@@ -1,0 +1,5 @@
+{
+  "name": "RevieU",
+  "description": "A modern and visually appealing login interface built with React and Tailwind CSS. It features email/password authentication, Google sign-in, registration, and password recovery flows, all managed through hash-based routing.",
+  "requestFramePermissions": []
+}
