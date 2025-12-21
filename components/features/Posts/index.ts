@@ -1,0 +1,1 @@
+export { StudentPost } from './StudentPost';
