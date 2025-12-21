@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
 interface NearbyCardProps {
   image: string;
@@ -43,7 +43,7 @@ export function NearbyCard({
         <div className="text-gray-600 mb-2">
           {category} · {price} · {distance}
         </div>
-         <span className="text-gray-500">({reviewCount})</span>
+        <span className="text-gray-500">({reviewCount})</span>
         {isOpen && (
           <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
             Open now

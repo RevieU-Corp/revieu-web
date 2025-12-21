@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
 interface ShopCardProps {
   image: string;
