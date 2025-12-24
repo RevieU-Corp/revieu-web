@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, Home, Compass, Heart, User } from 'lucide-react';
+import { Search, Star } from 'lucide-react';
+import { BottomNav } from '../layout/BottomNav';
 
 // Mock Data
 const merchants = [
@@ -171,27 +172,7 @@ const DiscoverPage: React.FC = () => {
       </div>
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 pb-safe">
-        <button onClick={() => navigate('/home')} className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
-          <Home className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Home</span>
-        </button>
-        <button onClick={() => navigate('/discover')} className="flex flex-col items-center gap-1 text-[#990000]">
-          <Compass className="w-6 h-6" />
-          <span className="text-[10px] font-bold">Discover</span>
-        </button>
-        <button className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
-          <Heart className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Saved</span>
-        </button>
-        <button 
-          onClick={() => navigate('/profile')}
-          className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <User className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Profile</span>
-        </button>
-      </div>
+      <BottomNav />
     </div>
   );
 };

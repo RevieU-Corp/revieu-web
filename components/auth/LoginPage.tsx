@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { config } from '../../config';
 import { AlertCircle } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
 
 const GoogleIcon = () => (
     <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
@@ -19,40 +21,23 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
         setIsLoading(true);
 
-        // try {
-        //     const loginUrl = `${config.apiBaseUrl}${config.endpoints.login}`;
-        //     console.log(`Attempting login via: ${loginUrl}`);
-
-        //     const response = await axios.post(loginUrl, {
-        //         email: email,
-        //         password: password
-        //     });
-
-        //     console.log('Login success:', response.data);
-
-        //     // Store the token (Adjust property name based on actual API response, e.g., 'token', 'access_token')
-        //     const token = response.data.token || response.data.access_token;
-        //     if (token) {
-        //         localStorage.setItem('authToken', token);
-        //     }
-
-        //     navigate('/home');
-        // } catch (err: any) {
-        //     console.error('Login error:', err);
-
-        //     // Extract error message from backend response if available
-        //     const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
-        //     setError(message);
-        // } finally {
-        //     setIsLoading(false);
-        // }
-        navigate('/home');
+        try {
+            await login(email, password);
+            navigate('/home');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
+            setError(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoogleLogin = () => {
