@@ -53,7 +53,7 @@ const savedPlaces = [
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'reviews' | 'saved'>('reviews');
 
   const handleLogout = () => {
