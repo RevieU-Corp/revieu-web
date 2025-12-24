@@ -1,0 +1,35 @@
+/* 火车站大屏自动滚动效果 */
+.train-station-scroll {
+  scroll-behavior: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.train-station-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.train-station-indicator {
+  animation: trainStationGlow 2s ease-in-out infinite;
+}
+
+@keyframes trainStationGlow {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.train-station-text {
+  animation: trainStationBlink 3s ease-in-out infinite;
+}
+
+@keyframes trainStationBlink {
+  0%, 90% { opacity: 1; }
+  95% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
