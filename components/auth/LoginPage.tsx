@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { config } from '../../config';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
 
 const GoogleIcon = () => (
     <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
