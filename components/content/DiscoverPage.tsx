@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Search, Star } from 'lucide-react';
 import { BottomNav } from '../layout/BottomNav';
 
@@ -77,19 +76,18 @@ const merchants = [
 const categories = ["All", "Food", "Cafe", "Shopping", "Services"];
 
 const DiscoverPage: React.FC = () => {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredMerchants = merchants.filter(merchant => {
-    const matchesCategory = selectedCategory === "All" || 
-                            (selectedCategory === "Food" && ["Chinese", "Mediterranean", "Bubble Tea"].includes(merchant.category)) ||
-                            (selectedCategory === "Cafe" && ["Cafe & Bakery"].includes(merchant.category)) ||
-                            (selectedCategory === "Shopping" && ["Grocery", "Retail"].includes(merchant.category)) ||
-                             merchant.category.includes(selectedCategory); // Fallback basic match
-    
-    const matchesSearch = merchant.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          merchant.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" ||
+      (selectedCategory === "Food" && ["Chinese", "Mediterranean", "Bubble Tea"].includes(merchant.category)) ||
+      (selectedCategory === "Cafe" && ["Cafe & Bakery"].includes(merchant.category)) ||
+      (selectedCategory === "Shopping" && ["Grocery", "Retail"].includes(merchant.category)) ||
+      merchant.category.includes(selectedCategory); // Fallback basic match
+
+    const matchesSearch = merchant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      merchant.category.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
@@ -105,25 +103,24 @@ const DiscoverPage: React.FC = () => {
       <div className="px-4 pt-4 space-y-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input 
-            type="text" 
-            placeholder="Find places near USC..." 
+          <input
+            type="text"
+            placeholder="Find places near USC..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#990000]/20 transition-shadow shadow-sm text-gray-800 placeholder-gray-400" 
+            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#990000]/20 transition-shadow shadow-sm text-gray-800 placeholder-gray-400"
           />
         </div>
-        
+
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
           {categories.map(cat => (
-            <button 
+            <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat 
-                  ? "bg-[#990000] text-white shadow-md shadow-red-900/20" 
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cat
+                ? "bg-[#990000] text-white shadow-md shadow-red-900/20"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
             >
               {cat}
             </button>
@@ -142,28 +139,28 @@ const DiscoverPage: React.FC = () => {
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                 <div>
-                    <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-gray-900 text-base truncate pr-2">{merchant.name}</h3>
-                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{merchant.distance}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-1 font-medium">{merchant.category}</p>
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-gray-900 text-base truncate pr-2">{merchant.name}</h3>
+                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{merchant.distance}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-1 font-medium">{merchant.category}</p>
                 </div>
-                
+
                 <div>
-                    <div className="flex items-center gap-1 mb-2">
-                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-bold text-gray-900">{merchant.rating}</span>
-                        <span className="text-xs text-gray-400">({merchant.reviews})</span>
-                        <span className="text-xs text-gray-300 mx-1">•</span>
-                        <span className="text-xs font-bold text-green-600">{merchant.price}</span>
-                    </div>
-                    <div className="flex gap-1 flex-wrap">
-                        {merchant.tags.map(tag => (
-                            <span key={tag} className="text-[10px] bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded border border-gray-100 font-medium">
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
+                  <div className="flex items-center gap-1 mb-2">
+                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs font-bold text-gray-900">{merchant.rating}</span>
+                    <span className="text-xs text-gray-400">({merchant.reviews})</span>
+                    <span className="text-xs text-gray-300 mx-1">•</span>
+                    <span className="text-xs font-bold text-green-600">{merchant.price}</span>
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    {merchant.tags.map(tag => (
+                      <span key={tag} className="text-[10px] bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded border border-gray-100 font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
