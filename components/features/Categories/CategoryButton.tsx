@@ -19,21 +19,24 @@ export function CategoryButton({
     <button
       className={`
         relative flex-shrink-0
-        w-40 h-24                  /* 比之前更小更紧凑 */
+        w-36 h-20                  /* 调整为更适合16:9手机的尺寸 */
         rounded-2xl shadow-md
         overflow-hidden
         flex flex-col justify-between
-        p-3
+        p-2.5
         ${textColor}
+        hover:shadow-lg
+        transition-shadow
+        cursor-pointer
       `}
       style={{ background }}
     >
       {/* 左上角角标 */}
       {badge && (
         <span className="
-          absolute top-2 left-2
-          text-[10px] font-semibold uppercase
-          px-2 py-0.5 rounded-full
+          absolute top-1.5 left-1.5
+          text-[9px] font-semibold uppercase
+          px-1.5 py-0.5 rounded-full
           bg-black/35 text-white
         ">
           {badge}
@@ -43,9 +46,9 @@ export function CategoryButton({
       {/* 右上角箭头（轻量一点） */}
       <span
         className="
-          absolute top-2 right-2
+          absolute top-1.5 right-1.5
           inline-flex items-center justify-center
-          w-5 h-5 rounded-full
+          w-4 h-4 rounded-full
           bg-white/20 text-xs
         "
       >
@@ -53,13 +56,13 @@ export function CategoryButton({
       </span>
 
       {/* 底部：图标 + 标题 */}
-      <div className="mt-auto flex items-center gap-2">
+      <div className="mt-auto flex items-center gap-1.5">
         {iconEmoji && (
-          <span className="text-lg leading-none">
+          <span className="text-base leading-none">
             {iconEmoji}
           </span>
         )}
-        <span className="font-semibold text-sm leading-snug">
+        <span className="font-semibold text-xs leading-snug">
           {title}
         </span>
       </div>

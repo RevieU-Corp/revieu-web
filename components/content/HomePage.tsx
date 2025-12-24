@@ -1,8 +1,11 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal, MapPin, Plus, Home, Compass, Heart, User } from 'lucide-react';
-import { StudentPost } from './StudentPost';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
+import { StudentPost } from '../features/Posts';
+import { ActivityCard } from '../features/Activities';
+import { FAB } from '../layout/FAB';
+import { BottomNav } from '../layout/BottomNav';
+import { RangeSelector } from '../common/RangeSelector';
+import './HomePage.css';
 
 // --- Types ---
 interface PostData {
@@ -16,170 +19,241 @@ interface PostData {
   comments: number;
 }
 
-interface CategoryButtonProps {
-  title: string;
-  background: string;
-  badge?: string;
-  iconEmoji: string;
-  textColor?: string;
-}
+type PostCategory = 'recommend' | 'follow' | 'food' | 'activity' | 'leisure';
+
+// --- Mock Activities Data ---
+const activities = [
+  {
+    id: 1,
+    title: "Taco Tuesday",
+    subtitle: "50% off all tacos at participating restaurants",
+    image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=500&auto=format&fit=crop&q=60",
+    badge: "WEEKLY",
+    badgeColor: "bg-orange-500"
+  },
+  {
+    id: 2,
+    title: "Bank of America Credit Card Special",
+    subtitle: "Get 5% cashback on dining purchases",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&auto=format&fit=crop&q=60",
+    badge: "LIMITED",
+    badgeColor: "bg-blue-600"
+  },
+  {
+    id: 3,
+    title: "USC Student Night",
+    subtitle: "Free appetizers with student ID",
+    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&auto=format&fit=crop&q=60",
+    badge: "STUDENT",
+    badgeColor: "bg-red-600"
+  },
+  {
+    id: 4,
+    title: "Happy Hour Special",
+    subtitle: "Buy 1 get 1 free drinks 4-6 PM",
+    image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=500&auto=format&fit=crop&q=60",
+    badge: "DAILY",
+    badgeColor: "bg-green-500"
+  },
+  {
+    id: 5,
+    title: "Weekend Brunch Festival",
+    subtitle: "Special brunch menu all weekend",
+    image: "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=500&auto=format&fit=crop&q=60",
+    badge: "WEEKEND",
+    badgeColor: "bg-purple-500"
+  }
+];
 
 // --- Mock Data ---
 const studentPosts: PostData[] = [
   {
     id: 1,
-    avatar: "🍜",
-    username: "Alex Johnson",
+    avatar: "🎓",
+    username: "Sarah Chen",
     timestamp: "2h ago",
-    text: "Found the best ramen spot near campus! The broth is incredible and student discount applies.",
-    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60",
-    likes: 124,
-    comments: 12
+    text: "Just tried the new poke bowl at Trojan Grounds and it's amazing! Perfect study fuel before finals. 🍜",
+    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    likes: 24,
+    comments: 7
   },
   {
     id: 2,
-    avatar: "🌮",
-    username: "Sarah Lee",
-    timestamp: "4h ago",
-    text: "Late night taco run? These are definitely the best al pastor tacos I've had in LA.",
-    image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=500&auto=format&fit=crop&q=60",
-    likes: 89,
-    comments: 8
+    avatar: "⚡",
+    username: "Mike Torres",
+    timestamp: "5h ago",
+    text: "Seoul Kitchen has a student discount on Tuesdays! Got bulgogi and kimchi fried rice for under $12. Game changer! 💰",
+    likes: 45,
+    comments: 12
   },
   {
     id: 3,
-    avatar: "📚",
-    username: "Mike Chen",
-    timestamp: "5h ago",
-    text: "This cafe is perfect for studying. Super quiet, fast wifi, and plenty of outlets.",
-    image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
-    likes: 256,
-    comments: 45
-  },
-  {
-    id: 4,
-    avatar: "🍔",
-    username: "Emily Davis",
+    avatar: "🌟",
+    username: "Emma Wilson",
     timestamp: "1d ago",
-    text: "The Monday burger deal is back! $5 for a cheeseburger and fries.",
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
-    likes: 67,
+    text: "Study Hall is my new favorite spot! Great wifi, lots of outlets, and the coffee is actually good.",
+    image: "https://images.unsplash.com/photo-1633940907831-945322bc60f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    likes: 38,
     comments: 15
   },
   {
+    id: 4,
+    avatar: "🎨",
+    username: "Alex Park",
+    timestamp: "2d ago",
+    text: "The avocado toast at Café Dulce is incredible! Perfect Instagram moment and tasty too 📸",
+    likes: 52,
+    comments: 8
+  },
+  {
     id: 5,
-    avatar: "🍵",
-    username: "Jess Wilson",
-    timestamp: "1d ago",
-    text: "Matcha heaven right here. A bit pricey but worth it for a treat.",
-    image: "https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?w=500&auto=format&fit=crop&q=60",
-    likes: 112,
-    comments: 9
+    avatar: "🏀",
+    username: "Jordan Lee",
+    timestamp: "3d ago",
+    text: "Post-game meal at Seoul Kitchen hit different. Their spicy ramen is undefeated!",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    likes: 67,
+    comments: 19
   },
   {
     id: 6,
-    avatar: "🍕",
-    username: "Tom Baker",
-    timestamp: "2d ago",
-    text: "Crispy thin crust pizza. Great for sharing with a group after class.",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60",
-    likes: 45,
-    comments: 3
+    avatar: "📚",
+    username: "Maya Singh",
+    timestamp: "4d ago",
+    text: "Found the best study spot with unlimited coffee refills. Finals week just got easier!",
+    likes: 41,
+    comments: 11
   }
 ];
 
 // --- Sub-Components ---
 
-const CategoryButton: React.FC<CategoryButtonProps> = ({ title, background, badge, iconEmoji, textColor = "text-white" }) => (
-  <button
-    className="relative flex-shrink-0 w-32 h-24 rounded-xl p-3 flex flex-col justify-between overflow-hidden shadow-md transition-transform hover:scale-95 text-left"
-    style={{ background }}
-  >
-    <div className="flex justify-between items-start w-full">
-      <span className="text-xl filter drop-shadow-sm">{iconEmoji}</span>
-      {badge && (
-        <span className="bg-white/20 backdrop-blur-sm text-[10px] font-bold px-1.5 py-0.5 rounded text-white border border-white/10">
-          {badge}
-        </span>
-      )}
-    </div>
-    <span className={`font-bold text-sm leading-tight ${textColor}`}>{title}</span>
-  </button>
-);
+const CityLocationButton: React.FC = () => {
+  const handleClick = () => {
+    alert('此功能正在开发中');
+  };
 
-const FAB: React.FC = () => (
-  <button className="fixed bottom-20 right-4 w-14 h-14 bg-[#990000] rounded-full shadow-lg shadow-red-900/30 flex items-center justify-center text-white z-40 hover:scale-105 active:scale-95 transition-all">
-    <Plus className="w-8 h-8" />
-  </button>
-);
-
-const BottomNav: React.FC = () => {
-  const navigate = useNavigate();
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 pb-safe">
-      <button className="flex flex-col items-center gap-1 text-[#990000]">
-        <Home className="w-6 h-6" />
-        <span className="text-[10px] font-bold">Home</span>
-      </button>
-      <button
-        onClick={() => navigate('/discover')}
-        className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors"
-      >
-        <Compass className="w-6 h-6" />
-        <span className="text-[10px] font-medium">Discover</span>
-      </button>
-      <button className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
-        <Heart className="w-6 h-6" />
-        <span className="text-[10px] font-medium">Saved</span>
-      </button>
-      <button
-        onClick={() => navigate('/profile')}
-        className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors"
-      >
-        <User className="w-6 h-6" />
-        <span className="text-[10px] font-medium">Profile</span>
-      </button>
-    </div>
+    <button 
+      onClick={handleClick}
+      className="w-8 h-8 bg-[#990000] rounded-full flex items-center justify-center text-white shadow-sm hover:bg-[#770000] transition-colors"
+    >
+      <MapPin className="w-5 h-5" />
+    </button>
   );
 };
-
-const CitySelector: React.FC = () => (
-  <div className="w-8 h-8 bg-[#990000] rounded-lg flex items-center justify-center text-white shadow-sm">
-    <MapPin className="w-4 h-4" />
-  </div>
-);
 
 // --- Main Component ---
 
 const HomePage: React.FC = () => {
+  const [activePostCategory, setActivePostCategory] = useState<PostCategory>('recommend');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  
+  const showDevelopmentAlert = () => {
+    alert('此功能正在开发中');
+  };
+
+  // 自动滚动效果
+  useEffect(() => {
+    if (!isAutoScrolling) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+    const maxScroll = scrollWidth - clientWidth;
+
+    let scrollPosition = 0;
+    let direction = 1; // 1 为向右，-1 为向左
+
+    const autoScroll = () => {
+      if (!container) return;
+
+      // 每次滚动的距离
+      const scrollStep = 2;
+      scrollPosition += scrollStep * direction;
+
+      // 到达右边界时反向
+      if (scrollPosition >= maxScroll) {
+        direction = -1;
+        scrollPosition = maxScroll;
+      }
+      // 到达左边界时反向
+      else if (scrollPosition <= 0) {
+        direction = 1;
+        scrollPosition = 0;
+      }
+
+      container.scrollLeft = scrollPosition;
+    };
+
+    const intervalId = setInterval(autoScroll, 50); // 每50ms滚动一次
+
+    return () => clearInterval(intervalId);
+  }, [isAutoScrolling]);
+
+  // 鼠标进入时暂停自动滚动
+  const handleMouseEnter = () => {
+    setIsAutoScrolling(false);
+  };
+
+  // 鼠标离开时恢复自动滚动
+  const handleMouseLeave = () => {
+    setIsAutoScrolling(true);
+  };
+
+  const handlePostCategoryChange = (category: PostCategory) => {
+    if (category !== 'recommend') {
+      showDevelopmentAlert();
+    }
+    setActivePostCategory(category);
+  };
+
+  const getPostCategoryTitle = (category: PostCategory) => {
+    switch (category) {
+      case 'recommend': return 'Recommend';
+      case 'follow': return 'Following';
+      case 'food': return 'Food';
+      case 'activity': return 'Events';
+      case 'leisure': return 'Leisure';
+      default: return 'Recommend';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans">
+    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans max-w-sm mx-auto">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 shadow-sm">
-        <div className="flex items-center justify-between px-4 h-14 relative">
-          <div className="flex items-center gap-3">
-            <CitySelector />
+        <div className="flex items-center justify-between px-4 h-16 relative">
+          <div className="flex items-center gap-2">
+            <CityLocationButton />
+            <RangeSelector />
           </div>
 
           {/* Centered Title */}
           <h1
-            className="absolute left-1/2 transform -translate-x-1/2 text-[#990000] font-bold text-3xl tracking-wide"
+            className="absolute left-1/2 transform -translate-x-1/2 text-[#990000] font-bold text-2xl tracking-wide"
             style={{ fontFamily: "'Dancing Script', cursive" }}
           >
             RevieU
           </h1>
 
-          <div className="w-9 h-9 bg-[#FFC72C] rounded-full flex items-center justify-center text-[#990000] font-bold border-2 border-white shadow-sm">
-            <span className="text-sm">TJ</span>
-          </div>
+          <button 
+            onClick={showDevelopmentAlert}
+            className="w-10 h-10 bg-[#FFC72C] rounded-full flex items-center justify-center text-[#990000] font-bold border-2 border-white shadow-sm cursor-pointer hover:bg-[#FFD700] transition-colors"
+          >
+            <span className="text-base">👤</span>
+          </button>
         </div>
         <div className="px-4 pb-3">
-          <p className="text-gray-500 text-sm font-medium">Good afternoon, Trojans ✌️</p>
+          <p className="text-gray-500 text-sm font-medium">Good afternoon, xxx</p>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="px-4 pt-4 space-y-6">
+      <div className="px-3 pt-4 space-y-5">
 
         {/* Search Bar */}
         <div className="bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center px-4 py-3 gap-3">
@@ -188,66 +262,176 @@ const HomePage: React.FC = () => {
             type="text"
             placeholder="Search near USC..."
             className="flex-1 outline-none bg-transparent text-gray-700 placeholder-gray-400 text-sm"
+            onFocus={showDevelopmentAlert}
           />
-          <SlidersHorizontal className="w-5 h-5 text-gray-600" />
+          <button onClick={showDevelopmentAlert} className="cursor-pointer hover:opacity-70 transition-opacity">
+            <SlidersHorizontal className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
 
         {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-          <button className="px-5 py-2 rounded-full bg-[#990000] text-white text-xs font-bold whitespace-nowrap shadow-md shadow-red-900/20">
-            Near USC
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-3 px-3 no-scrollbar">
+          <button className="px-4 py-2 rounded-full bg-[#990000] text-white text-xs font-bold whitespace-nowrap shadow-md shadow-red-900/20">
+            Coupons
           </button>
-          <button className="px-5 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap">
+          <button 
+            onClick={showDevelopmentAlert}
+            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
+          >
             Open Now
           </button>
-          <button className="px-5 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap">
+          <button 
+            onClick={showDevelopmentAlert}
+            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
+          >
             Top Rated
           </button>
-          <button className="px-5 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap">
-            <span className="text-[#990000]">$$</span> Budget
+          <button 
+            onClick={showDevelopmentAlert}
+            className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-[#990000]">$</span> Budget
           </button>
         </div>
 
-        {/* Categories */}
-        <div className="-mx-4">
-          <div className="flex gap-3 overflow-x-auto px-4 pb-4 no-scrollbar">
-            <CategoryButton
-              title="Top Lists"
-              background="linear-gradient(135deg, #990000 0%, #660000 100%)"
-              badge="TOP"
-              iconEmoji="📈"
-            />
-            <CategoryButton
-              title="Budget Eats"
-              background="linear-gradient(135deg, #FFC72C 0%, #F57F17 100%)"
-              textColor="text-[#7b1113]"
-              badge="DEAL"
-              iconEmoji="💸"
-            />
-            <CategoryButton
-              title="School Specials"
-              background="linear-gradient(135deg, #333333 0%, #000000 100%)"
-              badge="USC"
-              iconEmoji="🎓"
-            />
-            <CategoryButton
-              title="Coupons"
-              background="linear-gradient(135deg, #D32F2F 30%, #FFC107 100%)"
-              badge="PROMO"
-              iconEmoji="🎟️"
-            />
+        {/* Activities Section */}
+        <div className="-mx-3">
+          <div className="flex items-center justify-between px-3 mb-3">
+            <h2 className="font-bold text-lg text-gray-900">🎪 Hot Activities</h2>
+            <button 
+              onClick={showDevelopmentAlert}
+              className="text-[#990000] text-sm font-semibold hover:underline"
+            >
+              See All
+            </button>
+          </div>
+          <div 
+            ref={scrollContainerRef}
+            className="flex gap-4 overflow-x-auto px-3 pb-4 train-station-scroll"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleMouseEnter}
+            onTouchEnd={handleMouseLeave}
+          >
+            {/* 复制活动数据以实现无缝循环 */}
+            {[...activities, ...activities].map((activity, index) => (
+              <div
+                key={`${activity.id}-${index}`}
+                className="flex-shrink-0"
+              >
+                <ActivityCard
+                  title={activity.title}
+                  subtitle={activity.subtitle}
+                  image={activity.image}
+                  badge={activity.badge}
+                  badgeColor={activity.badgeColor}
+                  onClick={showDevelopmentAlert}
+                />
+              </div>
+            ))}
+          </div>
+          
+          {/* 滚动指示器 - 火车站风格 */}
+          <div className="flex justify-center items-center px-3 mt-2 gap-4">
+            <div className="flex gap-1">
+              {activities.map((_, index) => (
+                <div
+                  key={index}
+                  className="w-2 h-2 rounded-full bg-gradient-to-r from-[#990000] to-[#FF6B35] train-station-indicator"
+                  style={{
+                    animationDelay: `${index * 0.3}s`
+                  }}
+                />
+              ))}
+            </div>
+            <div className="text-xs text-gray-500 train-station-text flex items-center gap-1">
+              <span>🚂</span>
+              <span>Auto Scrolling</span>
+            </div>
           </div>
         </div>
 
         {/* Student Posts Grid */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-lg text-gray-900">Student Posts</h2>
-            <button className="text-[#990000] text-sm font-semibold hover:underline">
-              See all
+          {/* Post Category Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-3 px-3 no-scrollbar">
+            <button
+              onClick={() => handlePostCategoryChange('recommend')}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                activePostCategory === 'recommend'
+                  ? 'bg-[#990000] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              推荐
+            </button>
+            <button
+              onClick={() => handlePostCategoryChange('follow')}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                activePostCategory === 'follow'
+                  ? 'bg-[#990000] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              关注
+            </button>
+            <button
+              onClick={() => handlePostCategoryChange('food')}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                activePostCategory === 'food'
+                  ? 'bg-[#990000] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              美食
+            </button>
+            <button
+              onClick={() => handlePostCategoryChange('activity')}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all relative overflow-hidden ${
+                activePostCategory === 'activity'
+                  ? 'shadow-lg transform scale-105'
+                  : 'hover:shadow-md hover:scale-102'
+              }`}
+              style={{
+                background: 'linear-gradient(45deg, #FF6B35 0%, #F7931E 50%, #FFD700 100%)',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+              }}
+            >
+              <span className="relative z-10 font-extrabold tracking-wide text-white">
+                🎪 活动
+              </span>
+              {activePostCategory === 'activity' && (
+                <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
+              )}
+            </button>
+            <button
+              onClick={() => handlePostCategoryChange('leisure')}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                activePostCategory === 'leisure'
+                  ? 'bg-[#990000] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              休闲
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          {/* Post Section Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg text-gray-900">
+              {getPostCategoryTitle(activePostCategory)}
+            </h2>
+            <button 
+              onClick={showDevelopmentAlert}
+              className="text-[#990000] text-sm font-semibold hover:underline"
+            >
+        
+              Filter
+            </button>
+          </div>
+          
+          {/* Posts Grid */}
+          <div className="grid grid-cols-2 gap-3">
             {studentPosts.map((post) => (
               <StudentPost key={post.id} {...post} />
             ))}
