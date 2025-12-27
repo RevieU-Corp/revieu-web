@@ -9,7 +9,7 @@ interface BeautyCategoryWidgetProps {
 
 /**
  * 美容服务分类 Widget
- * 包含 beauty、洗吹、spa
+ * 包含beauty、洗吹、spa
  */
 export const BeautyCategoryWidget: React.FC<BeautyCategoryWidgetProps> = ({
   selectedCategory,
