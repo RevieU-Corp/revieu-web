@@ -17,7 +17,7 @@ export const ShoppingEntertainmentWidget: React.FC<ShoppingEntertainmentWidgetPr
 }) => {
   return (
     <CategoryWidget
-      title="🛍️ Shopping"
+      title="🛍️ Shopping & Fun"
       categories={SHOPPING_ENTERTAINMENT_CATEGORIES}
       selectedCategory={selectedCategory}
       onCategorySelect={onCategorySelect}
