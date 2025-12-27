@@ -113,7 +113,7 @@ export const filterByDistance = (
   userLocation: Location,
   radiusInMiles: number = 5
 ): Merchant[] => {
-  return merchants.filter(merchant => {
+  return merchants.filter(() => {
     // 模拟商家位置
     const merchantLocation: Location = {
       latitude: 34.0522 + (Math.random() - 0.5) * 0.1,

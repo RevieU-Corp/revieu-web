@@ -14,8 +14,7 @@ interface RecommendationSectionProps {
  */
 export const RecommendationSection: React.FC<RecommendationSectionProps> = ({
   selectedCategory,
-  merchants,
-  searchQuery
+  merchants
 }) => {
   const [userFavorites, setUserFavorites] = useState<UserFavorite[]>([]);
   const [userLocation, setUserLocation] = useState<Location>({
