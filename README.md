@@ -29,3 +29,5 @@ For deployment to work, ensure the following GitHub Secrets are configured:
 2. `DEPLOY_USER`: SSH Username
 3. `DEPLOY_KEY`: SSH Private Key
 4. `DEPLOY_PATH`: Target directory on the server
+
+Git workflow development test
