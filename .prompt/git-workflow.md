@@ -90,6 +90,7 @@ git push origin <type>/<issue-id>-<description>
 ```
 
 ---
+Wait for PR to be merged and user ensure to continue to next step.
 
 ## Phase 5: Post-Merge Cleanup
 
@@ -102,9 +103,17 @@ git fetch --all --prune
 ```
 
 ### 9. Switch & Pull
+
+if exists dev branch:
 ```bash
 git checkout dev  # or main
 git pull origin dev
+```
+
+if exists main branch:
+```bash 
+git checkout main
+git pull origin main
 ```
 
 ### 10. Delete Local Feature Branch
