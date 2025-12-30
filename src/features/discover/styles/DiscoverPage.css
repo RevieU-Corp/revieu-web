@@ -1,0 +1,184 @@
+/* DiscoverPage 样式 - 大众点评风格 */
+
+/* 隐藏滚动条但保持滚动功能 */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 平滑滚动 */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* 搜索栏样式 */
+.search-bar {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.search-bar:focus {
+  background-color: white;
+  border-color: #990000;
+  box-shadow: 0 0 0 3px rgba(153, 0, 0, 0.1);
+}
+
+/* 筛选按钮样式 */
+.filter-button {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #6b7280;
+  transition: all 0.2s ease-in-out;
+}
+
+.filter-button:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* 分类按钮悬停效果 - 大众点评风格 */
+.category-button-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.category-button-hover:hover {
+  transform: scale(1.05);
+}
+
+/* 推荐卡片动画 */
+.recommendation-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.recommendation-card:active {
+  transform: scale(0.99);
+}
+
+/* 加载动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 确保触控友好的最小尺寸 */
+.touch-friendly {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 大众点评风格的分类按钮 */
+.dianping-category-button {
+  width: 56px;
+  height: 64px;
+  background: transparent;
+  border: none;
+  padding: 4px;
+}
+
+/* 紧凑的 widget 间距 - 大众点评风格 */
+.widget-compact {
+  margin-bottom: 8px;
+}
+
+.widget-compact:last-child {
+  margin-bottom: 0;
+}
+
+/* 选中状态的指示器 */
+.selected-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background-color: #990000;
+  border-radius: 1px;
+}
+
+/* Header 优化 - 包含搜索栏 */
+.discover-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式布局 - 针对小按钮优化 */
+@media (max-width: 375px) {
+  .category-widget {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .dianping-category-button {
+    width: 52px;
+    height: 60px;
+  }
+  
+  .filter-button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 414px) {
+  .dianping-category-button {
+    width: 58px;
+    height: 66px;
+  }
+}
+
+/* 确保 16:9 屏幕适配 */
+@media (aspect-ratio: 16/9) {
+  .discover-container {
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .category-widgets-area {
+    max-height: 25vh;
+    overflow-y: auto;
+  }
+  
+  .recommendation-area {
+    max-height: 65vh;
+  }
+}
+
+/* 水平滚动优化 */
+.horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 滚动容器的触摸优化 */
+.scroll-container {
+  scroll-snap-type: x mandatory;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+}

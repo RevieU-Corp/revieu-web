@@ -1,16 +1,11 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import LoginPage from './components/auth/LoginPage';
-import RegisterPage from './components/auth/RegisterPage';
-import ForgotPasswordPage from './components/auth/ForgotPasswordPage';
-import GoogleCallbackPage from './components/auth/GoogleCallbackPage';
-import HomePage from './components/content/HomePage';
-import PostPage from './components/content/PostPage';
-import DiscoverPage from './components/content/DiscoverPage';
-import ProfilePage from './components/content/ProfilePage';
-import WriteReviewPage from './components/content/WriteReviewPage';
+import { AuthProvider } from '../contexts/AuthContext';
+import { LoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
+import { HomePage } from '../features/home';
+import { PostPage, WriteReviewPage } from '../features/reviews';
+import { DiscoverPage } from '../features/discover';
+import { ProfilePage } from '../features/profile';
 
 const App: React.FC = () => {
   return (
