@@ -1,0 +1,89 @@
+/* McDonald's Brand Colors */
+:root {
+  --mcdonalds-gold: #FFBC0D;
+  --mcdonalds-red: #DA291C;
+}
+
+/* Custom McDonald's themed components */
+.mcdonalds-gold {
+  background-color: var(--mcdonalds-gold);
+}
+
+.mcdonalds-gold:hover {
+  background-color: #e6a60b;
+}
+
+.mcdonalds-red {
+  background-color: var(--mcdonalds-red);
+}
+
+.mcdonalds-red:hover {
+  background-color: #c22419;
+}
+
+/* Delete button animations */
+.delete-button {
+  transition: all 0.2s ease-in-out;
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+.group:hover .delete-button {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.delete-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Gallery button improvements */
+.gallery-button {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.2s ease-in-out;
+}
+
+.gallery-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure buttons are always clickable */
+.gallery-overlay {
+  pointer-events: none;
+}
+
+.gallery-button {
+  pointer-events: auto;
+}
+
+/* Smooth transitions for interactive elements */
+.merchant-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.merchant-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom scrollbar for merchant portal */
+.merchant-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.merchant-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.merchant-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.merchant-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
