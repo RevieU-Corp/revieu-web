@@ -13,7 +13,7 @@ const GoogleIcon = () => (
     </svg>
 );
 
-const LoginPage: React.FC = () => {
+const MerchantLoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -28,9 +28,9 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            navigate('/home');
+            navigate('/merchant/dashboard');
         } catch (err: any) {
-            console.error('Login error:', err);
+            console.error('Merchant login error:', err);
             const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
             setError(message);
         } finally {
@@ -44,15 +44,16 @@ const LoginPage: React.FC = () => {
 
     return (
         <div
-            className="flex items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop')" }}
+            className="flex items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat transition-all duration-500"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop')" }}
         >
-            <div className="w-full max-w-md p-8 space-y-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl">
+            <div className="w-full max-w-md p-8 space-y-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-green-100">
                 <div className="text-center">
-                    <h1 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 drop-shadow-sm pb-2">
+                    <h1 className="text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500 drop-shadow-sm pb-1">
                         RevieU
                     </h1>
-                    <p className="mt-2 text-gray-600">Please sign in to your account.</p>
+                    <p className="text-sm font-bold text-green-600 uppercase tracking-widest mb-2">Merchant Portal</p>
+                    <p className="mt-1 text-gray-600">Manage your business with RevieU.</p>
                 </div>
 
                 {error && (
@@ -64,7 +65,7 @@ const LoginPage: React.FC = () => {
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
                     <div>
-                        <label htmlFor="email" className="text-sm font-medium text-gray-700 sr-only">Email address</label>
+                        <label htmlFor="email" className="text-sm font-medium text-gray-700 sr-only">Business Email</label>
                         <input
                             id="email"
                             name="email"
@@ -73,8 +74,8 @@ const LoginPage: React.FC = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border-gray-300 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
-                            placeholder="Email address"
+                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border-gray-300 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors"
+                            placeholder="Business Email"
                             disabled={isLoading}
                         />
                     </div>
@@ -89,14 +90,14 @@ const LoginPage: React.FC = () => {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border-gray-300 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
+                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border-gray-300 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors"
                             placeholder="Password"
                             disabled={isLoading}
                         />
                     </div>
 
                     <div className="text-right">
-                        <Link to="/forgot-password" className="text-sm font-medium text-red-600 hover:text-red-500">
+                        <Link to="/forgot-password" d-link="forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
                             Forgot password?
                         </Link>
                     </div>
@@ -105,7 +106,7 @@ const LoginPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isLoading ? (
                                 <span className="flex items-center gap-2">
@@ -116,7 +117,7 @@ const LoginPage: React.FC = () => {
                                     Signing in...
                                 </span>
                             ) : (
-                                'Sign in'
+                                'Merchant Sign in'
                             )}
                         </button>
                     </div>
@@ -133,7 +134,7 @@ const LoginPage: React.FC = () => {
                         onClick={handleGoogleLogin}
                         type="button"
                         disabled={isLoading}
-                        className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5"
+                        className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5"
                     >
                         <GoogleIcon />
                         Sign in with Google
@@ -142,17 +143,17 @@ const LoginPage: React.FC = () => {
 
                 <div className="pt-4 flex flex-col space-y-4 items-center">
                     <div className="text-sm">
-                        <span className="text-gray-600">Don't have an account? </span>
-                        <Link to="/register" className="font-medium text-red-600 hover:text-red-500">
-                            Sign up
+                        <span className="text-gray-600">Don't have a business account? </span>
+                        <Link to="/register" className="font-medium text-green-600 hover:text-green-500">
+                            Get Started
                         </Link>
                     </div>
 
                     <button
-                        onClick={() => navigate('/merchant/login')}
-                        className="text-sm font-semibold text-gray-700 hover:text-green-600 flex items-center gap-1 transition-colors"
+                        onClick={() => navigate('/login')}
+                        className="text-sm font-semibold text-gray-700 hover:text-red-600 flex items-center gap-1 transition-colors"
                     >
-                        我是商家 (I am a Merchant) →
+                        我是普通用户 (I am a User) →
                     </button>
                 </div>
             </div>
@@ -160,4 +161,4 @@ const LoginPage: React.FC = () => {
     );
 };
 
-export default LoginPage;
+export default MerchantLoginPage;
