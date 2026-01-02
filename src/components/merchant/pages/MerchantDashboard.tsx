@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Star, TrendingUp, Users, Gift, Trash2 } from 'lucide-react';
-import MerchantLayout from '../layout/MerchantLayout';
 import TrafficChart from '../components/TrafficChart';
 import CouponManager from '../components/CouponManager';
 import ReviewReplyModal from '../components/ReviewReplyModal';
@@ -21,7 +20,7 @@ const MerchantDashboard: React.FC = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   // Mock data for McDonald's USC
@@ -76,8 +75,8 @@ const MerchantDashboard: React.FC = () => {
   };
 
   const handleSubmitReply = (reviewId: number, replyText: string) => {
-    setReviews(reviews.map(review => 
-      review.id === reviewId 
+    setReviews(reviews.map(review =>
+      review.id === reviewId
         ? { ...review, hasReply: true, replyText }
         : review
     ));
@@ -105,183 +104,181 @@ const MerchantDashboard: React.FC = () => {
   };
 
   return (
-    <MerchantLayout>
-      <div className="p-4 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">USC Review Management</h1>
-          <p className="text-gray-600">Welcome back! Here's how your business is performing.</p>
-        </div>
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">USC Review Management</h1>
+        <p className="text-gray-600">Welcome back! Here's how your business is performing.</p>
+      </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Rating Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Current Rating</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-2xl font-bold text-gray-900">{businessMetrics.currentRating}</span>
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={16}
-                        className={i < Math.floor(businessMetrics.currentRating) 
-                          ? "text-yellow-400 fill-current" 
-                          : "text-gray-300"
-                        }
-                      />
-                    ))}
-                  </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Rating Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Current Rating</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-bold text-gray-900">{businessMetrics.currentRating}</span>
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      className={i < Math.floor(businessMetrics.currentRating)
+                        ? "text-yellow-400 fill-current"
+                        : "text-gray-300"
+                      }
+                    />
+                  ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{businessMetrics.totalReviews} reviews</p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Star className="w-6 h-6 text-yellow-600" />
-              </div>
+              <p className="text-xs text-gray-500 mt-1">{businessMetrics.totalReviews} reviews</p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <Star className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
+        </div>
 
-          {/* Views Card - Clickable */}
-          <div 
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => setShowTrafficChart(true)}
+        {/* Views Card - Clickable */}
+        <div
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setShowTrafficChart(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Monthly Views</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-bold text-gray-900">{businessMetrics.monthlyViews.toLocaleString()}</span>
+                <div className="flex items-center gap-1 text-green-600">
+                  <TrendingUp size={14} />
+                  <span className="text-sm font-medium">+{businessMetrics.trendPercentage}%</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Click to view details</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Coupons */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Active Coupons</h2>
+          <button
+            onClick={() => setShowCouponManager(true)}
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+            style={{ backgroundColor: '#FFBC0D' }}
           >
-            <div className="flex items-center justify-between">
+            <Gift size={16} />
+            Edit Coupons
+          </button>
+        </div>
+        <div className="space-y-3">
+          {coupons.filter(coupon => coupon.isActive).map((coupon) => (
+            <div key={coupon.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
               <div>
-                <p className="text-sm font-medium text-gray-600">Monthly Views</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-2xl font-bold text-gray-900">{businessMetrics.monthlyViews.toLocaleString()}</span>
-                  <div className="flex items-center gap-1 text-green-600">
-                    <TrendingUp size={14} />
-                    <span className="text-sm font-medium">+{businessMetrics.trendPercentage}%</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Click to view details</p>
+                <h3 className="font-medium text-gray-900">{coupon.name}</h3>
+                <p className="text-sm text-gray-600">{coupon.type}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {coupon.used}/{coupon.quantity} used
+                </p>
+                <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
+                  <div
+                    className="bg-yellow-500 h-2 rounded-full transition-all"
+                    style={{
+                      width: `${(coupon.used / coupon.quantity) * 100}%`,
+                      backgroundColor: '#FFBC0D'
+                    }}
+                  ></div>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
+          {coupons.filter(coupon => coupon.isActive).length === 0 && (
+            <div className="text-center py-4 text-gray-500">
+              <p>No active coupons. Click "Edit Coupons" to create some!</p>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Active Coupons */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Active Coupons</h2>
-            <button 
-              onClick={() => setShowCouponManager(true)}
-              className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-              style={{ backgroundColor: '#FFBC0D' }}
-            >
-              <Gift size={16} />
-              Edit Coupons
-            </button>
-          </div>
-          <div className="space-y-3">
-            {coupons.filter(coupon => coupon.isActive).map((coupon) => (
-              <div key={coupon.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+      {/* Recent Reviews */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Reviews</h2>
+          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            View All
+          </button>
+        </div>
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
+              <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-medium text-gray-900">{coupon.name}</h3>
-                  <p className="text-sm text-gray-600">{coupon.type}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {coupon.used}/{coupon.quantity} used
-                  </p>
-                  <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
-                    <div 
-                      className="bg-yellow-500 h-2 rounded-full transition-all"
-                      style={{ 
-                        width: `${(coupon.used / coupon.quantity) * 100}%`,
-                        backgroundColor: '#FFBC0D'
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {coupons.filter(coupon => coupon.isActive).length === 0 && (
-              <div className="text-center py-4 text-gray-500">
-                <p>No active coupons. Click "Edit Coupons" to create some!</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Reviews */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Reviews</h2>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-              View All
-            </button>
-          </div>
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{review.customerName}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className={i < review.rating 
-                              ? "text-yellow-400 fill-current" 
-                              : "text-gray-300"
-                            }
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-500">{review.date}</span>
+                  <h4 className="font-medium text-gray-900">{review.customerName}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={i < review.rating
+                            ? "text-yellow-400 fill-current"
+                            : "text-gray-300"
+                          }
+                        />
+                      ))}
                     </div>
+                    <span className="text-xs text-gray-500">{review.date}</span>
                   </div>
-                  <div className="flex gap-2">
-                    {!review.hasReply && (
-                      <button 
-                        onClick={() => handleReplyToReview(review)}
-                        className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition-colors"
-                      >
-                        Reply
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => handleDeleteReview(review)}
-                      className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
+                </div>
+                <div className="flex gap-2">
+                  {!review.hasReply && (
+                    <button
+                      onClick={() => handleReplyToReview(review)}
+                      className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition-colors"
                     >
-                      <Trash2 size={10} />
-                      Delete
+                      Reply
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteReview(review)}
+                    className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
+                  >
+                    <Trash2 size={10} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-700 text-sm">{review.text}</p>
+              {review.hasReply && review.replyText && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-medium text-gray-600">Your Reply:</p>
+                    <button
+                      onClick={() => handleReplyToReview(review)}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      Edit
                     </button>
                   </div>
+                  <p className="text-sm text-gray-700">{review.replyText}</p>
                 </div>
-                <p className="text-gray-700 text-sm">{review.text}</p>
-                {review.hasReply && review.replyText && (
-                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-xs font-medium text-gray-600">Your Reply:</p>
-                      <button 
-                        onClick={() => handleReplyToReview(review)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-700">{review.replyText}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-            {reviews.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <p>No reviews yet.</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ))}
+          {reviews.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>No reviews yet.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -315,7 +312,7 @@ const MerchantDashboard: React.FC = () => {
         message={confirmDialog.message}
         type="danger"
       />
-    </MerchantLayout>
+    </div>
   );
 };
 

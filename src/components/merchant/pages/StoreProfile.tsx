@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  Globe, 
-  Camera, 
-  Plus, 
-  Edit3, 
-  Save, 
+import {
+  MapPin,
+  Phone,
+  Globe,
+  Camera,
+  Plus,
+  Edit3,
+  Save,
   X,
   ExternalLink,
   Trash2
 } from 'lucide-react';
-import MerchantLayout from '../layout/MerchantLayout';
 import InteractiveMap from '../components/InteractiveMap';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import { DEFAULT_MERCHANT_ASSETS } from '../constants/defaults';
@@ -73,7 +72,7 @@ const StoreProfile: React.FC = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   const handleSave = () => {
@@ -96,9 +95,9 @@ const StoreProfile: React.FC = () => {
           setStoreData(prev => ({ ...prev, coverPhoto: result }));
         } else {
           // For gallery, add to existing images
-          setStoreData(prev => ({ 
-            ...prev, 
-            gallery: [...prev.gallery, result] 
+          setStoreData(prev => ({
+            ...prev,
+            gallery: [...prev.gallery, result]
           }));
         }
       };
@@ -155,7 +154,7 @@ const StoreProfile: React.FC = () => {
   };
 
   return (
-    <MerchantLayout>
+    <>
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -214,8 +213,8 @@ const StoreProfile: React.FC = () => {
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                 <label className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                   <Camera size={16} />
-                  {storeData.coverPhoto === DEFAULT_MERCHANT_ASSETS.COVER_PHOTO 
-                    ? 'Upload Cover Photo' 
+                  {storeData.coverPhoto === DEFAULT_MERCHANT_ASSETS.COVER_PHOTO
+                    ? 'Upload Cover Photo'
                     : 'Change Cover Photo'
                   }
                   <input
@@ -227,7 +226,7 @@ const StoreProfile: React.FC = () => {
                 </label>
               </div>
             )}
-            
+
             {/* Default image indicator */}
             {!isEditing && storeData.coverPhoto === DEFAULT_MERCHANT_ASSETS.COVER_PHOTO && (
               <div className="absolute top-4 left-4">
@@ -251,14 +250,14 @@ const StoreProfile: React.FC = () => {
                 <input
                   type="text"
                   value={storeData.name}
-                  onChange={(e) => setStoreData({...storeData, name: e.target.value})}
+                  onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 />
               ) : (
                 <p className="text-gray-900 font-medium">{storeData.name}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
               <div className="flex items-center gap-2">
@@ -267,7 +266,7 @@ const StoreProfile: React.FC = () => {
                   <input
                     type="tel"
                     value={storeData.phone}
-                    onChange={(e) => setStoreData({...storeData, phone: e.target.value})}
+                    onChange={(e) => setStoreData({ ...storeData, phone: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   />
                 ) : (
@@ -284,13 +283,13 @@ const StoreProfile: React.FC = () => {
                   <input
                     type="url"
                     value={storeData.website}
-                    onChange={(e) => setStoreData({...storeData, website: e.target.value})}
+                    onChange={(e) => setStoreData({ ...storeData, website: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   />
                 ) : (
-                  <a 
-                    href={storeData.website} 
-                    target="_blank" 
+                  <a
+                    href={storeData.website}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
@@ -314,7 +313,7 @@ const StoreProfile: React.FC = () => {
                 {isEditing ? (
                   <textarea
                     value={storeData.address}
-                    onChange={(e) => setStoreData({...storeData, address: e.target.value})}
+                    onChange={(e) => setStoreData({ ...storeData, address: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     rows={2}
                   />
@@ -323,7 +322,7 @@ const StoreProfile: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Interactive Map */}
             <InteractiveMap
               lat={storeData.coordinates.lat}
@@ -363,7 +362,7 @@ const StoreProfile: React.FC = () => {
                   <>
                     {/* Overlay for better button visibility */}
                     <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg z-10 gallery-overlay" />
-                    
+
                     {/* Delete button - top right corner */}
                     <button
                       onClick={() => handleDeleteGalleryImage(index)}
@@ -377,7 +376,7 @@ const StoreProfile: React.FC = () => {
                         Delete
                       </span>
                     </button>
-                    
+
                     {/* Edit button - bottom right corner */}
                     <label className="absolute bottom-2 right-2 p-2 bg-white bg-opacity-95 rounded-full text-gray-700 hover:bg-gray-100 cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-30 gallery-button group/edit"
                       title="Edit photo"
@@ -414,7 +413,7 @@ const StoreProfile: React.FC = () => {
           {isEditing ? (
             <textarea
               value={storeData.bio}
-              onChange={(e) => setStoreData({...storeData, bio: e.target.value})}
+              onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               rows={4}
               placeholder="Tell customers about your store..."
@@ -436,7 +435,7 @@ const StoreProfile: React.FC = () => {
               </button>
             )}
           </div>
-          
+
           <div className="space-y-4">
             {storeData.menu.map((item) => (
               <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
@@ -462,7 +461,7 @@ const StoreProfile: React.FC = () => {
                         <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                           <Edit3 size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteMenuItem(item.id)}
                           className="p-1 text-red-400 hover:text-red-600 transition-colors"
                           title="Delete menu item"
@@ -476,7 +475,7 @@ const StoreProfile: React.FC = () => {
               </div>
             ))}
           </div>
-          
+
           {storeData.menu.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <Plus size={32} className="mx-auto mb-2 text-gray-400" />
@@ -495,7 +494,7 @@ const StoreProfile: React.FC = () => {
         message={confirmDialog.message}
         type="danger"
       />
-    </MerchantLayout>
+    </>
   );
 };
 
