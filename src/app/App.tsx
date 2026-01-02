@@ -13,6 +13,7 @@ import { ProfilePage } from '../features/profile';
 import CustomerLayout from '../components/customer/CustomerLayout';
 
 // Merchant Portal Components
+import MerchantLayout from '../components/merchant/layout/MerchantLayout';
 import MerchantDashboard from '../components/merchant/pages/MerchantDashboard';
 import AdManager from '../components/merchant/pages/AdManager';
 import StoreProfile from '../components/merchant/pages/StoreProfile';
@@ -22,81 +23,43 @@ import Notifications from '../components/merchant/pages/Notifications';
 const AppRouter: React.FC = () => {
   return (
     <Routes>
-      {/* Entry Point */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/merchant/login" element={<MerchantLoginPage />} />
-
       {/* Auth Routes */}
+      <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-      {/* Customer Routes */}
-      <Route path="/customer" element={
-        <CustomerLayout>
-          <HomePage />
-        </CustomerLayout>
-      } />
-      <Route path="/customer/home" element={
-        <CustomerLayout>
-          <HomePage />
-        </CustomerLayout>
-      } />
-      <Route path="/customer/discover" element={
-        <CustomerLayout>
-          <DiscoverPage />
-        </CustomerLayout>
-      } />
-      <Route path="/customer/profile" element={
-        <CustomerLayout>
-          <ProfilePage />
-        </CustomerLayout>
-      } />
-      <Route path="/customer/post/:id" element={
-        <CustomerLayout>
-          <PostPage />
-        </CustomerLayout>
-      } />
-      <Route path="/customer/write-review" element={
-        <CustomerLayout>
-          <WriteReviewPage />
-        </CustomerLayout>
-      } />
+      {/* Merchant Auth */}
+      <Route path="/merchant/login" element={<MerchantLoginPage />} />
 
-      {/* Legacy Customer Routes (for backward compatibility) */}
-      <Route path="/home" element={
-        <CustomerLayout>
-          <HomePage />
-        </CustomerLayout>
-      } />
-      <Route path="/discover" element={
-        <CustomerLayout>
-          <DiscoverPage />
-        </CustomerLayout>
-      } />
-      <Route path="/profile" element={
-        <CustomerLayout>
-          <ProfilePage />
-        </CustomerLayout>
-      } />
-      <Route path="/post/:id" element={
-        <CustomerLayout>
-          <PostPage />
-        </CustomerLayout>
-      } />
-      <Route path="/write-review" element={
-        <CustomerLayout>
-          <WriteReviewPage />
-        </CustomerLayout>
-      } />
+      {/* Customer Routes (under CustomerLayout) */}
+      <Route path="/customer" element={<CustomerLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="home" element={<HomePage />} />
+        <Route path="discover" element={<DiscoverPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="post/:id" element={<PostPage />} />
+        <Route path="write-review" element={<WriteReviewPage />} />
+      </Route>
 
-      {/* Merchant Portal Routes */}
-      <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
-      <Route path="/merchant/ads" element={<AdManager />} />
-      <Route path="/merchant/profile" element={<StoreProfile />} />
-      <Route path="/merchant/messages" element={<Messages />} />
-      <Route path="/merchant/notifications" element={<Notifications />} />
+      {/* Legacy Customer Routes (backward compatibility) */}
+      <Route element={<CustomerLayout />}>
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/discover" element={<DiscoverPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/post/:id" element={<PostPage />} />
+        <Route path="/write-review" element={<WriteReviewPage />} />
+      </Route>
+
+      {/* Merchant Portal Routes (under MerchantLayout) */}
+      <Route path="/merchant" element={<MerchantLayout />}>
+        <Route path="dashboard" element={<MerchantDashboard />} />
+        <Route path="ads" element={<AdManager />} />
+        <Route path="profile" element={<StoreProfile />} />
+        <Route path="messages" element={<Messages />} />
+        <Route path="notifications" element={<Notifications />} />
+      </Route>
     </Routes>
   );
 };

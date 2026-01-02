@@ -1,13 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import BottomNavigation from './BottomNavigation';
 
-interface MerchantLayoutProps {
-  children: React.ReactNode;
-}
-
-const MerchantLayout: React.FC<MerchantLayoutProps> = ({ children }) => {
+const MerchantLayout: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackToEntry = () => {
@@ -29,9 +24,9 @@ const MerchantLayout: React.FC<MerchantLayoutProps> = ({ children }) => {
 
       {/* Main content area */}
       <main className="flex-1">
-        {children}
+        <Outlet />
       </main>
-      
+
       {/* Fixed bottom navigation */}
       <BottomNavigation />
     </div>
