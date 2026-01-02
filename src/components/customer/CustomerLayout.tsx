@@ -1,12 +1,7 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-interface CustomerLayoutProps {
-  children: React.ReactNode;
-}
-
-const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
+const CustomerLayout: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackToEntry = () => {
@@ -28,7 +23,7 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
       {/* Main content */}
       <main>
-        {children}
+        <Outlet />
       </main>
     </div>
   );
