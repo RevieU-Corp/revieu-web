@@ -1,14 +1,13 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
-import { LoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
+import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import { HomePage } from '../features/home';
 import { PostPage, WriteReviewPage } from '../features/reviews';
 import { DiscoverPage } from '../features/discover';
 import { ProfilePage } from '../features/profile';
 
 // Common Components
-import EntryPage from '../components/common/EntryPage';
 
 // Customer Components
 import CustomerLayout from '../components/customer/CustomerLayout';
@@ -24,7 +23,8 @@ const AppRouter: React.FC = () => {
   return (
     <Routes>
       {/* Entry Point */}
-      <Route path="/" element={<EntryPage />} />
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/merchant/login" element={<MerchantLoginPage />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={<LoginPage />} />
