@@ -110,4 +110,4 @@ src/
 
 ## 📄 License
 
-This project is private and intended for internal use only1.
+This project is private and intended for internal use only2.
