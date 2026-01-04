@@ -143,7 +143,7 @@ const DiscoverPage: React.FC = () => {
   }, [filteredMerchants]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans max-w-sm mx-auto">
+    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
       {/* Sticky Header - 优化布局 */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 px-4 py-2 shadow-sm">
         <div className="flex items-center justify-between mb-2">

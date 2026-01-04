@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans">
+    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
       {/* Profile Header */}
       <ProfileHeader userData={userData} onLogout={handleLogout} />
 

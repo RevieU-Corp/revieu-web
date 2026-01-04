@@ -44,7 +44,7 @@ const LoginPage: React.FC = () => {
 
     return (
         <div
-            className="flex items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat"
+            className="flex items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat w-full"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop')" }}
         >
             <div className="w-full max-w-md p-8 space-y-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl">

@@ -19,7 +19,7 @@ const PostPage: React.FC = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full">
         <div className="text-center">
            <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
            <p className="text-gray-500">Loading post...</p>
@@ -29,7 +29,7 @@ const PostPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20">
+    <div className="min-h-screen bg-white flex flex-col pb-20 w-full">
       {/* Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-14 flex items-center justify-between z-20">
         <button 

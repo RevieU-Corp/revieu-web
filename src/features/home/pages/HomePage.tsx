@@ -7,7 +7,6 @@ import { useAutoScroll } from '../hooks/useAutoScroll';
 import { getPostCategoryTitle, showDevelopmentAlert } from '../utils/postUtils';
 import { activities, studentPosts } from '../constants/mockData';
 import { PostCategory } from '../types';
-import '../styles/HomePage.css';
 
 const HomePage: React.FC = () => {
   const [activePostCategory, setActivePostCategory] = useState<PostCategory>('recommend');
@@ -22,7 +21,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans max-w-sm mx-auto">
+    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 shadow-sm">
         <div className="flex items-center justify-between px-4 h-16 relative">
@@ -106,7 +105,7 @@ const HomePage: React.FC = () => {
           </div>
           <div 
             ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto px-3 pb-4 train-station-scroll"
+            className="flex gap-4 overflow-x-auto px-3 pb-4 no-scrollbar"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleMouseEnter}
@@ -128,25 +127,6 @@ const HomePage: React.FC = () => {
                 />
               </div>
             ))}
-          </div>
-          
-          {/* 滚动指示器 - 火车站风格 */}
-          <div className="flex justify-center items-center px-3 mt-2 gap-4">
-            <div className="flex gap-1">
-              {activities.map((_, index) => (
-                <div
-                  key={index}
-                  className="w-2 h-2 rounded-full bg-gradient-to-r from-[#990000] to-[#FF6B35] train-station-indicator"
-                  style={{
-                    animationDelay: `${index * 0.3}s`
-                  }}
-                />
-              ))}
-            </div>
-            <div className="text-xs text-gray-500 train-station-text flex items-center gap-1">
-              <span>🚂</span>
-              <span>Auto Scrolling</span>
-            </div>
           </div>
         </div>
 
