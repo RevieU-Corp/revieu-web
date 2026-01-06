@@ -9,14 +9,39 @@ import {
   Save,
   X,
   ExternalLink,
-  Trash2
+  Trash2,
+  Upload,
+  ImageIcon
 } from 'lucide-react';
 import InteractiveMap from '../components/InteractiveMap';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import { DEFAULT_MERCHANT_ASSETS } from '../constants/defaults';
 
+// TypeScript interfaces
+interface MenuItem {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  isAvailable: boolean;
+  image?: string;
+}
+
+interface StoreData {
+  name: string;
+  phone: string;
+  website: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  coverPhoto: string;
+  gallery: string[];
+  bio: string;
+  menu: MenuItem[];
+}
+
 // Mock data for McDonald's USC
-const mockStoreData = {
+const mockStoreData: StoreData = {
   name: "McDonald's - USC Figueroa",
   phone: "+1 (213) 749-1444",
   website: "https://www.mcdonalds.com/location/ca/los-angeles/3037-s-figueroa-st/",
@@ -32,7 +57,8 @@ const mockStoreData = {
       price: 5.99,
       description: "Double beef patties with special sauce, lettuce, cheese, pickles, onions on a sesame seed bun.",
       category: "Burgers",
-      isAvailable: true
+      isAvailable: true,
+      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop"
     },
     {
       id: 2,
@@ -40,7 +66,8 @@ const mockStoreData = {
       price: 3.49,
       description: "Golden, crispy potatoes fried to perfection.",
       category: "Sides",
-      isAvailable: true
+      isAvailable: true,
+      image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&h=200&fit=crop"
     },
     {
       id: 3,
@@ -48,7 +75,8 @@ const mockStoreData = {
       price: 4.29,
       description: "Creamy vanilla soft serve mixed with crunchy OREO pieces.",
       category: "Desserts",
-      isAvailable: true
+      isAvailable: true,
+      image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=200&fit=crop"
     }
   ]
 };
@@ -147,6 +175,45 @@ const StoreProfile: React.FC = () => {
         }));
       }
     });
+  };
+
+  const handleMenuItemImageUpload = (itemId: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a JPEG, PNG, or WebP image');
+        return;
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setStoreData(prev => ({
+          ...prev,
+          menu: prev.menu.map(item => 
+            item.id === itemId ? { ...item, image: result } : item
+          )
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveMenuItemImage = (itemId: number) => {
+    setStoreData(prev => ({
+      ...prev,
+      menu: prev.menu.map(item => 
+        item.id === itemId ? { ...item, image: undefined } : item
+      )
+    }));
   };
 
   const closeConfirmDialog = () => {
@@ -425,8 +492,13 @@ const StoreProfile: React.FC = () => {
 
         {/* Menu Items */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Menu & Products</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Menu & Products</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Add images to make your menu items more appealing to customers
+              </p>
+            </div>
             {isEditing && (
               <button className="flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
                 style={{ backgroundColor: '#FFBC0D' }}>
@@ -436,40 +508,112 @@ const StoreProfile: React.FC = () => {
             )}
           </div>
 
+          {isEditing && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Image Guidelines:</strong> Upload high-quality images (JPEG, PNG, or WebP) up to 5MB. 
+                Square images work best for consistent display.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4">
             {storeData.menu.map((item) => (
               <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryColors[item.category] || 'bg-gray-100 text-gray-800'}`}>
-                        {item.category}
-                      </span>
-                      {item.isAvailable && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          Available
-                        </span>
+                <div className="flex items-start gap-4">
+                  {/* Menu Item Image */}
+                  <div className="flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                      {item.image ? (
+                        <>
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                          {isEditing && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              <div className="flex gap-1">
+                                <label className="p-1.5 bg-white rounded-full text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors"
+                                  title="Change image">
+                                  <Edit3 size={12} />
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={(e) => handleMenuItemImageUpload(item.id, e)}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <button
+                                  onClick={() => handleRemoveMenuItemImage(item.id)}
+                                  className="p-1.5 bg-red-600 rounded-full text-white hover:bg-red-700 transition-colors"
+                                  title="Remove image"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          {isEditing ? (
+                            <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-gray-50 transition-colors">
+                              <Upload size={16} className="text-gray-400 mb-1" />
+                              <span className="text-xs text-gray-500 text-center px-1">Add Image</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={(e) => handleMenuItemImageUpload(item.id, e)}
+                                className="hidden"
+                              />
+                            </label>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-gray-400">
+                              <ImageIcon size={16} className="mb-1" />
+                              <span className="text-xs text-center">No Image</span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">{item.description}</p>
                   </div>
-                  <div className="text-right ml-4">
-                    <p className="text-xl font-bold text-gray-900">${item.price}</p>
-                    {isEditing && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                          <Edit3 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMenuItem(item.id)}
-                          className="p-1 text-red-400 hover:text-red-600 transition-colors"
-                          title="Delete menu item"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+
+                  {/* Menu Item Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryColors[item.category] || 'bg-gray-100 text-gray-800'}`}>
+                            {item.category}
+                          </span>
+                          {item.isAvailable && (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              Available
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-sm mb-2">{item.description}</p>
                       </div>
-                    )}
+                      <div className="text-right ml-4 flex-shrink-0">
+                        <p className="text-xl font-bold text-gray-900">${item.price}</p>
+                        {isEditing && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                              <Edit3 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMenuItem(item.id)}
+                              className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                              title="Delete menu item"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
