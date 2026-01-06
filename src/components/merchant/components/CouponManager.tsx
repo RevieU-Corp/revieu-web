@@ -10,6 +10,7 @@ interface Coupon {
   used: number;
   isActive: boolean;
   expiryDate: string;
+  description?: string;
 }
 
 interface CouponManagerProps {
@@ -39,7 +40,8 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
     name: '',
     type: '',
     quantity: 0,
-    expiryDate: ''
+    expiryDate: '',
+    description: ''
   });
 
   // Sync local state with props when modal opens
@@ -68,7 +70,8 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
       name: '',
       type: '',
       quantity: 0,
-      expiryDate: ''
+      expiryDate: '',
+      description: ''
     });
   };
 
@@ -78,7 +81,8 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
       name: coupon.name,
       type: coupon.type,
       quantity: coupon.quantity,
-      expiryDate: coupon.expiryDate
+      expiryDate: coupon.expiryDate,
+      description: coupon.description || ''
     });
   };
 
@@ -91,7 +95,8 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
         quantity: formData.quantity,
         used: 0,
         isActive: true,
-        expiryDate: formData.expiryDate
+        expiryDate: formData.expiryDate,
+        description: formData.description
       };
       updateLocalCoupons([...localCoupons, newCoupon]);
     } else if (editingCoupon) {
@@ -104,7 +109,7 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
     
     setIsCreating(false);
     setEditingCoupon(null);
-    setFormData({ name: '', type: '', quantity: 0, expiryDate: '' });
+    setFormData({ name: '', type: '', quantity: 0, expiryDate: '', description: '' });
   };
 
   const handleDeleteCoupon = (coupon: Coupon) => {
@@ -202,6 +207,16 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      placeholder="Describe the coupon details, terms, or special conditions..."
+                      rows={3}
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-4">
                   <button
@@ -217,7 +232,7 @@ const CouponManager: React.FC<CouponManagerProps> = ({ isOpen, onClose, coupons,
                     onClick={() => {
                       setIsCreating(false);
                       setEditingCoupon(null);
-                      setFormData({ name: '', type: '', quantity: 0, expiryDate: '' });
+                      setFormData({ name: '', type: '', quantity: 0, expiryDate: '', description: '' });
                     }}
                     className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
