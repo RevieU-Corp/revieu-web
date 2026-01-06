@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import BottomNavigation from './BottomNavigation';
 import VerificationModal from '../components/VerificationModal';
+import RedemptionButton from '../components/RedemptionButton';
 
 const MerchantLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -52,15 +53,19 @@ const MerchantLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      {/* Header with back button */}
+      {/* Header with back button and redemption */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <button
-          onClick={handleBackToEntry}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="text-sm font-medium">Back to Entry</span>
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleBackToEntry}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span className="text-sm font-medium">Back to Entry</span>
+          </button>
+          
+          <RedemptionButton />
+        </div>
       </header>
 
       {/* Main content area */}
