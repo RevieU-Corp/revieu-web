@@ -1,7 +1,7 @@
 import { ChatItem } from '../types/chat';
 import { mockChats } from './mockData';
 import { getAllChatSettings, deleteSettingsForChats } from './chatSettings';
-import { deleteMessagesForChats } from './messageStorage';
+import { deleteMessagesForChats, getMessagesForChatPersistent, saveMessagesForChat } from './messageStorage';
 
 const CHATS_STORAGE_KEY = 'merchant_all_chats';
 
@@ -22,7 +22,7 @@ export const getStoredChats = (): ChatItem[] => {
   try {
     const stored = localStorage.getItem(CHATS_STORAGE_KEY);
     let chats: ChatItem[];
-    
+
     if (stored) {
       chats = JSON.parse(stored);
     } else {
@@ -30,7 +30,7 @@ export const getStoredChats = (): ChatItem[] => {
       localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(mockChats));
       chats = mockChats;
     }
-    
+
     // Merge with settings
     const allSettings = getAllChatSettings();
     const chatsWithSettings = chats.map(chat => ({
@@ -38,16 +38,16 @@ export const getStoredChats = (): ChatItem[] => {
       isMuted: allSettings[chat.id]?.isMuted || false,
       isPinned: allSettings[chat.id]?.isPinned || false
     }));
-    
+
     // Sort: pinned chats first, then by timestamp
     return chatsWithSettings.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      
+
       // For same pin status, sort by timestamp (newest first)
       if (a.timestamp === 'now') return -1;
       if (b.timestamp === 'now') return 1;
-      
+
       // Simple timestamp comparison (in real app, use proper date parsing)
       return 0;
     });
@@ -88,20 +88,19 @@ export const updateChatLastMessage = (chatId: string, lastMessage: string, times
     }
     return chat;
   });
-  
+
   // Move the updated chat to the top
   const updatedChat = updatedChats.find(chat => chat.id === chatId);
   const otherChats = updatedChats.filter(chat => chat.id !== chatId);
   const finalChats = updatedChat ? [updatedChat, ...otherChats] : updatedChats;
-  
+
   saveAllChats(finalChats);
-  
+
   // Ensure message storage is in sync - if we're updating lastMessage but there are no messages in storage,
   // we should create a message entry to maintain consistency
   try {
-    const { getMessagesForChatPersistent, saveMessagesForChat } = require('./messageStorage');
     const existingMessages = getMessagesForChatPersistent(chatId);
-    
+
     // If no messages exist but we're setting a meaningful lastMessage, create a placeholder
     if (existingMessages.length === 0 && lastMessage && shouldCreateSyncMessage(lastMessage)) {
       const placeholderMessage = {
@@ -115,13 +114,13 @@ export const updateChatLastMessage = (chatId: string, lastMessage: string, times
         type: 'text' as const,
         isRead: true
       };
-      
+
       saveMessagesForChat(chatId, [placeholderMessage]);
     }
   } catch (error) {
     console.error('Error syncing message storage with chat metadata:', error);
   }
-  
+
   return finalChats;
 };
 
@@ -129,7 +128,7 @@ export const updateChatLastMessage = (chatId: string, lastMessage: string, times
 export const searchStoredChats = (query: string): ChatItem[] => {
   const allChats = getStoredChats(); // This now includes settings
   if (!query.trim()) return allChats;
-  
+
   return allChats.filter(chat =>
     chat.name.toLowerCase().includes(query.toLowerCase()) ||
     chat.lastMessage.toLowerCase().includes(query.toLowerCase())
@@ -161,11 +160,11 @@ export const deleteMultipleChats = (chatIds: string[]): ChatItem[] => {
       const chats: ChatItem[] = JSON.parse(storedChats);
       const updatedChats = chats.filter(chat => !chatIds.includes(chat.id));
       localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(updatedChats));
-      
+
       // Clean up related data
       deleteSettingsForChats(chatIds);
       deleteMessagesForChats(chatIds);
-      
+
       return getStoredChats(); // Return updated chats with settings
     }
     return getStoredChats();
