@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
-import { BottomNav } from '../../../components/layout';
-import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget } from '../widgets';
+import { BottomNav } from '../layout';
+import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget } from '../components';
 import { filterMerchantsByCategory } from '../utils/categoryUtils';
 import { generateRecommendations } from '../utils/recommendationUtils';
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../constants/categories';

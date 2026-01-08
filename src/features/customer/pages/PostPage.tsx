@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, Share2, MoreHorizontal, Send } from 'lucide-react';
-import { MOCK_POSTS } from '../constants/mockData';
+import { MOCK_POSTS } from '../constants/index';
 import { PostData } from '../types';
 
 const PostPage: React.FC = () => {

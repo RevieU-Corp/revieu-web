@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BottomNav } from '../../../components/layout';
+import { BottomNav } from '../layout';
 import { useAuth } from '../../../contexts/AuthContext';
-import { StudentPost } from '../../home/components';
-import { ProfileHeader, ProfileTabs, SavedPlaceCard } from '../components';
-import { userData, userPosts, savedPlaces } from '../constants/mockData';
-import { ProfileTab } from '../types';
+import { StudentPost, ProfileHeader, ProfileTabs, SavedPlaceCard } from '../components';
+import { userData, userPosts, savedPlaces } from '../constants/index';
+import { ProfileTab } from '../types/index';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,9 +40,9 @@ const ProfilePage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {savedPlaces.map(place => (
-              <SavedPlaceCard 
-                key={place.id} 
-                place={place} 
+              <SavedPlaceCard
+                key={place.id}
+                place={place}
                 onClick={handleSavedPlaceClick}
               />
             ))}

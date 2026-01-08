@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { BottomNav, FAB } from '../../../components/layout';
+import { BottomNav, FAB } from '../layout';
 import { RangeSelector } from '../../../components/common';
 import { StudentPost, ActivityCard, CityLocationButton } from '../components';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { getPostCategoryTitle, showDevelopmentAlert } from '../utils/postUtils';
-import { activities, studentPosts } from '../constants/mockData';
+import { activities, studentPosts } from '../constants/index';
 import { PostCategory } from '../types';
 
 const HomePage: React.FC = () => {

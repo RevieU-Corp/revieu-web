@@ -1,4 +1,4 @@
 // Components exports
 export * from './ui';
-export * from './layout';
+// layout moved to features/customer/layout
 export * from './common';

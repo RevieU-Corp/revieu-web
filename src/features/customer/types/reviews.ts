@@ -1,16 +1,7 @@
 // Reviews页面相关的类型定义
 
 // Legacy types (keeping for backward compatibility)
-export interface PostData {
-  id: number;
-  avatar: string;
-  username: string;
-  timestamp: string;
-  text: string;
-  image?: string;
-  likes: number;
-  comments: number;
-}
+// PostData moved to index.ts
 
 export interface CommentData {
   id: number;

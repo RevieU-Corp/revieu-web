@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, User, Hash, X, Plus } from 'lucide-react';
-import { SmartReviewProvider, useReviewContext } from '../contexts';
-import { CombinedRatingComponent, ImageUploadWrapper } from '../components';
-import { BusinessCategory } from '../types';
+import { SmartReviewProvider, useReviewContext } from '../contexts/index';
+import { CombinedRatingComponent, ImageUploadWrapper } from '../components/index';
+import { BusinessCategory } from '../types/index';
 
 // Internal component that uses the review context
 const WriteReviewForm: React.FC = () => {
@@ -19,13 +19,13 @@ const WriteReviewForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate using context
     actions.validateForm();
-    
+
     const hasErrors = Object.keys(state.validationErrors).length > 0;
     const hasNoTags = (state.reviewData.tags || []).length === 0;
-    
+
     if (hasErrors || hasNoTags) {
       return;
     }
@@ -43,7 +43,7 @@ const WriteReviewForm: React.FC = () => {
 
   const submitReview = () => {
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -67,7 +67,7 @@ const WriteReviewForm: React.FC = () => {
   const handleAddTag = (tag: string) => {
     const currentTags = state.reviewData.tags || [];
     if (currentTags.length >= maxTags) return;
-    
+
     const formattedTag = tag.startsWith('#') ? tag : `#${tag}`;
     if (!currentTags.includes(formattedTag)) {
       actions.addTag(formattedTag);
@@ -83,7 +83,7 @@ const WriteReviewForm: React.FC = () => {
       e.preventDefault();
       const currentTags = state.reviewData.tags || [];
       if (currentTags.length >= maxTags) return;
-      
+
       const trimmedTag = customTagInput.trim();
       if (trimmedTag && !currentTags.includes(`#${trimmedTag}`)) {
         handleAddTag(trimmedTag);
@@ -92,23 +92,23 @@ const WriteReviewForm: React.FC = () => {
     }
   };
 
-  const isFormValid = (state.reviewData.overallRating || 0) > 0 && 
-                     state.reviewData.reviewText && 
-                     state.reviewData.reviewText.trim().length >0 &&
-                     (state.reviewData.tags || []).length > 0;
+  const isFormValid = (state.reviewData.overallRating || 0) > 0 &&
+    state.reviewData.reviewText &&
+    state.reviewData.reviewText.trim().length > 0 &&
+    (state.reviewData.tags || []).length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header - Xiaomi style with subtle shadow */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 flex items-center justify-between z-20 shadow-sm">
         <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="p-2.5 -ml-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          
+
           {/* User Avatar - Xiaomi style */}
           <button
             onClick={handleUserProfileClick}
@@ -117,16 +117,15 @@ const WriteReviewForm: React.FC = () => {
             <User className="w-4 h-4 text-white" />
           </button>
         </div>
-        
+
         <h1 className="font-semibold text-gray-800 text-lg">Write Review</h1>
         <button
           onClick={handleSubmit}
           disabled={!isFormValid || isSubmitting}
-          className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-            isFormValid && !isSubmitting
-              ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg hover:scale-105 active:scale-95'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
+          className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${isFormValid && !isSubmitting
+            ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg hover:scale-105 active:scale-95'
+            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
         >
           {isSubmitting ? 'Publishing...' : 'Publish'}
         </button>
@@ -142,7 +141,7 @@ const WriteReviewForm: React.FC = () => {
             </label>
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
           </div>
-          
+
           <ImageUploadWrapper
             images={state.reviewData.images || []}
             onImagesChange={actions.updateImages}
@@ -166,9 +165,9 @@ const WriteReviewForm: React.FC = () => {
             <label className="text-sm font-medium text-gray-700">
               Share Your Experience
             </label>
-              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
           </div>
-          
+
           <textarea
             value={state.reviewData.reviewText || ''}
             onChange={(e) => actions.updateText(e.target.value)}
@@ -177,16 +176,15 @@ const WriteReviewForm: React.FC = () => {
             maxLength={200}
             className="w-full p-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000] resize-none text-sm leading-relaxed transition-all duration-200"
           />
-          
+
           <div className="flex justify-between items-center mt-1">
             <div className="flex items-center space-x-1.5">
-              <span className={`text-xs font-medium ${
-                (state.reviewData.characterCount || 0) < 1
-                  ? 'text-red-500' 
-                  : (state.reviewData.characterCount || 0) >= 20 
-                    ? 'text-green-500' 
-                    : 'text-gray-500'
-              }`}>
+              <span className={`text-xs font-medium ${(state.reviewData.characterCount || 0) < 1
+                ? 'text-red-500'
+                : (state.reviewData.characterCount || 0) >= 20
+                  ? 'text-green-500'
+                  : 'text-gray-500'
+                }`}>
                 {state.reviewData.characterCount || 0}/200
               </span>
               {(state.reviewData.characterCount || 0) >= 20 && (
@@ -196,7 +194,7 @@ const WriteReviewForm: React.FC = () => {
               )}
             </div>
           </div>
-          
+
           {state.validationErrors.text && (
             <p className="text-sm text-red-500 mt-2 flex items-center space-x-1">
               <span className="w-0.5 h-0.5 bg-red-500 rounded-full"></span>
@@ -216,11 +214,11 @@ const WriteReviewForm: React.FC = () => {
                 {(state.reviewData.tags || []).length}/{maxTags}
               </span>
             </div>
-            
+
             {/* Selected Tags - Very compact */}
             {state.reviewData.tags && state.reviewData.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
-                {state.reviewData.tags.map((tag, index) => (
+                {(state.reviewData.tags || []).map((tag: string, index: number) => (
                   <div
                     key={index}
                     className="inline-flex items-center bg-gradient-to-r from-[#990000] to-[#770000] text-white px-2 py-0.5 rounded-full text-xs font-medium shadow-sm"
@@ -248,13 +246,12 @@ const WriteReviewForm: React.FC = () => {
                     key={tag}
                     onClick={() => isSelected ? handleRemoveTag(formattedTag) : handleAddTag(tag)}
                     disabled={!isSelected && !canAdd}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white border-[#990000] shadow-sm'
-                        : canAdd
-                          ? 'bg-white text-gray-600 border-gray-200 hover:border-[#990000] hover:text-[#990000] hover:bg-[#990000]/5'
-                          : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    }`}
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-all duration-200 ${isSelected
+                      ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white border-[#990000] shadow-sm'
+                      : canAdd
+                        ? 'bg-white text-gray-600 border-gray-200 hover:border-[#990000] hover:text-[#990000] hover:bg-[#990000]/5'
+                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      }`}
                   >
                     #{tag}
                   </button>
@@ -289,17 +286,16 @@ const WriteReviewForm: React.FC = () => {
                     }
                   }}
                   disabled={!customTagInput.trim()}
-                  className={`p-1.5 rounded-lg transition-all duration-200 ${
-                    customTagInput.trim()
-                      ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-md hover:scale-105'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className={`p-1.5 rounded-lg transition-all duration-200 ${customTagInput.trim()
+                    ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-md hover:scale-105'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
                   <Plus className="w-2.5 h-2.5" />
                 </button>
               </div>
             )}
-            
+
             <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
               Tags help others discover your review (max {maxTags})
             </p>
@@ -313,7 +309,7 @@ const WriteReviewForm: React.FC = () => {
             <span className="text-sm font-medium text-gray-700">Rating</span>
             <span className="text-xs text-red-400 bg-red-50 px-2 py-0.5 rounded-full">Required</span>
           </div>
-          
+
           <CombinedRatingComponent
             overallRating={state.reviewData.overallRating || 0}
             detailedRatings={state.reviewData.detailedRatings || { quality: 0, environment: 0, service: 0 }}
@@ -355,7 +351,7 @@ const WriteReviewForm: React.FC = () => {
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
                   Posts with photos earn more points and help other users make better decisions
                 </p>
-                
+
                 <div className="space-y-3">
                   <button
                     onClick={handleGoBackToAddPhoto}
