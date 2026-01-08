@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { config } from '../../../config';
 import { AlertCircle } from 'lucide-react';
+import { PATHS } from '../../../routes/paths';
+import { authService } from '../api/authService';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const GoogleIcon = () => (
@@ -28,7 +29,7 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            navigate('/home');
+            navigate(PATHS.CUSTOMER.HOME);
         } catch (err: any) {
             console.error('Login error:', err);
             const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -39,7 +40,7 @@ const LoginPage: React.FC = () => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = `${config.apiBaseUrl}/auth/google/login`;
+        window.location.href = authService.getGoogleLoginUrl();
     };
 
     return (
@@ -96,7 +97,7 @@ const LoginPage: React.FC = () => {
                     </div>
 
                     <div className="text-right">
-                        <Link to="/forgot-password" className="text-sm font-medium text-red-600 hover:text-red-500">
+                        <Link to={PATHS.AUTH.FORGOT_PASSWORD} className="text-sm font-medium text-red-600 hover:text-red-500">
                             Forgot password?
                         </Link>
                     </div>
@@ -143,13 +144,13 @@ const LoginPage: React.FC = () => {
                 <div className="pt-4 flex flex-col space-y-4 items-center">
                     <div className="text-sm">
                         <span className="text-gray-600">Don't have an account? </span>
-                        <Link to="/register" className="font-medium text-red-600 hover:text-red-500">
+                        <Link to={PATHS.AUTH.REGISTER} className="font-medium text-red-600 hover:text-red-500">
                             Sign up
                         </Link>
                     </div>
 
                     <button
-                        onClick={() => navigate('/merchant/login')}
+                        onClick={() => navigate(PATHS.MERCHANT.LOGIN)}
                         className="text-sm font-semibold text-gray-700 hover:text-green-600 flex items-center gap-1 transition-colors"
                     >
                         我是商家 (I am a Merchant) →
