@@ -18,6 +18,8 @@ import MerchantDashboard from '../components/merchant/pages/MerchantDashboard';
 import AdManager from '../components/merchant/pages/AdManager';
 import StoreProfile from '../components/merchant/pages/StoreProfile';
 import Messages from '../components/merchant/pages/Messages';
+import ChatDetail from '../components/merchant/pages/ChatDetail';
+import SearchMessages from '../components/merchant/pages/SearchMessages';
 import Notifications from '../components/merchant/pages/Notifications';
 
 const AppRouter: React.FC = () => {
@@ -58,6 +60,8 @@ const AppRouter: React.FC = () => {
         <Route path="ads" element={<AdManager />} />
         <Route path="profile" element={<StoreProfile />} />
         <Route path="messages" element={<Messages />} />
+        <Route path="messages/:chatId" element={<ChatDetail />} />
+        <Route path="messages/:chatId/search" element={<SearchMessages />} />
         <Route path="notifications" element={<Notifications />} />
       </Route>
     </Routes>
