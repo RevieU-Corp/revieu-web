@@ -95,16 +95,28 @@ We use **GitHub Actions** for our automated pipeline:
 
 ## 📂 Project Structure
 
-```text
-src/
-├── app/            # Application entry and routing
-├── components/     # Reusable UI components (Common, Customer, Merchant)
-├── contexts/       # React Contexts (Auth, etc.)
-├── features/       # Feature-specific components and logic
-├── hooks/          # Custom React hooks
-├── services/       # API services
-└── styles/         # Global styles and Tailwind configuration
-```
+This project follows a **Feature-Based Architecture**, designed for high scalability and maintainability.
+
+### Global Directory Map
+- `src/api/`: Global API client configuration (Axios instances, interceptors).
+- `src/app/`: Application entry points, root providers, and main `App.tsx`.
+- `src/assets/`: Static assets (images, fonts, global styles).
+- `src/components/`: **Pure UI System**.
+  - `ui/`: Atomic components (Button, Input, Card) - pure and state-free.
+  - `layout/`: Global structure components (Navbar, Sidebar, Page Layouts).
+  - `common/`: Shared business-agnostic components.
+- `src/config/`: Environment-specific configurations and global constants.
+- `src/contexts/`: Global state management via React Context.
+- `src/features/`: **Core Business Modules**. Each feature is self-contained:
+  - `api/`: Module-specific service calls and API logic.
+  - `components/`: Internal components used only within this feature.
+  - `pages/`: Route-level page components.
+  - `types/`: Domain-specific TypeScript models.
+- `src/routes/`: Routing configuration and path constants (`paths.ts`).
+- `src/types/`: Global, cross-feature TypeScript definitions.
+
+### Working with Features
+When adding new functionality (e.g., a "Product Gallery"), create a new folder in `src/features/product-gallery/`. This ensures that all logic, UI, and types related to that feature are encapsulated and easy to find.
 
 ---
 
