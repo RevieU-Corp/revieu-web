@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import axios from 'axios';
-import { config } from '../../../config';
+import { PATHS } from '../../../routes/paths';
+import { authService } from '../api/authService';
+
 
 const RegisterPage: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -48,7 +49,7 @@ const RegisterPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const validationError = validateForm();
         if (validationError) {
             setError(validationError);
@@ -59,9 +60,8 @@ const RegisterPage: React.FC = () => {
         setError('');
 
         try {
-            const registerUrl = `${config.apiBaseUrl}${config.endpoints.register}`;
-            console.log(`Attempting registration via: ${registerUrl}`);
-            
+            setError('');
+
             // Construct payload (exclude confirmPassword)
             const payload = {
                 username: formData.username,
@@ -69,17 +69,17 @@ const RegisterPage: React.FC = () => {
                 password: formData.password
             };
 
-            const response = await axios.post(registerUrl, payload);
-            
+            const response = await authService.register(payload);
+
             console.log('Registration response:', response.data);
 
             if (response.status === 201 || response.data.code === 0) {
                 // Success
                 // In a real app, you might want to show a success message about email verification
                 // For now, navigate to login
-                navigate('/'); 
+                navigate(PATHS.AUTH.LOGIN);
             } else {
-                 setError(response.data.message || 'Registration failed.');
+                setError(response.data.message || 'Registration failed.');
             }
         } catch (err: any) {
             console.error('Registration error:', err);
@@ -91,7 +91,7 @@ const RegisterPage: React.FC = () => {
     };
 
     return (
-        <div 
+        <div
             className="flex flex-col items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat py-10"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop')" }}
         >
@@ -205,7 +205,7 @@ const RegisterPage: React.FC = () => {
                 <div className="text-center pt-2">
                     <p className="text-sm text-gray-600">
                         Already have an account?{' '}
-                        <Link to="/" className="font-bold text-red-600 hover:text-red-500 hover:underline">
+                        <Link to={PATHS.AUTH.LOGIN} className="font-bold text-red-600 hover:text-red-500 hover:underline">
                             Sign in
                         </Link>
                     </p>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail, CheckCircle, AlertCircle } from 'lucide-react';
-import { config } from '../../../config';
-import axios from 'axios';
+import { PATHS } from '../../../routes/paths';
+import { authService } from '../api/authService';
 
 const ForgotPasswordPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -17,9 +17,7 @@ const ForgotPasswordPage: React.FC = () => {
 
         try {
             // In a real app, this would call your password reset API
-            const response = await axios.post(`${config.apiBaseUrl}/auth/forgot-password`, {
-                email: email
-            });
+            const response = await authService.forgotPassword(email);
 
             console.log('Password reset email sent:', response.data);
             setIsSuccess(true);
@@ -60,7 +58,7 @@ const ForgotPasswordPage: React.FC = () => {
                             Try Different Email
                         </button>
                         <Link
-                            to="/login"
+                            to={PATHS.AUTH.LOGIN}
                             className="block w-full px-6 py-3 text-sm font-medium text-white bg-[#990000] rounded-lg hover:bg-[#770000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition text-center"
                         >
                             Back to Login
@@ -79,7 +77,7 @@ const ForgotPasswordPage: React.FC = () => {
             <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl max-w-md w-full">
                 <div className="flex items-center mb-6">
                     <Link
-                        to="/login"
+                        to={PATHS.AUTH.LOGIN}
                         className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
@@ -124,9 +122,8 @@ const ForgotPasswordPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading || !email.trim()}
-                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#990000] hover:bg-[#770000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out ${
-                            isLoading || !email.trim() ? 'opacity-70 cursor-not-allowed' : ''
-                        }`}
+                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#990000] hover:bg-[#770000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out ${isLoading || !email.trim() ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
                     >
                         {isLoading ? (
                             <span className="flex items-center gap-2">
@@ -144,7 +141,7 @@ const ForgotPasswordPage: React.FC = () => {
 
                 <div className="mt-6 text-center">
                     <Link
-                        to="/login"
+                        to={PATHS.AUTH.LOGIN}
                         className="text-sm font-medium text-[#990000] hover:text-[#770000]"
                     >
                         Remember your password? Sign in
