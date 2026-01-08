@@ -21,6 +21,8 @@ export const PATHS = {
         ADS: '/merchant/ads',
         PROFILE: '/merchant/profile',
         MESSAGES: '/merchant/messages',
+        CHAT_DETAIL: '/merchant/messages/:chatId',
+        CHAT_SEARCH: '/merchant/messages/:chatId/search',
         NOTIFICATIONS: '/merchant/notifications',
     }
 };

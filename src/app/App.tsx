@@ -3,15 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
-import { HomePage } from '../features/home';
-import { PostPage, WriteReviewPage } from '../features/reviews';
-import { DiscoverPage } from '../features/discover';
-import { ProfilePage } from '../features/profile';
-
-// Common Components
-
-// Customer Components
-import CustomerLayout from '../components/layout/CustomerLayout';
+import { HomePage, DiscoverPage, ProfilePage, PostPage, WriteReviewPage, CustomerLayout } from '../features/customer';
 
 // Merchant Portal Components
 import MerchantLayout from '../features/merchant/layout/MerchantLayout';
@@ -19,6 +11,8 @@ import MerchantDashboard from '../features/merchant/pages/MerchantDashboard';
 import AdManager from '../features/merchant/pages/AdManager';
 import StoreProfile from '../features/merchant/pages/StoreProfile';
 import Messages from '../features/merchant/pages/Messages';
+import ChatDetail from '../features/merchant/pages/ChatDetail';
+import SearchMessages from '../features/merchant/pages/SearchMessages';
 import Notifications from '../features/merchant/pages/Notifications';
 
 const AppRouter: React.FC = () => {
@@ -50,12 +44,13 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.MERCHANT.ADS} element={<AdManager />} />
         <Route path={PATHS.MERCHANT.PROFILE} element={<StoreProfile />} />
         <Route path={PATHS.MERCHANT.MESSAGES} element={<Messages />} />
+        <Route path={PATHS.MERCHANT.CHAT_DETAIL} element={<ChatDetail />} />
+        <Route path={PATHS.MERCHANT.CHAT_SEARCH} element={<SearchMessages />} />
         <Route path={PATHS.MERCHANT.NOTIFICATIONS} element={<Notifications />} />
       </Route>
     </Routes>
   );
 };
-
 const App: React.FC = () => {
   return (
     <AuthProvider>
