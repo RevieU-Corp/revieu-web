@@ -13,7 +13,6 @@ import { syncMessageStorageWithChatMetadata } from '../utils/messageStorage';
 const Messages: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [allChats, setAllChats] = useState<ChatItem[]>([]);
   const [filteredChats, setFilteredChats] = useState<ChatItem[]>([]);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -34,7 +33,6 @@ const Messages: React.FC = () => {
     syncMessageStorageWithChatMetadata();
     
     const storedChats = getStoredChats();
-    setAllChats(storedChats);
     setFilteredChats(storedChats);
   }, []);
 
@@ -42,7 +40,6 @@ const Messages: React.FC = () => {
   useEffect(() => {
     const handleStorageChange = () => {
       const updatedChats = getStoredChats();
-      setAllChats(updatedChats);
       // Re-apply current search filter
       if (searchQuery) {
         const filtered = searchStoredChats(searchQuery);
@@ -134,8 +131,7 @@ const Messages: React.FC = () => {
     );
 
     if (confirmed) {
-      const updatedChats = deleteMultipleChats(Array.from(selectedChatIds));
-      setAllChats(updatedChats);
+      deleteMultipleChats(Array.from(selectedChatIds));
       
       // Re-apply search filter
       const filtered = searchStoredChats(searchQuery);
@@ -166,8 +162,7 @@ const Messages: React.FC = () => {
     };
     
     // Add to persistent storage
-    const updatedChats = addNewChat(newGroup);
-    setAllChats(updatedChats);
+    addNewChat(newGroup);
     
     // Apply current search filter to the updated chats
     const filtered = searchStoredChats(searchQuery);

@@ -17,7 +17,6 @@ const DeleteModeHeader: React.FC<DeleteModeHeaderProps> = ({
   onDelete,
   onSelectAll,
   onDeselectAll,
-  totalCount,
   isAllSelected
 }) => {
   return (

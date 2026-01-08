@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { 
   initializeMessagesForChat, 
-  syncMessageStorageWithChatMetadata,
-  getStoredMessages,
-  saveMessagesForChat,
-  forceSyncChatAndMessages
+  syncMessageStorageWithChatMetadata
 } from '../messageStorage';
 import { ChatMessage } from '../../types/chat';
 

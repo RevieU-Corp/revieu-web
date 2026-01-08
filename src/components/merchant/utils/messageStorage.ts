@@ -71,20 +71,20 @@ export const syncMessageStorageWithChatMetadata = (): void => {
     const chats = JSON.parse(storedChats);
     const allMessages = getStoredMessages();
     
-    chats.forEach((chat: any) => {
-      const chatId = chat.id;
+    chats.forEach((chatData: any) => {
+      const chatId = chatData.id;
       const existingMessages = allMessages[chatId] || [];
       
       // If chat has a meaningful lastMessage but no messages in storage, create a reconstructed message
-      if (existingMessages.length === 0 && chat.lastMessage && shouldReconstructMessage(chat.lastMessage)) {
+      if (existingMessages.length === 0 && chatData.lastMessage && shouldReconstructMessage(chatData.lastMessage)) {
         const reconstructedMessage: ChatMessage = {
           id: `sync_${Date.now()}_${chatId}`,
           chatId: chatId,
-          senderId: determineMessageSender(chatId, chat),
-          senderName: determineMessageSenderName(chatId, chat),
-          senderAvatar: chat.avatar || '',
-          content: chat.lastMessage,
-          timestamp: chat.timestamp || 'recently',
+          senderId: determineMessageSender(chatId),
+          senderName: determineMessageSenderName(chatId, chatData),
+          senderAvatar: chatData.avatar || '',
+          content: chatData.lastMessage,
+          timestamp: chatData.timestamp || 'recently',
           type: 'text',
           isRead: true
         };
@@ -121,18 +121,18 @@ export const initializeMessagesForChat = (chatId: string, mockMessages: ChatMess
     const storedChats = localStorage.getItem(chatStorageKey);
     if (storedChats) {
       const chats = JSON.parse(storedChats);
-      const chat = chats.find((c: any) => c.id === chatId);
+      const chatData = chats.find((c: any) => c.id === chatId);
       
       // If chat exists and has a meaningful lastMessage, create a reconstructed message
-      if (chat && chat.lastMessage && shouldReconstructMessage(chat.lastMessage)) {
+      if (chatData && chatData.lastMessage && shouldReconstructMessage(chatData.lastMessage)) {
         const reconstructedMessage: ChatMessage = {
           id: `reconstructed_${Date.now()}`,
           chatId: chatId,
-          senderId: determineMessageSender(chatId, chat),
-          senderName: determineMessageSenderName(chatId, chat),
-          senderAvatar: chat.avatar || '',
-          content: chat.lastMessage,
-          timestamp: chat.timestamp || 'recently',
+          senderId: determineMessageSender(chatId),
+          senderName: determineMessageSenderName(chatId, chatData),
+          senderAvatar: chatData.avatar || '',
+          content: chatData.lastMessage,
+          timestamp: chatData.timestamp || 'recently',
           type: 'text',
           isRead: true
         };
@@ -163,7 +163,7 @@ const shouldReconstructMessage = (lastMessage: string): boolean => {
 };
 
 // Helper function to determine the sender ID for reconstructed messages
-const determineMessageSender = (chatId: string, chat: any): string => {
+const determineMessageSender = (chatId: string): string => {
   if (chatId.startsWith('group_')) {
     return 'unknown'; // For groups, we don't know who sent the last message
   }
@@ -173,13 +173,13 @@ const determineMessageSender = (chatId: string, chat: any): string => {
 };
 
 // Helper function to determine the sender name for reconstructed messages
-const determineMessageSenderName = (chatId: string, chat: any): string => {
+const determineMessageSenderName = (chatId: string, chatData: any): string => {
   if (chatId.startsWith('group_')) {
     return 'Unknown'; // For groups, we don't know who sent the last message
   }
   
   // For 1-on-1 chats, use the chat name
-  return chat.name || 'Unknown';
+  return chatData.name || 'Unknown';
 };
 
 // Force sync between chat metadata and message storage (useful for debugging)

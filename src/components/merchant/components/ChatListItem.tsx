@@ -1,8 +1,6 @@
 import React from 'react';
 import { BellOff, Pin, Check } from 'lucide-react';
 
-import { ChatItem } from '../types/chat';
-
 interface ChatListItemProps {
   id: string;
   name: string;
