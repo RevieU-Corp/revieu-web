@@ -144,7 +144,7 @@ const DiscoverPage: React.FC = () => {
   return (
     <div className="bg-[#FAFAFA] pb-24 font-sans w-full">
       {/* Sticky Header - 优化布局 */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 pl-14 pr-4 py-2 shadow-sm">
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 px-4 py-2 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-[#990000]">Discover</h1>
 
