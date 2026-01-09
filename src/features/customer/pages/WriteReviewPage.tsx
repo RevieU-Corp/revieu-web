@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, User, Hash, X, Plus } from 'lucide-react';
+import { Camera, Hash, X, Plus } from 'lucide-react';
 import { SmartReviewProvider, useReviewContext } from '../contexts/index';
 import { CombinedRatingComponent, ImageUploadWrapper } from '../components/index';
 import { BusinessCategory } from '../types/index';
@@ -60,10 +60,6 @@ const WriteReviewForm: React.FC = () => {
     setShowPhotoPrompt(false);
   };
 
-  const handleUserProfileClick = () => {
-    navigate('/profile');
-  };
-
   const handleAddTag = (tag: string) => {
     const currentTags = state.reviewData.tags || [];
     if (currentTags.length >= maxTags) return;
@@ -99,36 +95,23 @@ const WriteReviewForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header - Xiaomi style with subtle shadow */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 flex items-center justify-between z-20 shadow-sm">
-        <div className="flex items-center space-x-4">
+      {/* Header - Xiaomi style with subtle shadow - Back button removed as it is now in layout */}
+      {/* Header - Center aligned title with symmetric padding */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 grid grid-cols-3 items-center z-20 shadow-sm">
+        <div /> {/* Spacer for floating back button */}
+        <h1 className="font-semibold text-gray-800 text-lg text-center truncate">Write Review</h1>
+        <div className="flex justify-end">
           <button
-            onClick={() => navigate(-1)}
-            className="p-2.5 -ml-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+            onClick={handleSubmit}
+            disabled={!isFormValid || isSubmitting}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isFormValid && !isSubmitting
+              ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg active:scale-95'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
           >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          {/* User Avatar - Xiaomi style */}
-          <button
-            onClick={handleUserProfileClick}
-            className="w-9 h-9 bg-gradient-to-br from-[#990000] to-[#770000] rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <User className="w-4 h-4 text-white" />
+            {isSubmitting ? '...' : 'Publish'}
           </button>
         </div>
-
-        <h1 className="font-semibold text-gray-800 text-lg">Write Review</h1>
-        <button
-          onClick={handleSubmit}
-          disabled={!isFormValid || isSubmitting}
-          className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${isFormValid && !isSubmitting
-            ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg hover:scale-105 active:scale-95'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-        >
-          {isSubmitting ? 'Publishing...' : 'Publish'}
-        </button>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto">

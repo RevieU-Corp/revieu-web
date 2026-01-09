@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PATHS } from '../../../routes/paths';
 import { Search, Plus, Minus } from 'lucide-react';
 import ChatListItem from '../components/ChatListItem';
 import SearchBar from '../components/SearchBar';
@@ -31,7 +32,7 @@ const Messages: React.FC = () => {
   useEffect(() => {
     // Sync message storage with chat metadata to ensure consistency
     syncMessageStorageWithChatMetadata();
-    
+
     const storedChats = getStoredChats();
     setFilteredChats(storedChats);
   }, []);
@@ -52,7 +53,7 @@ const Messages: React.FC = () => {
     // Listen for custom events from ChatDetail component
     const handleChatUpdated = handleStorageChange;
     window.addEventListener('chatUpdated', handleChatUpdated);
-    
+
     return () => {
       window.removeEventListener('chatUpdated', handleChatUpdated);
     };
@@ -132,15 +133,15 @@ const Messages: React.FC = () => {
 
     if (confirmed) {
       deleteMultipleChats(Array.from(selectedChatIds));
-      
+
       // Re-apply search filter
       const filtered = searchStoredChats(searchQuery);
       setFilteredChats(filtered);
-      
+
       // Exit delete mode
       setIsDeleteMode(false);
       setSelectedChatIds(new Set());
-      
+
       // Show success toast
       setToast({
         message: `${selectedChatIds.size} chat${selectedChatIds.size !== 1 ? 's' : ''} deleted successfully`,
@@ -160,10 +161,10 @@ const Messages: React.FC = () => {
       timestamp: 'now',
       unreadCount: 0
     };
-    
+
     // Add to persistent storage
     addNewChat(newGroup);
-    
+
     // Apply current search filter to the updated chats
     const filtered = searchStoredChats(searchQuery);
     setFilteredChats(filtered);
@@ -189,7 +190,7 @@ const Messages: React.FC = () => {
 
   const handleChatClick = (chatId: string) => {
     if (!isDeleteMode) {
-      navigate(`/merchant/messages/${chatId}`);
+      navigate(PATHS.MERCHANT.CHAT(chatId));
     }
   };
 
@@ -200,7 +201,7 @@ const Messages: React.FC = () => {
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
-            
+
             {/* Search Bar */}
             <div className="flex-1 max-w-md mx-4">
               <SearchBar
@@ -220,7 +221,7 @@ const Messages: React.FC = () => {
               >
                 <Minus className="w-5 h-5" />
               </button>
-              
+
               {/* Plus Button */}
               <button
                 onClick={handleNewChat}

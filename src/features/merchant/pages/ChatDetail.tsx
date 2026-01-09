@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { PATHS } from '../../../routes/paths';
 import { ArrowLeft, MoreVertical } from 'lucide-react';
 import { ChatItem, ChatMessage, CURRENT_USER } from '../types/chat';
 import { mockChats, getMessagesForChat } from '../utils/mockData';
@@ -14,7 +15,7 @@ const ChatDetail: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const [chat, setChat] = useState<ChatItem | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +44,7 @@ const ChatDetail: React.FC = () => {
 
   useEffect(() => {
     if (!chatId) {
-      navigate('/merchant/messages');
+      navigate(PATHS.MERCHANT.MESSAGES);
       return;
     }
 
@@ -52,7 +53,7 @@ const ChatDetail: React.FC = () => {
 
     // Try to find the chat in mockChats first
     let foundChat = mockChats.find(c => c.id === chatId);
-    
+
     // If not found in mockChats, check localStorage for all chats (including newly created groups)
     if (!foundChat) {
       try {
@@ -65,7 +66,7 @@ const ChatDetail: React.FC = () => {
         console.error('Error loading chat from storage:', error);
       }
     }
-    
+
     // If still not found, check sessionStorage for newly created groups (fallback)
     if (!foundChat) {
       const storedChat = sessionStorage.getItem(`chat_${chatId}`);
@@ -77,7 +78,7 @@ const ChatDetail: React.FC = () => {
         }
       }
     }
-    
+
     // If still not found and it's a group, create a fallback
     if (!foundChat && chatId.startsWith('group_')) {
       foundChat = {
@@ -90,35 +91,35 @@ const ChatDetail: React.FC = () => {
         isOnline: false
       };
     }
-    
+
     if (foundChat) {
       setChat(foundChat);
       // Load messages for this chat with persistence and reconstruction
       const mockMessages = getMessagesForChat(chatId);
       const persistentMessages = initializeMessagesForChat(chatId, mockMessages);
       setMessages(persistentMessages);
-      
+
       // Load chat settings
       const settings = getChatSettings(chatId);
       setChatSettings(settings);
     } else {
       // If chat still not found, redirect back to messages
-      navigate('/merchant/messages');
+      navigate(PATHS.MERCHANT.MESSAGES);
       return;
     }
-    
+
     setIsLoading(false);
   }, [chatId, navigate]);
 
   const handleBack = () => {
-    navigate('/merchant/messages');
+    navigate(PATHS.MERCHANT.MESSAGES);
   };
 
   const handleSendMessage = (content: string, file?: File) => {
     if (!chat || (!content.trim() && !file)) return;
 
     const messageContent = content.trim() || (file ? `📎 ${file.name}` : '');
-    
+
     const newMessage: ChatMessage = {
       id: `msg_${Date.now()}`,
       chatId: chat.id,
@@ -138,16 +139,16 @@ const ChatDetail: React.FC = () => {
 
     // Add to local state immediately for instant UI update
     setMessages(prev => [...prev, newMessage]);
-    
+
     // Persist the message to localStorage
     addMessageToChat(chat.id, newMessage);
-    
+
     // Update the chat's last message in the chat list
     updateChatLastMessage(chat.id, messageContent, 'now');
-    
+
     // Notify Messages component to refresh
     window.dispatchEvent(new CustomEvent('chatUpdated'));
-    
+
     // TODO: In a real app, you would upload the file and send message to your backend
     console.log('Sending message:', newMessage);
   };
@@ -162,7 +163,7 @@ const ChatDetail: React.FC = () => {
 
   const handleSearchMessages = () => {
     if (!chat) return;
-    navigate(`/merchant/messages/${chat.id}/search`);
+    navigate(PATHS.MERCHANT.SEARCH_MESSAGES(chat.id));
   };
 
   const handleMuteNotifications = () => {
@@ -183,12 +184,12 @@ const ChatDetail: React.FC = () => {
 
   const handleClearMessages = () => {
     if (!chat) return;
-    
+
     // Show confirmation dialog
     const confirmed = window.confirm(
       `Are you sure you want to clear all messages in this chat with ${chat.name}? This action cannot be undone.`
     );
-    
+
     if (confirmed) {
       // Clear messages from local state
       setMessages([]);
@@ -225,7 +226,7 @@ const ChatDetail: React.FC = () => {
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            
+
             {/* Chat Avatar and Name */}
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div className="flex-shrink-0">
@@ -248,7 +249,7 @@ const ChatDetail: React.FC = () => {
                   {getInitials(chat.name)}
                 </div>
               </div>
-              
+
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg font-semibold text-gray-900 truncate">{chat.name}</h1>
                 <p className="text-sm text-gray-500 truncate">
@@ -302,7 +303,7 @@ const ChatDetail: React.FC = () => {
                   {chat.id.startsWith('group_') ? `Welcome to ${chat.name}` : `Chat with ${chat.name}`}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  {chat.id.startsWith('group_') 
+                  {chat.id.startsWith('group_')
                     ? `This is the beginning of your group conversation in ${chat.name}.`
                     : `This is the beginning of your conversation with ${chat.name}.`
                   }
@@ -318,7 +319,7 @@ const ChatDetail: React.FC = () => {
                 const isOwnMessage = message.senderId === CURRENT_USER.id;
                 const prevMessage = messages[index - 1];
                 const showAvatar = !prevMessage || prevMessage.senderId !== message.senderId;
-                
+
                 return (
                   <MessageBubble
                     key={message.id}

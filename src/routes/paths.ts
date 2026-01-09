@@ -9,10 +9,23 @@ export const PATHS = {
         ROOT: '/customer',
         HOME: '/customer/home',
         DISCOVER: '/customer/discover',
-        PROFILE: '/customer/profile',
+        ME: {
+            ROOT: '/customer/me',
+            PROFILE: '/customer/me/profile',
+            EDIT_PROFILE: '/customer/me/edit-profile',
+            SETTINGS: '/customer/me/settings',
+            REVIEWS: '/customer/me/reviews',
+            COMMUNITY: '/customer/me/community',
+            PAYMENTS: '/customer/me/payments',
+            PRIVACY: '/customer/me/privacy',
+            NOTIFICATIONS: '/customer/me/notifications',
+            HELP: '/customer/me/help',
+        },
         POST: (id: string) => `/customer/post/${id}`,
-        POST_DETAIL: '/customer/post/:id', // For route definition
+        POST_DETAIL: '/customer/post/:id',
         WRITE_REVIEW: '/customer/write-review',
+        MAP: '/customer/map',
+        VOUCHERS: '/customer/vouchers',
     },
     MERCHANT: {
         ROOT: '/merchant',
@@ -22,7 +35,9 @@ export const PATHS = {
         PROFILE: '/merchant/profile',
         MESSAGES: '/merchant/messages',
         CHAT_DETAIL: '/merchant/messages/:chatId',
+        CHAT: (chatId: string) => `/merchant/messages/${chatId}`,
         CHAT_SEARCH: '/merchant/messages/:chatId/search',
+        SEARCH_MESSAGES: (chatId: string) => `/merchant/messages/${chatId}/search`,
         NOTIFICATIONS: '/merchant/notifications',
     }
 };

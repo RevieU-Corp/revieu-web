@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
-import { BottomNav } from '../layout';
 import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget } from '../components';
 import { filterMerchantsByCategory } from '../utils/categoryUtils';
 import { generateRecommendations } from '../utils/recommendationUtils';
@@ -90,7 +89,7 @@ const DiscoverPage: React.FC = () => {
   const getCategoryDisplayName = (categoryId: string) => {
     const allCategories = [
       ...FOOD_CATEGORIES,
-      ...BEAUTY_CATEGORIES, 
+      ...BEAUTY_CATEGORIES,
       ...SHOPPING_ENTERTAINMENT_CATEGORIES
     ];
     const category = allCategories.find(cat => cat.id === categoryId);
@@ -117,7 +116,7 @@ const DiscoverPage: React.FC = () => {
       { merchantId: '2', category: 'Chinese', timestamp: new Date() },
       { merchantId: '4', category: 'Bubble Tea', timestamp: new Date() }
     ];
-    
+
     let recommendedMerchants = generateRecommendations(
       filteredMerchants,
       userLocation,
@@ -132,23 +131,23 @@ const DiscoverPage: React.FC = () => {
         userLocation,
         userFavorites,
         10 - recommendedMerchants.length
-      ).filter((merchant: RecommendedMerchant) => 
+      ).filter((merchant: RecommendedMerchant) =>
         !recommendedMerchants.some((existing: RecommendedMerchant) => existing.id === merchant.id)
       );
-      
+
       recommendedMerchants = [...recommendedMerchants, ...additionalMerchants];
     }
-    
+
     return recommendedMerchants.slice(0, 10);
   }, [filteredMerchants]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
+    <div className="bg-[#FAFAFA] pb-24 font-sans w-full">
       {/* Sticky Header - 优化布局 */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 px-4 py-2 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-[#990000]">Discover</h1>
-          
+
           {/* 搜索栏 - 与标题对齐 */}
           <div className="flex-1 ml-4">
             <div className="relative">
@@ -170,12 +169,12 @@ const DiscoverPage: React.FC = () => {
           selectedCategory={selectedCategory}
           onCategorySelect={handleCategorySelect}
         />
-        
+
         <BeautyCategoryWidget
           selectedCategory={selectedCategory}
           onCategorySelect={handleCategorySelect}
         />
-        
+
         <ShoppingEntertainmentWidget
           selectedCategory={selectedCategory}
           onCategorySelect={handleCategorySelect}
@@ -186,12 +185,12 @@ const DiscoverPage: React.FC = () => {
       <div className="px-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">
-            {selectedCategory 
+            {selectedCategory
               ? `🎯 ${getCategoryDisplayName(selectedCategory)} Picks`
               : recommendations.length > 0 ? '🎯 Recommended for You' : '⭐ Top Rated'
             }
           </h2>
-          
+
           {/* 筛选按钮 */}
           <button
             onClick={showDevelopmentAlert}
@@ -201,7 +200,7 @@ const DiscoverPage: React.FC = () => {
             <span>Filter</span>
           </button>
         </div>
-        
+
         <div className="grid gap-4">
           {recommendations.map((merchant: RecommendedMerchant) => (
             <div key={merchant.id} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]">
@@ -244,8 +243,6 @@ const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Nav */}
-      <BottomNav />
     </div>
   );
 };
