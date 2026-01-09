@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { BottomNav, FAB } from '../layout';
 import { RangeSelector } from '../../../components/common';
 import { StudentPost, ActivityCard, CityLocationButton } from '../components';
 import { useAutoScroll } from '../hooks/useAutoScroll';
@@ -21,10 +20,10 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
+    <div className="bg-white font-sans w-full">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 shadow-sm">
-        <div className="flex items-center justify-between px-4 h-16 relative">
+        <div className="flex items-center justify-between pl-14 pr-4 h-16 relative">
           <div className="flex items-center gap-2">
             <CityLocationButton />
             <RangeSelector />
@@ -38,7 +37,7 @@ const HomePage: React.FC = () => {
             RevieU
           </h1>
 
-          <button 
+          <button
             onClick={showDevelopmentAlert}
             className="w-10 h-10 bg-[#FFC72C] rounded-full flex items-center justify-center text-[#990000] font-bold border-2 border-white shadow-sm cursor-pointer hover:bg-[#FFD700] transition-colors"
           >
@@ -72,19 +71,19 @@ const HomePage: React.FC = () => {
           <button className="px-4 py-2 rounded-full bg-[#990000] text-white text-xs font-bold whitespace-nowrap shadow-md shadow-red-900/20">
             Coupons
           </button>
-          <button 
+          <button
             onClick={showDevelopmentAlert}
             className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
           >
             Open Now
           </button>
-          <button 
+          <button
             onClick={showDevelopmentAlert}
             className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
           >
             Top Rated
           </button>
-          <button 
+          <button
             onClick={showDevelopmentAlert}
             className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-xs font-medium whitespace-nowrap hover:bg-gray-50 transition-colors"
           >
@@ -96,14 +95,14 @@ const HomePage: React.FC = () => {
         <div className="-mx-3">
           <div className="flex items-center justify-between px-3 mb-3">
             <h2 className="font-bold text-lg text-gray-900">🎪 Hot Activities</h2>
-            <button 
+            <button
               onClick={showDevelopmentAlert}
               className="text-[#990000] text-sm font-semibold hover:underline"
             >
               See All
             </button>
           </div>
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex gap-4 overflow-x-auto px-3 pb-4 no-scrollbar"
             onMouseEnter={handleMouseEnter}
@@ -136,41 +135,37 @@ const HomePage: React.FC = () => {
           <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-3 px-3 no-scrollbar">
             <button
               onClick={() => handlePostCategoryChange('recommend')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                activePostCategory === 'recommend'
-                  ? 'bg-[#990000] text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'recommend'
+                ? 'bg-[#990000] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               推荐
             </button>
             <button
               onClick={() => handlePostCategoryChange('follow')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                activePostCategory === 'follow'
-                  ? 'bg-[#990000] text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'follow'
+                ? 'bg-[#990000] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               关注
             </button>
             <button
               onClick={() => handlePostCategoryChange('food')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                activePostCategory === 'food'
-                  ? 'bg-[#990000] text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'food'
+                ? 'bg-[#990000] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               美食
             </button>
             <button
               onClick={() => handlePostCategoryChange('activity')}
-              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all relative overflow-hidden ${
-                activePostCategory === 'activity'
-                  ? 'shadow-lg transform scale-105'
-                  : 'hover:shadow-md hover:scale-102'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all relative overflow-hidden ${activePostCategory === 'activity'
+                ? 'shadow-lg transform scale-105'
+                : 'hover:shadow-md hover:scale-102'
+                }`}
               style={{
                 background: 'linear-gradient(45deg, #FF6B35 0%, #F7931E 50%, #FFD700 100%)',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
@@ -185,11 +180,10 @@ const HomePage: React.FC = () => {
             </button>
             <button
               onClick={() => handlePostCategoryChange('leisure')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                activePostCategory === 'leisure'
-                  ? 'bg-[#990000] text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'leisure'
+                ? 'bg-[#990000] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               休闲
             </button>
@@ -200,14 +194,14 @@ const HomePage: React.FC = () => {
             <h2 className="font-bold text-lg text-gray-900">
               {getPostCategoryTitle(activePostCategory)}
             </h2>
-            <button 
+            <button
               onClick={showDevelopmentAlert}
               className="text-[#990000] text-sm font-semibold hover:underline"
             >
               Filter
             </button>
           </div>
-          
+
           {/* Posts Grid */}
           <div className="grid grid-cols-2 gap-3">
             {studentPosts.map((post) => (
@@ -216,10 +210,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Fixed Elements */}
-      <FAB />
-      <BottomNav />
     </div>
   );
 };

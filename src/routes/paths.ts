@@ -22,7 +22,9 @@ export const PATHS = {
         PROFILE: '/merchant/profile',
         MESSAGES: '/merchant/messages',
         CHAT_DETAIL: '/merchant/messages/:chatId',
+        CHAT: (chatId: string) => `/merchant/messages/${chatId}`,
         CHAT_SEARCH: '/merchant/messages/:chatId/search',
+        SEARCH_MESSAGES: (chatId: string) => `/merchant/messages/${chatId}/search`,
         NOTIFICATIONS: '/merchant/notifications',
     }
 };

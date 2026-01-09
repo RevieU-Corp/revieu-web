@@ -1,30 +1,38 @@
-import { useNavigate, Outlet } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useLocation, Outlet } from 'react-router-dom';
+import { BottomNav, FAB } from './index';
+import { BackButton } from '../../../components/common';
+import { PATHS } from '../../../routes/paths';
 
 const CustomerLayout: React.FC = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleBackToEntry = () => {
-    navigate('/');
-  };
+  // Main tabs where bottom navigation and FAB should be visible
+  const mainTabPaths = [
+    PATHS.CUSTOMER.ROOT,
+    PATHS.CUSTOMER.HOME,
+    PATHS.CUSTOMER.DISCOVER,
+    PATHS.CUSTOMER.PROFILE,
+  ];
+
+  const isMainTab = mainTabPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header with back button */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <button
-          onClick={handleBackToEntry}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="text-sm font-medium">Back to Entry</span>
-        </button>
-      </header>
+    <div className="h-screen w-full overflow-hidden bg-white flex flex-col relative">
+      {/* Floating Back Button */}
+      <BackButton />
 
-      {/* Main content */}
-      <main>
+      {/* Scrollable content area */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar relative">
         <Outlet />
       </main>
+
+      {/* Navigation bar - Stay outside scroll */}
+      {isMainTab && (
+        <div className="shrink-0 z-40">
+          <FAB />
+          <BottomNav />
+        </div>
+      )}
     </div>
   );
 };

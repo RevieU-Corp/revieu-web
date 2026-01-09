@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { PATHS } from '../../../routes/paths';
 import { ArrowLeft, Search, MessageSquare } from 'lucide-react';
 import { ChatMessage } from '../types/chat';
 import { getMessagesForChatPersistent } from '../utils/messageStorage';
@@ -18,7 +19,7 @@ const SearchMessages: React.FC = () => {
 
   useEffect(() => {
     if (!chatId) {
-      navigate('/merchant/messages');
+      navigate(PATHS.MERCHANT.MESSAGES);
       return;
     }
 
@@ -38,7 +39,7 @@ const SearchMessages: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
       setFilteredMessages(allMessages);
       return;
@@ -49,21 +50,21 @@ const SearchMessages: React.FC = () => {
       message.senderName.toLowerCase().includes(query.toLowerCase()) ||
       (message.fileName && message.fileName.toLowerCase().includes(query.toLowerCase()))
     );
-    
+
     setFilteredMessages(filtered);
   };
 
   const handleBack = () => {
-    navigate(`/merchant/messages/${chatId}`);
+    navigate(PATHS.MERCHANT.CHAT(chatId || ''));
   };
 
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
-    
+
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
+
+    return parts.map((part, index) =>
       regex.test(part) ? (
         <mark key={index} className="bg-yellow-200 text-yellow-900 rounded px-1">
           {part}
@@ -124,7 +125,7 @@ const SearchMessages: React.FC = () => {
             <p className="text-sm text-gray-500">{chatName}</p>
           </div>
         </div>
-        
+
         {/* Search Bar */}
         <div className="w-full">
           <SearchBar
@@ -167,11 +168,11 @@ const SearchMessages: React.FC = () => {
           <div className="p-4">
             {searchQuery && (
               <div className="mb-4 text-sm text-gray-600">
-                Found {filteredMessages.length} message{filteredMessages.length !== 1 ? 's' : ''} 
+                Found {filteredMessages.length} message{filteredMessages.length !== 1 ? 's' : ''}
                 {searchQuery && ` matching "${searchQuery}"`}
               </div>
             )}
-            
+
             <div className="space-y-1">
               {filteredMessages.map((message, index) => renderSearchResult(message, index))}
             </div>
