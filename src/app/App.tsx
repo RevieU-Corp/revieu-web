@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
-import { HomePage, DiscoverPage, ProfilePage, PostPage, WriteReviewPage, CustomerLayout } from '../features/customer';
+import { HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage, PostPage, WriteReviewPage, CustomerLayout, VouchersPage, ReviewsPage } from '../features/customer';
 
 // Merchant Portal Components
 import MerchantLayout from '../features/merchant/layout/MerchantLayout';
@@ -33,9 +33,19 @@ const AppRouter: React.FC = () => {
         <Route index element={<HomePage />} />
         <Route path={PATHS.CUSTOMER.HOME} element={<HomePage />} />
         <Route path={PATHS.CUSTOMER.DISCOVER} element={<DiscoverPage />} />
-        <Route path={PATHS.CUSTOMER.PROFILE} element={<ProfilePage />} />
+        <Route path={PATHS.CUSTOMER.ME.ROOT} element={<ProfilePage />} />
+        <Route path={PATHS.CUSTOMER.ME.PROFILE} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.EDIT_PROFILE} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.SETTINGS} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.REVIEWS} element={<ReviewsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.COMMUNITY} element={<ProfilePage />} />
+        <Route path={PATHS.CUSTOMER.ME.PAYMENTS} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.PRIVACY} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.NOTIFICATIONS} element={<ProfileSettingsPage />} />
+        <Route path={PATHS.CUSTOMER.ME.HELP} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.POST_DETAIL} element={<PostPage />} />
         <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
+        <Route path={PATHS.CUSTOMER.VOUCHERS} element={<VouchersPage />} />
       </Route>
 
       {/* Merchant Portal Routes (under MerchantLayout) */}

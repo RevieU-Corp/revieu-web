@@ -9,10 +9,14 @@ export { FoodCategoryWidget } from './FoodCategoryWidget';
 export { BeautyCategoryWidget } from './BeautyCategoryWidget';
 export { ShoppingEntertainmentWidget } from './ShoppingEntertainmentWidget';
 
-// Profile
+// Me / Profile
 export { ProfileHeader } from './ProfileHeader';
 export { ProfileTabs } from './ProfileTabs';
 export { SavedPlaceCard } from './SavedPlaceCard';
+export { MeHeader } from './MeHeader';
+export { MeStats } from './MeStats';
+export { MeShortcuts } from './MeShortcuts';
+export { MeOptionItem } from './MeOptionItem';
 
 // Reviews
 export { default as CombinedRatingComponent } from './CombinedRatingComponent';

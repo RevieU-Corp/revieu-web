@@ -96,20 +96,22 @@ const WriteReviewForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header - Xiaomi style with subtle shadow - Back button removed as it is now in layout */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 pl-14 pr-4 h-16 flex items-center justify-between z-20 shadow-sm">
-        <div className="flex items-center">
-          <h1 className="font-semibold text-gray-800 text-lg">Write Review</h1>
+      {/* Header - Center aligned title with symmetric padding */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 grid grid-cols-3 items-center z-20 shadow-sm">
+        <div /> {/* Spacer for floating back button */}
+        <h1 className="font-semibold text-gray-800 text-lg text-center truncate">Write Review</h1>
+        <div className="flex justify-end">
+          <button
+            onClick={handleSubmit}
+            disabled={!isFormValid || isSubmitting}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isFormValid && !isSubmitting
+              ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg active:scale-95'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+          >
+            {isSubmitting ? '...' : 'Publish'}
+          </button>
         </div>
-        <button
-          onClick={handleSubmit}
-          disabled={!isFormValid || isSubmitting}
-          className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${isFormValid && !isSubmitting
-            ? 'bg-gradient-to-r from-[#990000] to-[#770000] text-white hover:shadow-lg hover:scale-105 active:scale-95'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-        >
-          {isSubmitting ? 'Publishing...' : 'Publish'}
-        </button>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto">

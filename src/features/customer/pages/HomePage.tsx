@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
     <div className="bg-white font-sans w-full">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 z-30 shadow-sm">
-        <div className="flex items-center justify-between pl-14 pr-4 h-16 relative">
+        <div className="flex items-center justify-between px-4 h-16 relative">
           <div className="flex items-center gap-2">
             <CityLocationButton />
             <RangeSelector />
