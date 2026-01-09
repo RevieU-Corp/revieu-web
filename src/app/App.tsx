@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
@@ -19,7 +19,7 @@ const AppRouter: React.FC = () => {
   return (
     <Routes>
       {/* Auth Routes */}
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to={PATHS.CUSTOMER.HOME} replace />} />
       <Route path={PATHS.AUTH.LOGIN} element={<LoginPage />} />
       <Route path={PATHS.AUTH.REGISTER} element={<RegisterPage />} />
       <Route path={PATHS.AUTH.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
