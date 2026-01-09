@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, User, Hash, X, Plus } from 'lucide-react';
+import { Camera, Hash, X, Plus } from 'lucide-react';
 import { SmartReviewProvider, useReviewContext } from '../contexts/index';
 import { CombinedRatingComponent, ImageUploadWrapper } from '../components/index';
 import { BusinessCategory } from '../types/index';
@@ -60,10 +60,6 @@ const WriteReviewForm: React.FC = () => {
     setShowPhotoPrompt(false);
   };
 
-  const handleUserProfileClick = () => {
-    navigate('/profile');
-  };
-
   const handleAddTag = (tag: string) => {
     const currentTags = state.reviewData.tags || [];
     if (currentTags.length >= maxTags) return;
@@ -99,26 +95,11 @@ const WriteReviewForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header - Xiaomi style with subtle shadow */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 flex items-center justify-between z-20 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2.5 -ml-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          {/* User Avatar - Xiaomi style */}
-          <button
-            onClick={handleUserProfileClick}
-            className="w-9 h-9 bg-gradient-to-br from-[#990000] to-[#770000] rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <User className="w-4 h-4 text-white" />
-          </button>
+      {/* Header - Xiaomi style with subtle shadow - Back button removed as it is now in layout */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 pl-14 pr-4 h-16 flex items-center justify-between z-20 shadow-sm">
+        <div className="flex items-center">
+          <h1 className="font-semibold text-gray-800 text-lg">Write Review</h1>
         </div>
-
-        <h1 className="font-semibold text-gray-800 text-lg">Write Review</h1>
         <button
           onClick={handleSubmit}
           disabled={!isFormValid || isSubmitting}

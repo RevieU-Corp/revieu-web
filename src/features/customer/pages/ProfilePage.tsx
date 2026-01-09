@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BottomNav } from '../layout';
 import { useAuth } from '../../../contexts/AuthContext';
 import { StudentPost, ProfileHeader, ProfileTabs, SavedPlaceCard } from '../components';
 import { userData, userPosts, savedPlaces } from '../constants/index';
@@ -22,7 +21,7 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24 font-sans w-full">
+    <div className="bg-white pb-6 pl-14">
       {/* Profile Header */}
       <ProfileHeader userData={userData} onLogout={handleLogout} />
 
@@ -50,8 +49,6 @@ const ProfilePage: React.FC = () => {
         )}
       </div>
 
-      {/* Bottom Nav */}
-      <BottomNav />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PATHS } from '../../../routes/paths';
 import { Upload, CheckCircle } from 'lucide-react';
 
 interface VerificationData {
@@ -80,17 +81,17 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }
   };
 
   const handleCancel = () => {
-    navigate('/merchant/login');
+    navigate(PATHS.MERCHANT.LOGIN);
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     setIsSubmitting(false);
     setCurrentView('success');
   };
@@ -99,7 +100,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }
     // Get current user info to make verification user-specific
     const userData = localStorage.getItem('user');
     let userId = null;
-    
+
     if (userData) {
       try {
         const user = JSON.parse(userData);
@@ -108,10 +109,10 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }
         console.error('Error parsing user data:', error);
       }
     }
-    
+
     // Create user-specific verification key
     const verificationKey = userId ? `merchantVerificationCompleted_${userId}` : 'merchantVerificationCompleted';
-    
+
     // Mark verification as completed for this specific user
     localStorage.setItem(verificationKey, 'true');
     onClose();
@@ -169,13 +170,12 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }
                   />
                   <label
                     htmlFor="storefront-photo"
-                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      errors.storefrontPhoto 
-                        ? 'border-red-300 bg-red-50' 
+                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${errors.storefrontPhoto
+                        ? 'border-red-300 bg-red-50'
                         : formData.storefrontPhoto
-                        ? 'border-green-300 bg-green-50'
-                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                    }`}
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                      }`}
                   >
                     {formData.storefrontPhoto ? (
                       <div className="text-center">
@@ -209,11 +209,10 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }
                   id="license-number"
                   value={formData.businessLicenseNumber}
                   onChange={handleLicenseNumberChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.businessLicenseNumber 
-                      ? 'border-red-300 focus:ring-red-500' 
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${errors.businessLicenseNumber
+                      ? 'border-red-300 focus:ring-red-500'
                       : 'border-gray-300'
-                  }`}
+                    }`}
                   placeholder="Enter your business license number"
                 />
                 {errors.businessLicenseNumber && (
