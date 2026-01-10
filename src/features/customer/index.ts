@@ -1,14 +1,14 @@
-﻿// Pages
-export { default as HomePage } from './pages/HomePage';
-export { default as DiscoverPage } from './pages/DiscoverPage';
-export { default as ProfilePage } from './pages/ProfilePage';
-export { default as ProfileSettingsPage } from './pages/ProfileSettingsPage';
-export { default as VouchersPage } from './pages/VouchersPage';
-export { default as ReviewsPage } from './pages/ReviewsPage';
+﻿// Shared (Layouts, Contexts, etc.)
+export * from './shared/layout';
+export * from './shared/contexts';
+// export * from './shared/hooks'; // If they exist
 
-// Layouts
-export { default as CustomerLayout } from './layout/CustomerLayout';
-export * from './layout/index';
+// Modules
+export * from './home';
+export * from './discover';
+export * from './profile';
+export * from './vouchers';
+export * from './reviews';
 
-// Contexts
-export * from './contexts/index';
+// Re-export CustomerLayout specifically if needed
+export { default as CustomerLayout } from './shared/layout/CustomerLayout';
