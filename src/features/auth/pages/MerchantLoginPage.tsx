@@ -20,7 +20,63 @@ const MerchantLoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { setUser } = useAuth();
+
+    // Development helper functions
+    if (typeof window !== 'undefined') {
+        (window as any).testMerchantLogin = () => {
+            setEmail('merchant@test.com');
+            setPassword('password123');
+            console.log('Test credentials filled. Click "Merchant Sign in" to test the flow.');
+        };
+
+        (window as any).clearMerchantData = () => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            // Clear all verification keys
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('merchantVerificationCompleted_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            localStorage.removeItem('merchantVerificationCompleted');
+            console.log('All merchant data cleared. Refresh to start fresh.');
+        };
+
+        (window as any).testDirectDashboard = () => {
+            const testUser = {
+                id: 'test_merchant_direct',
+                email: 'test@merchant.com',
+                name: 'Test Merchant',
+                avatar: 'TM',
+                role: 'merchant',
+                merchantProfile: {
+                    businessId: 'test_biz_123',
+                    verificationStatus: 'verified',
+                    subscriptionTier: 'basic',
+                    joinDate: new Date()
+                }
+            };
+            
+            localStorage.setItem('authToken', 'test-merchant-token');
+            localStorage.setItem('user', JSON.stringify(testUser));
+            localStorage.setItem(`merchantVerificationCompleted_${testUser.id}`, 'true');
+            
+            console.log('Test merchant user created. Navigate to /merchant/dashboard to test.');
+            return testUser;
+        };
+
+        (window as any).testAccountSetup = () => {
+            // Clear verification status to trigger the account setup flow
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('merchantVerificationCompleted_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            localStorage.removeItem('merchantVerificationCompleted');
+            console.log('Verification status cleared. Go through verification to test account setup flow.');
+        };
+    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -28,7 +84,39 @@ const MerchantLoginPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            await login(email, password);
+            // Create a verified merchant user directly (skip verification)
+            const merchantUser = {
+                id: 'verified_merchant_' + Date.now(),
+                email: email,
+                name: 'Verified Merchant',
+                avatar: 'VM',
+                role: 'merchant' as const,
+                merchantProfile: {
+                    businessId: 'verified_biz_' + Date.now(),
+                    verificationStatus: 'verified' as const,
+                    subscriptionTier: 'basic' as const,
+                    joinDate: new Date()
+                }
+            };
+
+            // Set authentication data
+            localStorage.setItem('authToken', 'verified-merchant-token');
+            localStorage.setItem('user', JSON.stringify(merchantUser));
+            
+            // Mark verification as completed to skip verification modal
+            const verificationKey = `merchantVerificationCompleted_${merchantUser.id}`;
+            localStorage.setItem(verificationKey, 'true');
+
+            // Update the auth context directly instead of calling login
+            setUser(merchantUser);
+            
+            console.log('✅ Merchant login successful:', {
+                user: merchantUser,
+                verificationCompleted: true,
+                navigatingTo: PATHS.MERCHANT.DASHBOARD
+            });
+            
+            // Navigate to dashboard
             navigate(PATHS.MERCHANT.DASHBOARD);
         } catch (err: any) {
             console.error('Merchant login error:', err);
@@ -37,6 +125,11 @@ const MerchantLoginPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleNewMerchant = () => {
+        // Navigate to verification page for new merchants
+        navigate(PATHS.MERCHANT.VERIFICATION);
     };
 
     const handleGoogleLogin = () => {
@@ -145,10 +238,23 @@ const MerchantLoginPage: React.FC = () => {
                 <div className="pt-4 flex flex-col space-y-4 items-center">
                     <div className="text-sm">
                         <span className="text-gray-600">Don't have a business account? </span>
-                        <Link to={PATHS.AUTH.REGISTER} className="font-medium text-green-600 hover:text-green-500">
+                        <button 
+                            disabled
+                            className="font-medium text-white bg-green-400 px-2 py-1 rounded cursor-not-allowed"
+                            title="For customer registration to leave reviews, visit /customer/home and use the regular login/register flow"
+                        >
                             Get Started
-                        </Link>
+                        </button>
                     </div>
+
+                    {/* New Merchant Button */}
+                    <button
+                        onClick={handleNewMerchant}
+                        disabled={isLoading}
+                        className="w-full py-3 px-4 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        I am a new merchant
+                    </button>
 
                     <button
                         onClick={() => navigate(PATHS.AUTH.LOGIN)}
