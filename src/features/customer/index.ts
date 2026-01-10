@@ -1,19 +1,14 @@
-// Pages
-export { default as HomePage } from './pages/HomePage';
-export { default as DiscoverPage } from './pages/DiscoverPage';
-export { default as ProfilePage } from './pages/ProfilePage';
-export { default as ProfileSettingsPage } from './pages/ProfileSettingsPage';
-export { default as PostPage } from './pages/PostPage';
-export { default as WriteReviewPage } from './pages/WriteReviewPage';
-export { default as VouchersPage } from './pages/VouchersPage';
-export { default as ReviewsPage } from './pages/ReviewsPage';
+﻿// Shared (Layouts, Contexts, etc.)
+export * from './shared/layout';
+export * from './shared/contexts';
+// export * from './shared/hooks'; // If they exist
 
-// Layouts
-export { default as CustomerLayout } from './layout/CustomerLayout';
-export * from './layout/index'; // Export BottomNav, FAB, etc. from layout subfolder 
+// Modules
+export * from './home';
+export * from './discover';
+export * from './profile';
+export * from './vouchers';
+export * from './reviews';
 
-// Contexts
-export * from './contexts/index';
-
-// Components (Optional: export often used components if needed)
-// export * from './components';
+// Re-export CustomerLayout specifically if needed
+export { default as CustomerLayout } from './shared/layout/CustomerLayout';
