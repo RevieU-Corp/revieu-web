@@ -20,7 +20,7 @@ const MerchantLoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login, setUser } = useAuth();
+    const { setUser } = useAuth();
 
     // Development helper functions
     if (typeof window !== 'undefined') {

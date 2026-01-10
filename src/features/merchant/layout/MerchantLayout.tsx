@@ -8,7 +8,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { PATHS } from '../../../routes/paths';
 
 const MerchantLayout: React.FC = () => {
-  const { user, isAuthenticated, isLoading, isMerchant, setUser } = useAuth();
+  const { user, isAuthenticated, isLoading, isMerchant } = useAuth();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   useEffect(() => {

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../routes/paths';
 import { Upload, CheckCircle, Loader2, FileText, User, Building } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
 import AccountSetupModal from './AccountSetupModal';
 
 interface VerificationData {
@@ -32,9 +31,8 @@ interface VerificationModalProps {
   onClose: () => void;
 }
 
-const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }) => {
+const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
   const [currentView, setCurrentView] = useState<'form' | 'pending' | 'success'>('form');
   const [showAccountSetup, setShowAccountSetup] = useState(false);
   const [formData, setFormData] = useState<VerificationData>({
