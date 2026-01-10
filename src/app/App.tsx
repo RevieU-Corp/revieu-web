@@ -6,17 +6,19 @@ import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleC
 import { HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage, PostPage, WriteReviewPage, CustomerLayout, VouchersPage, ReviewsPage } from '../features/customer';
 
 // Merchant Portal Components
-import MerchantLayout from '../features/merchant/layout/MerchantLayout';
-import MerchantDashboard from '../features/merchant/pages/MerchantDashboard';
-import VerificationPage from '../features/merchant/pages/VerificationPage';
-import PostCreation from '../features/merchant/pages/PostCreation';
-import StoreAnalytics from '../features/merchant/pages/StoreAnalytics';
-import AdManager from '../features/merchant/pages/AdManager';
-import StoreProfile from '../features/merchant/pages/StoreProfile';
-import Messages from '../features/merchant/pages/Messages';
-import ChatDetail from '../features/merchant/pages/ChatDetail';
-import SearchMessages from '../features/merchant/pages/SearchMessages';
-import Notifications from '../features/merchant/pages/Notifications';
+import {
+  MerchantLayout,
+  MerchantDashboard,
+  VerificationPage,
+  PostCreation,
+  StoreAnalytics,
+  AdManager,
+  StoreProfile,
+  Messages,
+  ChatDetail,
+  SearchMessages,
+  Notifications
+} from '../features/merchant';
 
 const AppRouter: React.FC = () => {
   return (
