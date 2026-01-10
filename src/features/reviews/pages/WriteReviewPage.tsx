@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Hash, X, Plus } from 'lucide-react';
-import { SmartReviewProvider, useReviewContext } from '../contexts/index';
-import { CombinedRatingComponent, ImageUploadWrapper } from '../components/index';
-import { BusinessCategory } from '../types/index';
+import { useReviewContext } from '../contexts/ReviewContext';
+import { ReviewProvider } from '../contexts/ReviewContext';
+import { CombinedRatingComponent, ImageUploadGrid, ImageUploadWrapper, AIAssistantButton, AISuggestionsList } from '../components';
+import { BusinessCategory } from '../types';
 
 // Internal component that uses the review context
 const WriteReviewForm: React.FC = () => {
@@ -95,7 +96,6 @@ const WriteReviewForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header - Xiaomi style with subtle shadow - Back button removed as it is now in layout */}
       {/* Header - Center aligned title with symmetric padding */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 grid grid-cols-3 items-center z-20 shadow-sm">
         <div /> {/* Spacer for floating back button */}
@@ -124,21 +124,17 @@ const WriteReviewForm: React.FC = () => {
             </label>
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
           </div>
-
-          <ImageUploadWrapper
-            images={state.reviewData.images || []}
-            onImagesChange={actions.updateImages}
-            maxImages={9}
-            onImageAnalysis={(image, tags) => {
-              console.log('Image analysis:', image, tags);
-            }}
-            compressionOptions={{
-              maxWidth: 1920,
-              maxHeight: 1080,
-              quality: 0.8,
-              maxSizeKB: 2048,
-            }}
-          />
+          
+          <ImageUploadWrapper>
+            <ImageUploadGrid
+              images={state.reviewData.images || []}
+              onImagesChange={actions.updateImages}
+              maxImages={9}
+              onImageAnalysis={(image: any, tags: any) => {
+                console.log('Image analysis:', image, tags);
+              }}
+            />
+          </ImageUploadWrapper>
         </div>
 
         {/* Review Text - Xiaomi style */}
@@ -176,8 +172,17 @@ const WriteReviewForm: React.FC = () => {
                 </div>
               )}
             </div>
+            
+            {/* AI Assistant Button */}
+            <AIAssistantButton
+              merchantCategory={BusinessCategory.RESTAURANT}
+              merchantName="this business"
+            />
           </div>
-
+          
+          {/* AI Suggestions List Modal */}
+          <AISuggestionsList />
+          
           {state.validationErrors.text && (
             <p className="text-sm text-red-500 mt-2 flex items-center space-x-1">
               <span className="w-0.5 h-0.5 bg-red-500 rounded-full"></span>
@@ -296,9 +301,9 @@ const WriteReviewForm: React.FC = () => {
           <CombinedRatingComponent
             overallRating={state.reviewData.overallRating || 0}
             detailedRatings={state.reviewData.detailedRatings || { quality: 0, environment: 0, service: 0 }}
-            businessCategory={BusinessCategory.RESTAURANT}
             onOverallRatingChange={actions.updateRating}
             onDetailedRatingChange={actions.updateDetailedRating}
+            businessCategory={BusinessCategory.RESTAURANT}
           />
         </div>
 
@@ -360,13 +365,13 @@ const WriteReviewForm: React.FC = () => {
 
 const WriteReviewPage: React.FC = () => {
   return (
-    <SmartReviewProvider
+    <ReviewProvider
       merchantId="temp-merchant-id"
       merchantName="Sample Restaurant"
       merchantCategory={BusinessCategory.RESTAURANT}
     >
       <WriteReviewForm />
-    </SmartReviewProvider>
+    </ReviewProvider>
   );
 };
 

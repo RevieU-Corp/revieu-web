@@ -18,9 +18,6 @@ export { MeStats } from './MeStats';
 export { MeShortcuts } from './MeShortcuts';
 export { MeOptionItem } from './MeOptionItem';
 
-// Reviews
-export { default as CombinedRatingComponent } from './CombinedRatingComponent';
+// Ratings (kept for customer-specific rating displays)
 export { default as DetailedRatingsComponent } from './DetailedRatingsComponent';
-export { default as ImageUploadGrid } from './ImageUploadGrid';
-export { default as ImageUploadWrapper } from './ImageUploadWrapper';
-export { default as StarRatingComponent } from './StarRatingComponent';
+export { StarRatingComponent } from './RatingComponents';

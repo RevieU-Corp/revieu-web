@@ -7,9 +7,11 @@ import {
   DraftState,
   UploadState,
   AIStreamingState,
+  AIAssistantState,
   BusinessCategory,
   UploadedImage
 } from '../types';
+import { AIAssistRequest, generateReviewSuggestions } from '../services/gemini';
 
 // Initial states
 const initialReviewData: Partial<ReviewData> = {
@@ -56,11 +58,20 @@ const initialAIState: AIStreamingState = {
   progress: 0,
 };
 
+const initialAIAssistantState: AIAssistantState = {
+  isGenerating: false,
+  suggestions: [],
+  currentSuggestion: '',
+  error: null,
+  isVisible: false,
+};
+
 const initialState: ReviewContextState = {
   reviewData: initialReviewData,
   draftState: initialDraftState,
   uploadState: initialUploadState,
   aiState: initialAIState,
+  aiAssistantState: initialAIAssistantState,
   validationErrors: {},
   isSubmitting: false,
 };
@@ -70,24 +81,30 @@ type ReviewAction =
   | { type: 'UPDATE_RATING'; payload: number }
   | { type: 'UPDATE_DETAILED_RATING'; payload: { type: 'quality' | 'environment' | 'service'; rating: number } }
   | { type: 'UPDATE_TEXT'; payload: string }
+  | { type: 'ADD_TAG'; payload: string }
+  | { type: 'REMOVE_TAG'; payload: string }
+  | { type: 'UPDATE_SETTINGS'; payload: { isAnonymous?: boolean; syncToFeed?: boolean } }
+  | { type: 'UPDATE_PRICE_INFO'; payload: Partial<ReviewData['priceInfo']> }
   | { type: 'ADD_IMAGE'; payload: File }
   | { type: 'REMOVE_IMAGE'; payload: string }
   | { type: 'UPDATE_IMAGE_ORDER'; payload: string[] }
+  | { type: 'UPDATE_IMAGES'; payload: UploadedImage[] }
   | { type: 'START_AI_STREAMING'; payload: string }
   | { type: 'AI_CHUNK_RECEIVED'; payload: string }
   | { type: 'AI_STREAMING_COMPLETE' }
   | { type: 'AI_STREAMING_ERROR'; payload: string }
+  | { type: 'GENERATE_AI_SUGGESTIONS_START' }
+  | { type: 'GENERATE_AI_SUGGESTIONS_SUCCESS'; payload: string[] }
+  | { type: 'GENERATE_AI_SUGGESTIONS_ERROR'; payload: string }
+  | { type: 'SELECT_AI_SUGGESTION'; payload: string }
+  | { type: 'TOGGLE_AI_ASSISTANT' }
+  | { type: 'CLEAR_AI_SUGGESTIONS' }
   | { type: 'SAVE_DRAFT_START' }
   | { type: 'SAVE_DRAFT_SUCCESS'; payload: Date }
   | { type: 'SAVE_DRAFT_ERROR'; payload: string }
   | { type: 'LOAD_DRAFT'; payload: any }
   | { type: 'VALIDATE_FORM' }
-  | { type: 'UPDATE_PRICE_INFO'; payload: Partial<ReviewData['priceInfo']> }
-  | { type: 'UPDATE_SETTINGS'; payload: { isAnonymous?: boolean; syncToFeed?: boolean } }
-  | { type: 'ADD_TAG'; payload: string }
-  | { type: 'REMOVE_TAG'; payload: string }
   | { type: 'SET_SUBMITTING'; payload: boolean }
-  | { type: 'UPDATE_IMAGES'; payload: UploadedImage[] }
   | { type: 'RESET' };
 
 // Reducer
@@ -137,8 +154,67 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         },
       };
 
+    case 'ADD_TAG':
+      const currentTags = state.reviewData.tags || [];
+      if (!currentTags.includes(action.payload)) {
+        return {
+          ...state,
+          reviewData: {
+            ...state.reviewData,
+            tags: [...currentTags, action.payload],
+          },
+          draftState: {
+            ...state.draftState,
+            hasUnsavedChanges: true,
+          },
+        };
+      }
+      return state;
+
+    case 'REMOVE_TAG':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          tags: state.reviewData.tags?.filter(tag => tag !== action.payload) || [],
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: true,
+        },
+      };
+
+    case 'UPDATE_SETTINGS':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          ...action.payload,
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: true,
+        },
+      };
+
+    case 'UPDATE_PRICE_INFO':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          priceInfo: {
+            ...state.reviewData.priceInfo!,
+            ...action.payload,
+          },
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: true,
+        },
+      };
+
     case 'ADD_IMAGE':
-      const newImageId = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newImageId = `img_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const newImage: UploadedImage = {
         id: newImageId,
         file: action.payload,
@@ -173,6 +249,19 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         reviewData: {
           ...state.reviewData,
           images: state.reviewData.images?.filter(img => img.id !== action.payload) || [],
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: true,
+        },
+      };
+
+    case 'UPDATE_IMAGES':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          images: action.payload,
         },
         draftState: {
           ...state.draftState,
@@ -233,6 +322,77 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         },
       };
 
+    case 'GENERATE_AI_SUGGESTIONS_START':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          isGenerating: true,
+          error: null,
+        },
+      };
+
+    case 'GENERATE_AI_SUGGESTIONS_SUCCESS':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          isGenerating: false,
+          suggestions: action.payload,
+          error: null,
+          isVisible: true,
+        },
+      };
+
+    case 'GENERATE_AI_SUGGESTIONS_ERROR':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          isGenerating: false,
+          error: action.payload,
+        },
+      };
+
+    case 'SELECT_AI_SUGGESTION':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          reviewText: action.payload,
+          aiAssisted: true,
+          characterCount: action.payload.length,
+        },
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          currentSuggestion: action.payload,
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: true,
+        },
+      };
+
+    case 'TOGGLE_AI_ASSISTANT':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          isVisible: !state.aiAssistantState.isVisible,
+        },
+      };
+
+    case 'CLEAR_AI_SUGGESTIONS':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          suggestions: [],
+          currentSuggestion: '',
+          error: null,
+        },
+      };
+
     case 'SAVE_DRAFT_START':
       return {
         ...state,
@@ -269,82 +429,10 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         validationErrors: errors,
       };
 
-    case 'UPDATE_PRICE_INFO':
-      return {
-        ...state,
-        reviewData: {
-          ...state.reviewData,
-          priceInfo: {
-            ...state.reviewData.priceInfo!,
-            ...action.payload,
-          },
-        },
-        draftState: {
-          ...state.draftState,
-          hasUnsavedChanges: true,
-        },
-      };
-
-    case 'UPDATE_SETTINGS':
-      return {
-        ...state,
-        reviewData: {
-          ...state.reviewData,
-          ...action.payload,
-        },
-        draftState: {
-          ...state.draftState,
-          hasUnsavedChanges: true,
-        },
-      };
-
-    case 'ADD_TAG':
-      const currentTags = state.reviewData.tags || [];
-      if (!currentTags.includes(action.payload)) {
-        return {
-          ...state,
-          reviewData: {
-            ...state.reviewData,
-            tags: [...currentTags, action.payload],
-          },
-          draftState: {
-            ...state.draftState,
-            hasUnsavedChanges: true,
-          },
-        };
-      }
-      return state;
-
-    case 'REMOVE_TAG':
-      return {
-        ...state,
-        reviewData: {
-          ...state.reviewData,
-          tags: state.reviewData.tags?.filter(tag => tag !== action.payload) || [],
-        },
-        draftState: {
-          ...state.draftState,
-          hasUnsavedChanges: true,
-        },
-      };
-
     case 'SET_SUBMITTING':
       return {
         ...state,
         isSubmitting: action.payload,
-      };
-
-    case 'UPDATE_IMAGES':
-      return {
-        ...state,
-        reviewData: {
-          ...state.reviewData,
-          images: action.payload,
-        },
-        draftState: {
-          ...state.draftState,
-          hasUnsavedChanges: true,
-        },
       };
 
     case 'RESET':
@@ -372,8 +460,6 @@ interface ReviewProviderProps {
 export const ReviewProvider: React.FC<ReviewProviderProps> = ({ 
   children, 
   merchantId, 
-  // merchantName, 
-  // merchantCategory 
 }) => {
   const [state, dispatch] = useReducer(reviewReducer, {
     ...initialState,
@@ -396,6 +482,22 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'UPDATE_TEXT', payload: text });
     }, []),
 
+    addTag: useCallback((tag: string) => {
+      dispatch({ type: 'ADD_TAG', payload: tag });
+    }, []),
+
+    removeTag: useCallback((tag: string) => {
+      dispatch({ type: 'REMOVE_TAG', payload: tag });
+    }, []),
+
+    updateSettings: useCallback((settings: { isAnonymous?: boolean; syncToFeed?: boolean }) => {
+      dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+    }, []),
+
+    updatePriceInfo: useCallback((priceInfo: Partial<ReviewData['priceInfo']>) => {
+      dispatch({ type: 'UPDATE_PRICE_INFO', payload: priceInfo });
+    }, []),
+
     addImage: useCallback((image: File) => {
       dispatch({ type: 'ADD_IMAGE', payload: image });
     }, []),
@@ -408,14 +510,43 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'UPDATE_IMAGE_ORDER', payload: imageIds });
     }, []),
 
+    updateImages: useCallback((images: UploadedImage[]) => {
+      dispatch({ type: 'UPDATE_IMAGES', payload: images });
+    }, []),
+
     streamAIText: useCallback((prompt: string) => {
       dispatch({ type: 'START_AI_STREAMING', payload: prompt });
-      // AI streaming implementation will be added later
+    }, []),
+
+    generateAISuggestions: useCallback(async (request: AIAssistRequest) => {
+      dispatch({ type: 'GENERATE_AI_SUGGESTIONS_START' });
+      try {
+        const response = await generateReviewSuggestions(request);
+        
+        if (response.error) {
+          dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: response.error });
+        } else {
+          dispatch({ type: 'GENERATE_AI_SUGGESTIONS_SUCCESS', payload: response.suggestions });
+        }
+      } catch (error) {
+        dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: 'Failed to generate suggestions' });
+      }
+    }, []),
+
+    selectAISuggestion: useCallback((suggestion: string) => {
+      dispatch({ type: 'SELECT_AI_SUGGESTION', payload: suggestion });
+    }, []),
+
+    toggleAIAssistant: useCallback(() => {
+      dispatch({ type: 'TOGGLE_AI_ASSISTANT' });
+    }, []),
+
+    clearAISuggestions: useCallback(() => {
+      dispatch({ type: 'CLEAR_AI_SUGGESTIONS' });
     }, []),
 
     saveDraft: useCallback(() => {
       dispatch({ type: 'SAVE_DRAFT_START' });
-      // Draft saving implementation will be added later
       setTimeout(() => {
         dispatch({ type: 'SAVE_DRAFT_SUCCESS', payload: new Date() });
       }, 1000);
@@ -427,26 +558,6 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
     validateForm: useCallback(() => {
       dispatch({ type: 'VALIDATE_FORM' });
-    }, []),
-
-    updatePriceInfo: useCallback((priceInfo: Partial<ReviewData['priceInfo']>) => {
-      dispatch({ type: 'UPDATE_PRICE_INFO', payload: priceInfo });
-    }, []),
-
-    updateSettings: useCallback((settings: { isAnonymous?: boolean; syncToFeed?: boolean }) => {
-      dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
-    }, []),
-
-    addTag: useCallback((tag: string) => {
-      dispatch({ type: 'ADD_TAG', payload: tag });
-    }, []),
-
-    removeTag: useCallback((tag: string) => {
-      dispatch({ type: 'REMOVE_TAG', payload: tag });
-    }, []),
-
-    updateImages: useCallback((images: UploadedImage[]) => {
-      dispatch({ type: 'UPDATE_IMAGES', payload: images });
     }, []),
 
     reset: useCallback(() => {

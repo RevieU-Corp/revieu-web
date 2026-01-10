@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import StarRatingComponent from './StarRatingComponent';
+import { StarRatingComponent } from './index';
 import { BusinessCategory } from '../types';
 
 export interface CombinedRatingProps {
@@ -9,7 +9,7 @@ export interface CombinedRatingProps {
     environment: number;
     service: number;
   };
-  businessCategory: BusinessCategory;
+  businessCategory?: BusinessCategory;
   onOverallRatingChange: (rating: number) => void;
   onDetailedRatingChange: (type: 'quality' | 'environment' | 'service', rating: number) => void;
   readonly?: boolean;
@@ -19,7 +19,7 @@ export interface CombinedRatingProps {
 const CombinedRatingComponent: React.FC<CombinedRatingProps> = ({
   overallRating,
   detailedRatings,
-  businessCategory,
+  businessCategory = BusinessCategory.RESTAURANT,
   onOverallRatingChange,
   onDetailedRatingChange,
   readonly = false,

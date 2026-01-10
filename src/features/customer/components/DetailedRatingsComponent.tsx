@@ -1,5 +1,5 @@
 import React from 'react';
-import StarRatingComponent from './StarRatingComponent';
+import StarRatingComponent from '../../reviews/components/StarRatingComponent';
 import { BusinessCategory } from '../types';
 
 export interface DetailedRatingsProps {

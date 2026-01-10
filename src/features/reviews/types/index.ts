@@ -1,7 +1,16 @@
 // Reviews页面相关的类型定义
 
 // Legacy types (keeping for backward compatibility)
-// PostData moved to index.ts
+export interface PostData {
+  id: number;
+  avatar: string;
+  username: string;
+  timestamp: string;
+  text: string;
+  image?: string;
+  likes: number;
+  comments: number;
+}
 
 export interface CommentData {
   id: number;
@@ -275,7 +284,7 @@ export interface ReviewContextActions {
   removeTag: (tag: string) => void;
   reset: () => void;
   // New AI Assistant Actions
-  generateAISuggestions: (request: import('../../reviews/services/gemini').AIAssistRequest) => Promise<void>;
+  generateAISuggestions: (request: import('../services/gemini').AIAssistRequest) => Promise<void>;
   selectAISuggestion: (suggestion: string) => void;
   toggleAIAssistant: () => void;
   clearAISuggestions: () => void;

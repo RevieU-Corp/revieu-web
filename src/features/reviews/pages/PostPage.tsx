@@ -1,8 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, Send } from 'lucide-react';
-import { MOCK_POSTS } from '../constants/index';
 import { PostData } from '../types';
+
+// Mock data - in a real app this would come from an API
+const MOCK_POSTS: PostData[] = [
+  {
+    id: 1,
+    avatar: "🍜",
+    username: "FoodieExplorer",
+    timestamp: "2 hours ago",
+    text: "Just tried this amazing ramen place! The broth was so rich and flavorful. Definitely coming back for more. The service was quick and the atmosphere was cozy.",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop",
+    likes: 24,
+    comments: 8
+  },
+  {
+    id: 2,
+    avatar: "☕",
+    username: "CoffeeAddict",
+    timestamp: "4 hours ago", 
+    text: "Perfect morning coffee spot! Great ambiance for working or catching up with friends. Their pastries are fresh and delicious too.",
+    image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop",
+    likes: 18,
+    comments: 5
+  }
+];
 
 const PostPage: React.FC = () => {
   const { id } = useParams();
