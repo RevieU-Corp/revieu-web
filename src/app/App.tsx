@@ -3,8 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
-import { HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage, CustomerLayout, VouchersPage, ReviewsPage } from '../features/customer';
-import { WriteReviewPage, PostPage } from '../features/reviews';
+import {
+  HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage,
+  CustomerLayout, VouchersPage, ReviewsPage, WriteReviewPage, PostPage
+} from '../features/customer';
 
 // Merchant Portal Components
 import MerchantLayout from '../features/merchant/layout/MerchantLayout';
