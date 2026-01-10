@@ -251,7 +251,7 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
 
               <div className="text-center">
                 <p className="text-xs text-gray-500">
-                  Codes are case-insensitive and will be automatically formatted
+                  Or select automatic verification
                 </p>
               </div>
             </div>

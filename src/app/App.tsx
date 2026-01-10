@@ -8,6 +8,9 @@ import { HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage, PostPage, Wri
 // Merchant Portal Components
 import MerchantLayout from '../features/merchant/layout/MerchantLayout';
 import MerchantDashboard from '../features/merchant/pages/MerchantDashboard';
+import VerificationPage from '../features/merchant/pages/VerificationPage';
+import PostCreation from '../features/merchant/pages/PostCreation';
+import StoreAnalytics from '../features/merchant/pages/StoreAnalytics';
 import AdManager from '../features/merchant/pages/AdManager';
 import StoreProfile from '../features/merchant/pages/StoreProfile';
 import Messages from '../features/merchant/pages/Messages';
@@ -27,6 +30,7 @@ const AppRouter: React.FC = () => {
 
       {/* Merchant Auth */}
       <Route path={PATHS.MERCHANT.LOGIN} element={<MerchantLoginPage />} />
+      <Route path={PATHS.MERCHANT.VERIFICATION} element={<VerificationPage />} />
 
       {/* Customer Routes (under CustomerLayout) */}
       <Route path={PATHS.CUSTOMER.ROOT} element={<CustomerLayout />}>
@@ -51,6 +55,8 @@ const AppRouter: React.FC = () => {
       {/* Merchant Portal Routes (under MerchantLayout) */}
       <Route path={PATHS.MERCHANT.ROOT} element={<MerchantLayout />}>
         <Route path={PATHS.MERCHANT.DASHBOARD} element={<MerchantDashboard />} />
+        <Route path={PATHS.MERCHANT.CREATE_POST} element={<PostCreation />} />
+        <Route path={PATHS.MERCHANT.ANALYTICS} element={<StoreAnalytics />} />
         <Route path={PATHS.MERCHANT.ADS} element={<AdManager />} />
         <Route path={PATHS.MERCHANT.PROFILE} element={<StoreProfile />} />
         <Route path={PATHS.MERCHANT.MESSAGES} element={<Messages />} />

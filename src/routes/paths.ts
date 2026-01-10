@@ -30,9 +30,12 @@ export const PATHS = {
     MERCHANT: {
         ROOT: '/merchant',
         LOGIN: '/merchant/login',
+        VERIFICATION: '/merchant/verification',
         DASHBOARD: '/merchant/dashboard',
+        ANALYTICS: '/merchant/analytics',
         ADS: '/merchant/ads',
         PROFILE: '/merchant/profile',
+        CREATE_POST: '/merchant/create-post',
         MESSAGES: '/merchant/messages',
         CHAT_DETAIL: '/merchant/messages/:chatId',
         CHAT: (chatId: string) => `/merchant/messages/${chatId}`,

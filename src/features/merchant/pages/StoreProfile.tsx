@@ -38,6 +38,15 @@ interface StoreData {
   gallery: string[];
   bio: string;
   menu: MenuItem[];
+  operatingHours: {
+    open: string;
+    close: string;
+  };
+  outdoorSeating: boolean;
+  accessibility: boolean;
+  petFriendly: boolean;
+  wifiOutlets: 'none' | 'wifi' | 'outlets' | 'both';
+  parking: 'free' | 'paid' | 'valet' | 'street';
 }
 
 // Mock data for McDonald's USC
@@ -50,6 +59,15 @@ const mockStoreData: StoreData = {
   coverPhoto: DEFAULT_MERCHANT_ASSETS.COVER_PHOTO, // Use default cover photo
   gallery: DEFAULT_MERCHANT_ASSETS.DEFAULT_GALLERY, // Use default gallery
   bio: "Welcome to the heart of the Trojan community! Serving USC students and local residents 24/7. We offer high-speed Wi-Fi, ample indoor seating, and the classic taste you love. Perfect for late-night study sessions or pre-game meals.",
+  operatingHours: {
+    open: "06:00",
+    close: "23:00"
+  },
+  outdoorSeating: true,
+  accessibility: true,
+  petFriendly: false,
+  wifiOutlets: 'both',
+  parking: 'street',
   menu: [
     {
       id: 1,
@@ -226,8 +244,7 @@ const StoreProfile: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Store Profile</h1>
-            <p className="text-gray-600">Manage your business information and menu</p>
+            <h1 className="text-2xl font-bold text-gray-900">{storeData.name}</h1>
           </div>
           <div className="flex gap-2">
             {isEditing ? (
@@ -365,6 +382,186 @@ const StoreProfile: React.FC = () => {
                   </a>
                 )}
               </div>
+            </div>
+
+            {/* Operating Hours */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Opening Time</label>
+                  {isEditing ? (
+                    <input
+                      type="time"
+                      value={storeData.operatingHours.open}
+                      onChange={(e) => setStoreData({ 
+                        ...storeData, 
+                        operatingHours: { ...storeData.operatingHours, open: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{storeData.operatingHours.open}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Closing Time</label>
+                  {isEditing ? (
+                    <input
+                      type="time"
+                      value={storeData.operatingHours.close}
+                      onChange={(e) => setStoreData({ 
+                        ...storeData, 
+                        operatingHours: { ...storeData.operatingHours, close: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{storeData.operatingHours.close}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Outdoor Seating */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Outdoor Seating</label>
+              {isEditing ? (
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="outdoorSeating"
+                      checked={storeData.outdoorSeating === true}
+                      onChange={() => setStoreData({ ...storeData, outdoorSeating: true })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="outdoorSeating"
+                      checked={storeData.outdoorSeating === false}
+                      onChange={() => setStoreData({ ...storeData, outdoorSeating: false })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              ) : (
+                <p className="text-gray-900">{storeData.outdoorSeating ? 'Yes' : 'No'}</p>
+              )}
+            </div>
+
+            {/* Accessibility */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Accessibility (ADA Compliant)</label>
+              {isEditing ? (
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="accessibility"
+                      checked={storeData.accessibility === true}
+                      onChange={() => setStoreData({ ...storeData, accessibility: true })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="accessibility"
+                      checked={storeData.accessibility === false}
+                      onChange={() => setStoreData({ ...storeData, accessibility: false })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              ) : (
+                <p className="text-gray-900">{storeData.accessibility ? 'Yes' : 'No'}</p>
+              )}
+            </div>
+
+            {/* Pet-Friendly */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Pet-Friendly</label>
+              {isEditing ? (
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="petFriendly"
+                      checked={storeData.petFriendly === true}
+                      onChange={() => setStoreData({ ...storeData, petFriendly: true })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="petFriendly"
+                      checked={storeData.petFriendly === false}
+                      onChange={() => setStoreData({ ...storeData, petFriendly: false })}
+                      className="text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              ) : (
+                <p className="text-gray-900">{storeData.petFriendly ? 'Yes' : 'No'}</p>
+              )}
+            </div>
+
+            {/* Wi-Fi & Outlets */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Wi-Fi & Outlets</label>
+              {isEditing ? (
+                <select
+                  value={storeData.wifiOutlets}
+                  onChange={(e) => setStoreData({ ...storeData, wifiOutlets: e.target.value as 'none' | 'wifi' | 'outlets' | 'both' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                >
+                  <option value="none">None</option>
+                  <option value="wifi">Free Wi-Fi</option>
+                  <option value="outlets">Power Outlets Available</option>
+                  <option value="both">Free Wi-Fi & Power Outlets</option>
+                </select>
+              ) : (
+                <p className="text-gray-900">
+                  {storeData.wifiOutlets === 'none' && 'None'}
+                  {storeData.wifiOutlets === 'wifi' && 'Free Wi-Fi'}
+                  {storeData.wifiOutlets === 'outlets' && 'Power Outlets Available'}
+                  {storeData.wifiOutlets === 'both' && 'Free Wi-Fi & Power Outlets'}
+                </p>
+              )}
+            </div>
+
+            {/* Parking */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Parking</label>
+              {isEditing ? (
+                <select
+                  value={storeData.parking}
+                  onChange={(e) => setStoreData({ ...storeData, parking: e.target.value as 'free' | 'paid' | 'valet' | 'street' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                >
+                  <option value="free">Free Parking</option>
+                  <option value="paid">Paid Parking</option>
+                  <option value="valet">Valet</option>
+                  <option value="street">Street Parking</option>
+                </select>
+              ) : (
+                <p className="text-gray-900">
+                  {storeData.parking === 'free' && 'Free Parking'}
+                  {storeData.parking === 'paid' && 'Paid Parking'}
+                  {storeData.parking === 'valet' && 'Valet'}
+                  {storeData.parking === 'street' && 'Street Parking'}
+                </p>
+              )}
             </div>
           </div>
         </div>

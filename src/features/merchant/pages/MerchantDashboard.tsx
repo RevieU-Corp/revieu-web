@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
-import { Star, TrendingUp, Users, Gift, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Star, TrendingUp, Users, Gift, Trash2, ChevronDown, ChevronUp, Package, Plus } from 'lucide-react';
 import TrafficChart from '../components/TrafficChart';
 import CouponManager from '../components/CouponManager';
 import PackageManager from '../components/PackageManager';
 import ReviewReplyModal from '../components/ReviewReplyModal';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import AllReviews from './AllReviews';
+import { PATHS } from '../../../routes/paths';
 
 const MerchantDashboard: React.FC = () => {
+  console.log('🏪 MerchantDashboard: Component rendering');
+  const navigate = useNavigate();
+  
   // State management
   const [showTrafficChart, setShowTrafficChart] = useState(false);
   const [showCouponManager, setShowCouponManager] = useState(false);
   const [showPackageManager, setShowPackageManager] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [selectedReview, setSelectedReview] = useState<any>(null);
   const [expandedCoupons, setExpandedCoupons] = useState<Set<number>>(new Set());
@@ -27,6 +34,9 @@ const MerchantDashboard: React.FC = () => {
     onConfirm: () => { }
   });
 
+  // Store information
+  const storeName = "McDonald's - USC Figueroa";
+
   // Mock data for McDonald's USC
   const businessMetrics = {
     currentRating: 4.2,
@@ -37,12 +47,13 @@ const MerchantDashboard: React.FC = () => {
   };
 
   const [reviews, setReviews] = useState([
+    // Today's reviews
     {
       id: 1,
       customerName: "Sarah Chen",
       rating: 5,
-      text: "Perfect spot for late night study sessions! Fast service and the Wi-Fi is reliable.",
-      date: "2 hours ago",
+      text: "Perfect spot for late night study sessions! Fast service and the Wi-Fi is reliable. The staff is super friendly and they keep the place clean even during busy hours.",
+      date: new Date().toISOString(),
       hasReply: false,
       replyText: ""
     },
@@ -50,17 +61,127 @@ const MerchantDashboard: React.FC = () => {
       id: 2,
       customerName: "Mike Rodriguez",
       rating: 4,
-      text: "Great location near campus. The staff is friendly and the food is consistent.",
-      date: "1 day ago",
+      text: "Great location near campus. The staff is friendly and the food is consistent. Only complaint is that it gets really crowded during lunch rush.",
+      date: new Date().toISOString(),
       hasReply: true,
-      replyText: "Thank you for your feedback! We appreciate your business."
+      replyText: "Thank you for your feedback! We appreciate your business and are working on managing rush hour crowds better."
     },
     {
       id: 3,
+      customerName: "Alex Thompson",
+      rating: 2,
+      text: "Food was cold when I got it and the service was really slow. Had to wait 15 minutes for a simple order. Not impressed.",
+      date: new Date().toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    // Yesterday's reviews
+    {
+      id: 4,
       customerName: "Jessica Park",
       rating: 3,
-      text: "Food was good but the wait time was longer than expected during lunch rush.",
-      date: "2 days ago",
+      text: "Food was good but the wait time was longer than expected during lunch rush. The fries were a bit soggy too.",
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    {
+      id: 5,
+      customerName: "David Kim",
+      rating: 5,
+      text: "Amazing service! The manager went above and beyond to make sure my order was perfect. This is why I keep coming back to this location.",
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "Thank you so much David! We really appreciate customers like you. See you soon!"
+    },
+    // Older reviews
+    {
+      id: 6,
+      customerName: "Emily Johnson",
+      rating: 1,
+      text: "Worst experience ever. The burger was completely wrong, fries were cold, and the staff was rude when I tried to get it fixed. Will not be coming back.",
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    {
+      id: 7,
+      customerName: "Carlos Martinez",
+      rating: 4,
+      text: "Good food and quick service. The mobile app ordering works great here. Just wish they had more healthy options on the menu.",
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "Thanks for the feedback Carlos! We're always looking at ways to expand our menu options."
+    },
+    {
+      id: 8,
+      customerName: "Lisa Wong",
+      rating: 5,
+      text: "Love this place! Open 24/7 which is perfect for us college students. The staff recognizes me now and they're always so nice. Great coffee too!",
+      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "Hi Lisa! Thanks for being such a loyal customer. We love seeing familiar faces!"
+    },
+    {
+      id: 9,
+      customerName: "Robert Taylor",
+      rating: 2,
+      text: "The place is always dirty and the bathrooms are disgusting. Food quality has gone downhill recently. Management needs to step up.",
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    {
+      id: 10,
+      customerName: "Amanda Foster",
+      rating: 5,
+      text: "Excellent customer service! I accidentally left my wallet here and the staff kept it safe for me. The food is always fresh and hot. Highly recommend!",
+      date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "So glad we could help Amanda! Thank you for the kind words."
+    },
+    {
+      id: 11,
+      customerName: "James Wilson",
+      rating: 3,
+      text: "Average McDonald's experience. Nothing special but nothing terrible either. Gets the job done when you need a quick bite.",
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    {
+      id: 12,
+      customerName: "Maria Garcia",
+      rating: 1,
+      text: "Ordered through the app and waited 30 minutes only to be told they ran out of what I ordered. No apology, no compensation. Terrible management.",
+      date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: false,
+      replyText: ""
+    },
+    {
+      id: 13,
+      customerName: "Kevin Lee",
+      rating: 4,
+      text: "Good location with plenty of parking. Food is consistent with other McDonald's locations. The drive-thru is usually pretty fast.",
+      date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "Thank you Kevin! We work hard to keep our drive-thru moving efficiently."
+    },
+    {
+      id: 14,
+      customerName: "Rachel Brown",
+      rating: 5,
+      text: "Best McDonald's in the area! The staff here actually cares about customer service. My order is always right and the food is fresh. Keep up the great work!",
+      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      hasReply: true,
+      replyText: "Thank you so much Rachel! Reviews like yours make our day. We appreciate you!"
+    },
+    {
+      id: 15,
+      customerName: "Tom Anderson",
+      rating: 2,
+      text: "The ice cream machine is always broken. It's become a running joke at this point. Also, the prices keep going up but the quality stays the same.",
+      date: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(),
       hasReply: false,
       replyText: ""
     }
@@ -145,6 +266,29 @@ const MerchantDashboard: React.FC = () => {
     }
   ]);
 
+  // Helper function to check if a review is from today
+  const isToday = (dateString: string) => {
+    const reviewDate = new Date(dateString);
+    const today = new Date();
+    return reviewDate.toDateString() === today.toDateString();
+  };
+
+  // Helper function to format date for display
+  const formatDate = (dateString: string) => {
+    const reviewDate = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - reviewDate.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return "Just now";
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    }
+  };
+
   // Handler functions
   const handleReplyToReview = (review: any) => {
     setSelectedReview(review);
@@ -206,6 +350,10 @@ const MerchantDashboard: React.FC = () => {
     setPackages(updatedPackages);
   };
 
+  const handleUpdateReviews = (updatedReviews: any[]) => {
+    setReviews(updatedReviews);
+  };
+
   const closeConfirmDialog = () => {
     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
   };
@@ -214,8 +362,17 @@ const MerchantDashboard: React.FC = () => {
     <div className="p-4 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">USC Review Management</h1>
-        <p className="text-gray-600">Welcome back! Here's how your business is performing.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Your Store</h1>
+        <p className="text-gray-600">{storeName}</p>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => navigate(PATHS.MERCHANT.CREATE_POST)}
+          className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          <Plus size={16} />
+          Create Post
+        </button>
       </div>
 
       {/* KPI Cards */}
@@ -248,14 +405,14 @@ const MerchantDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Views Card - Clickable */}
+        {/* Store Analytics Card - Clickable */}
         <div
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => setShowTrafficChart(true)}
+          onClick={() => navigate(PATHS.MERCHANT.ANALYTICS)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Views</p>
+              <p className="text-sm font-medium text-gray-600">Store Analytics</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-2xl font-bold text-gray-900">{businessMetrics.monthlyViews.toLocaleString()}</span>
                 <div className="flex items-center gap-1 text-green-600">
@@ -263,7 +420,7 @@ const MerchantDashboard: React.FC = () => {
                   <span className="text-sm font-medium">+{businessMetrics.trendPercentage}%</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Click to view details</p>
+              <p className="text-xs text-gray-500 mt-1">Monthly views • Click for detailed analytics</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Users className="w-6 h-6 text-blue-600" />
@@ -486,12 +643,15 @@ const MerchantDashboard: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Recent Reviews</h2>
-          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+          <button 
+            onClick={() => setShowAllReviews(true)}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
             View All
           </button>
         </div>
         <div className="space-y-4">
-          {reviews.map((review) => (
+          {reviews.filter(review => isToday(review.date)).map((review) => (
             <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
@@ -509,7 +669,7 @@ const MerchantDashboard: React.FC = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500">{review.date}</span>
+                    <span className="text-xs text-gray-500">{formatDate(review.date)}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -547,9 +707,9 @@ const MerchantDashboard: React.FC = () => {
               )}
             </div>
           ))}
-          {reviews.length === 0 && (
+          {reviews.filter(review => isToday(review.date)).length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p>No reviews yet.</p>
+              <p>No reviews today yet.</p>
             </div>
           )}
         </div>
@@ -592,6 +752,17 @@ const MerchantDashboard: React.FC = () => {
         message={confirmDialog.message}
         type="danger"
       />
+
+      {/* All Reviews Modal */}
+      {showAllReviews && (
+        <div className="fixed inset-0 z-50 bg-white">
+          <AllReviews
+            reviews={reviews}
+            onUpdateReviews={handleUpdateReviews}
+            onClose={() => setShowAllReviews(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };
