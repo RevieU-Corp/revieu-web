@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, User, Hash, X, Plus } from 'lucide-react';
-import { SmartReviewProvider, useReviewContext } from '../contexts';
-import { CombinedRatingComponent, ImageUploadWrapper } from '../components';
+import { useReviewContext } from '../contexts/ReviewContext';
+import { ReviewProvider as SmartReviewProvider } from '../contexts/ReviewContext';
+import { CombinedRatingComponent, ImageUploadGrid, ImageUploadWrapper, AIAssistantButton, AISuggestionsList } from '../components';
 import { BusinessCategory } from '../types';
 
 // Internal component that uses the review context
@@ -143,20 +144,16 @@ const WriteReviewForm: React.FC = () => {
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
           </div>
           
-          <ImageUploadWrapper
-            images={state.reviewData.images || []}
-            onImagesChange={actions.updateImages}
-            maxImages={9}
-            onImageAnalysis={(image, tags) => {
-              console.log('Image analysis:', image, tags);
-            }}
-            compressionOptions={{
-              maxWidth: 1920,
-              maxHeight: 1080,
-              quality: 0.8,
-              maxSizeKB: 2048,
-            }}
-          />
+          <ImageUploadWrapper>
+            <ImageUploadGrid
+              images={state.reviewData.images || []}
+              onImagesChange={actions.updateImages}
+              maxImages={9}
+              onImageAnalysis={(image: any, tags: any) => {
+                console.log('Image analysis:', image, tags);
+              }}
+            />
+          </ImageUploadWrapper>
         </div>
 
         {/* Review Text - Xiaomi style */}
@@ -195,7 +192,16 @@ const WriteReviewForm: React.FC = () => {
                 </div>
               )}
             </div>
+            
+            {/* AI Assistant Button */}
+            <AIAssistantButton
+              merchantCategory={BusinessCategory.RESTAURANT}
+              merchantName="this business"
+            />
           </div>
+
+          {/* AI Suggestions List Modal */}
+          <AISuggestionsList />
           
           {state.validationErrors.text && (
             <p className="text-sm text-red-500 mt-2 flex items-center space-x-1">
@@ -317,7 +323,6 @@ const WriteReviewForm: React.FC = () => {
           <CombinedRatingComponent
             overallRating={state.reviewData.overallRating || 0}
             detailedRatings={state.reviewData.detailedRatings || { quality: 0, environment: 0, service: 0 }}
-            businessCategory={BusinessCategory.RESTAURANT}
             onOverallRatingChange={actions.updateRating}
             onDetailedRatingChange={actions.updateDetailedRating}
           />

@@ -51,6 +51,7 @@ export interface ReviewData {
   syncToFeed: boolean;
   locationVerified: boolean;
   aiAssisted: boolean;
+  aiSuggestions?: string[]; // New: Store AI suggestions used
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -170,6 +171,15 @@ export interface AIStreamingState {
   progress: number; // 0-100
 }
 
+// AI Assistant State (New for Gemini Integration)
+export interface AIAssistantState {
+  isGenerating: boolean;
+  suggestions: string[];
+  currentSuggestion: string;
+  error: string | null;
+  isVisible: boolean;
+}
+
 export interface AIStreamingRequest {
   prompt: string;
   context: {
@@ -244,6 +254,7 @@ export interface ReviewContextState {
   draftState: DraftState;
   uploadState: UploadState;
   aiState: AIStreamingState;
+  aiAssistantState: AIAssistantState; // New: AI Assistant state
   validationErrors: ValidationErrors;
   isSubmitting: boolean;
 }
@@ -272,6 +283,11 @@ export interface ReviewContextActions {
   addTag: (tag: string) => void;
   removeTag: (tag: string) => void;
   reset: () => void;
+  // New AI Assistant Actions
+  generateAISuggestions: (request: import('../services/gemini').AIAssistRequest) => Promise<void>;
+  selectAISuggestion: (suggestion: string) => void;
+  toggleAIAssistant: () => void;
+  clearAISuggestions: () => void;
 }
 
 // Legacy compatibility

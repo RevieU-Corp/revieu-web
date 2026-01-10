@@ -3,7 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import { HomePage } from '../features/home';
-import { PostPage, WriteReviewPage } from '../features/reviews';
+import { PostPage } from '../features/reviews';
+import WriteReviewPage from '../features/reviews/pages/WriteReviewPage';
+import TestPage from '../features/reviews/pages/TestPage';
 import { DiscoverPage } from '../features/discover';
 import { ProfilePage } from '../features/profile';
 
@@ -24,7 +26,10 @@ const AppRouter: React.FC = () => {
   return (
     <Routes>
       {/* Auth Routes */}
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<CustomerLayout />}>
+        <Route index element={<HomePage />} />
+      </Route>
+      <Route path="/test" element={<TestPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
