@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, Copy, Check, AlertCircle } from 'lucide-react';
 import { useReviewContext } from '../contexts/ReviewContext';
 

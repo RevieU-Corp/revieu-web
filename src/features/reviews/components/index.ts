@@ -1,27 +1,6 @@
-// Simplified Component exports - All in one place
-
-// Rating Components
-export {
-  StarRatingComponent,
-  DetailedRatingsComponent,
-  CombinedRatingComponent
-} from './RatingComponents';
-export type {
-  StarRatingProps,
-  DetailedRatingsProps,
-  CombinedRatingProps
-} from './RatingComponents';
-
-// AI Assistant Components
-export { default as AIAssistantButton } from './AIAssistantButton';
-export { default as AISuggestionsList } from './AISuggestionsList';
-
-// Image Upload Components
-export {
-  ImageUploadGrid,
-  ImageUploadWrapper
-} from './ImageUpload';
-export type {
-  ImageUploadGridProps,
-  ImageUploadWrapperProps
-} from './ImageUpload';
+// Reviews components exports
+export { AIAssistantButton } from './AIAssistantButton';
+export { AISuggestionsList } from './AISuggestionsList';
+export { ImageUploadGrid, ImageUploadWrapper } from './ImageUpload';
+export { default as CombinedRatingComponent } from './CombinedRatingComponent';
+export { default as StarRatingComponent } from './StarRatingComponent';

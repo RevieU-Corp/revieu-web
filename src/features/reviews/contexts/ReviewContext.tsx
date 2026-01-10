@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import { 
   ReviewContextState, 
   ReviewContextActions, 
@@ -214,7 +214,7 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
       };
 
     case 'ADD_IMAGE':
-      const newImageId = img__;
+      const newImageId = `img_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const newImage: UploadedImage = {
         id: newImageId,
         file: action.payload,

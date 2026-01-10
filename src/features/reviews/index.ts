@@ -1,6 +1,15 @@
-// Reviews Feature exports
-export { default as PostPage } from './pages/PostPage';
-export { default as WriteReviewPage } from './pages/WriteReviewPage';
+// Reviews feature exports
+export { WriteReviewPage, PostPage } from './pages';
+
+// Components
+export * from './components/AIAssistantButton';
+export * from './components/ImageUpload';
+
+// Contexts
+export { ReviewProvider, useReviewContext } from './contexts/ReviewContext';
+
+// Types
 export * from './types';
-export * from './utils/reviewUtils';
-// export * from './contexts'; // Temporarily commented out to fix module resolution
+
+// Services
+export * from './services/gemini';
