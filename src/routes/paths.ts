@@ -24,7 +24,7 @@ export const PATHS = {
         POST: (id: string) => `/customer/post/${id}`,
         POST_DETAIL: '/customer/post/:id',
         WRITE_REVIEW: '/customer/write-review',
-        MAP: '/customer/map',
+        EXPLORE: '/customer/explore',
         VOUCHERS: '/customer/vouchers',
     },
     MERCHANT: {

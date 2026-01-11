@@ -74,7 +74,7 @@ export function BottomNav() {
           <span className="text-[8px] font-black text-gray-900 mt-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Review</span>
         </div>
 
-        <NavTab path={PATHS.CUSTOMER.MAP || "/map"} icon={Compass} label="Explore" />
+        <NavTab path={PATHS.CUSTOMER.EXPLORE} icon={Compass} label="Explore" />
         <NavTab path={PATHS.CUSTOMER.ME.ROOT} icon={User} label="Profile" />
       </div>
     </div>

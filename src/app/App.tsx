@@ -4,7 +4,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import {
-  HomePage, DiscoverPage, ProfilePage, ProfileSettingsPage,
+  HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
   CustomerLayout, VouchersPage, ReviewsPage, WriteReviewPage, PostPage
 } from '../features/customer';
 
@@ -31,6 +31,7 @@ const AppRouter: React.FC = () => {
         <Route index element={<HomePage />} />
         <Route path={PATHS.CUSTOMER.HOME} element={<HomePage />} />
         <Route path={PATHS.CUSTOMER.DISCOVER} element={<DiscoverPage />} />
+        <Route path={PATHS.CUSTOMER.EXPLORE} element={<ExplorePage />} />
         <Route path={PATHS.CUSTOMER.ME.ROOT} element={<ProfilePage />} />
         <Route path={PATHS.CUSTOMER.ME.PROFILE} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.ME.EDIT_PROFILE} element={<ProfileSettingsPage />} />
