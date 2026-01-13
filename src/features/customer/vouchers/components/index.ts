@@ -1,0 +1,1 @@
+export { default as VoucherDisplay } from './VoucherDisplay';

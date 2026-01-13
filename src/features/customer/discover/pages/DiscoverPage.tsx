@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
 import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget } from '../components';
 import { filterMerchantsByCategory } from '../../shared/utils/categoryUtils';
 import { generateRecommendations } from '../../shared/utils/recommendationUtils';
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../../shared/constants/categories';
 import { Merchant, RecommendedMerchant } from '../../shared/types';
+import { PATHS } from '../../../../routes/paths';
 import '../../shared/styles/DiscoverPage.css';
 
 // Mock Data - 保持现有的商家数据
@@ -78,11 +80,17 @@ const merchants: Merchant[] = [
 ];
 
 const DiscoverPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // 开发中提示
   const showDevelopmentAlert = () => {
     alert('此功能正在开发中');
+  };
+
+  // 处理商家点击
+  const handleMerchantClick = (merchantId: number) => {
+    navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId.toString()));
   };
 
   // 获取分类显示名称
@@ -203,7 +211,11 @@ const DiscoverPage: React.FC = () => {
 
         <div className="grid gap-4">
           {recommendations.map((merchant: RecommendedMerchant) => (
-            <div key={merchant.id} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]">
+            <div 
+              key={merchant.id} 
+              className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"
+              onClick={() => handleMerchantClick(merchant.id)}
+            >
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
                 <img src={merchant.image} alt={merchant.name} className="w-full h-full object-cover" />
                 {merchant.relevanceScore > 0.5 && (

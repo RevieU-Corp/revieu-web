@@ -1,4 +1,4 @@
-export const PATHS = {
+﻿export const PATHS = {
     AUTH: {
         LOGIN: '/login',
         REGISTER: '/register',
@@ -25,6 +25,8 @@ export const PATHS = {
         POST_DETAIL: '/customer/post/:id',
         WRITE_REVIEW: '/customer/write-review',
         EXPLORE: '/customer/explore',
+        MERCHANT_INFO: (id: string) => `/customer/merchant/${id}`,
+        MERCHANT_DETAIL: '/customer/merchant/:id',
         VOUCHERS: '/customer/vouchers',
     },
     MERCHANT: {

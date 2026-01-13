@@ -5,7 +5,8 @@ import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import {
   HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
-  CustomerLayout, VouchersPage, ReviewsPage, WriteReviewPage, PostPage
+  CustomerLayout, VouchersPage, VoucherDisplay, ReviewsPage, WriteReviewPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
+  PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage
 } from '../features/customer';
 
 // Merchant Portal Components
@@ -51,8 +52,14 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.CUSTOMER.ME.NOTIFICATIONS} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.ME.HELP} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.POST_DETAIL} element={<PostPage />} />
+        <Route path={PATHS.CUSTOMER.MERCHANT_DETAIL} element={<MerchantDetailPage />} />
+        <Route path="/customer/merchant/:id/reviews" element={<MerchantReviewsPage />} />
         <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
+        <Route path="/customer/payment" element={<PaymentPage />} />
+        <Route path="/customer/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/customer/payment/coupon-success" element={<CouponPaymentSuccessPage />} />
         <Route path={PATHS.CUSTOMER.VOUCHERS} element={<VouchersPage />} />
+        <Route path="/customer/voucher/display" element={<VoucherDisplay />} />
       </Route>
       <Route path={PATHS.MERCHANT.ROOT} element={<MerchantLayout />}>
         <Route path={PATHS.MERCHANT.DASHBOARD} element={<MerchantDashboard />} />
