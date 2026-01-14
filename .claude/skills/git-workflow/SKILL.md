@@ -21,12 +21,11 @@ If user don't provide issue id, wait and tell user to provide issue id.
 `git add .`
 summarize changes for commit.
 ## 4. Commit
-**Fmt**: `<type>(scope): <subject> (#<id>)`
 **Rule**: type lowercase, id mandatory.
 **Ex**: `feat(auth): jwt login (#42)`
-**Cmd**: `git commit -m "<fmt>"`
+**Cmd**: `git commit -m "<type>(scope): <subject> (#<issue-id>)" -m "<body>" -m "<footer:Close/Fix/Resolve> #<issue-id>"`
 ## 5. Push
-**Cmd**: `git push -u origin HEAD`
+**Cmd**: `git push -u origin <branch>`
 **Task**: Create PR -> `dev`. Assign reviewers.
 ## 6. Cleanup
 **Logic**: **STOP**. Wait for merge confirmation and user to continue to next step.
