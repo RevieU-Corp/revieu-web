@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
-import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget } from '../components';
+import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget, FilterModal } from '../components';
 import { filterMerchantsByCategory } from '../../shared/utils/categoryUtils';
 import { generateRecommendations } from '../../shared/utils/recommendationUtils';
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../../shared/constants/categories';
@@ -79,11 +79,22 @@ const merchants: Merchant[] = [
 
 const DiscoverPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // 开发中提示
   const showDevelopmentAlert = () => {
     alert('此功能正在开发中');
   };
+
+  // 从所有商家中提取所有可用的 tags
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    merchants.forEach(merchant => {
+      merchant.tags.forEach(tag => tagsSet.add(tag));
+    });
+    return Array.from(tagsSet).sort();
+  }, []);
 
   // 获取分类显示名称
   const getCategoryDisplayName = (categoryId: string) => {
@@ -101,13 +112,24 @@ const DiscoverPage: React.FC = () => {
     setSelectedCategory(categoryId);
   };
 
-  // 筛选商家
+  // 筛选商家 - 支持按分类和标签筛选
   const filteredMerchants = React.useMemo(() => {
+    let filtered = merchants;
+
+    // 按分类筛选
     if (selectedCategory) {
-      return filterMerchantsByCategory(merchants, selectedCategory);
+      filtered = filterMerchantsByCategory(filtered, selectedCategory);
     }
-    return merchants;
-  }, [selectedCategory]);
+
+    // 按标签筛选 - 商家必须包含所有选中的标签
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(merchant =>
+        selectedTags.every(tag => merchant.tags.includes(tag))
+      );
+    }
+
+    return filtered;
+  }, [selectedCategory, selectedTags]);
 
   // 生成推荐列表 - 当选择的分类商家不够时，自动添加其他热门商家
   const recommendations = React.useMemo(() => {
@@ -193,11 +215,20 @@ const DiscoverPage: React.FC = () => {
 
           {/* 筛选按钮 */}
           <button
-            onClick={showDevelopmentAlert}
-            className="flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            onClick={() => setIsFilterModalOpen(true)}
+            className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm transition-colors ${
+              selectedTags.length > 0
+                ? 'bg-[#990000] text-white border-[#990000] hover:bg-[#880000]'
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filter</span>
+            {selectedTags.length > 0 && (
+              <span className="ml-1 bg-white text-[#990000] text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {selectedTags.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -243,6 +274,14 @@ const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        availableTags={availableTags}
+        selectedTags={selectedTags}
+        onApplyFilter={setSelectedTags}
+      />
     </div>
   );
 };

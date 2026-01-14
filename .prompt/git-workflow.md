@@ -55,9 +55,11 @@ git add <file>   # Stage specific file
 ### 6. Commit Message Format
 Use the Conventional Commits specification:
 ```text
-<type>(<scope>): <subject>
+<type>(<scope>): <subject> (#<issue-id>)
 
-<body> (optional)
+<body> (at least 10 characters)
+
+<footer> (must contain "Closes/Refs/Fixes/Resolves/Reverts #<issue-id>")
 ```
 
 | Type | Description |

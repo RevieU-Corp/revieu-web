@@ -6,6 +6,7 @@ export * from './shared/contexts';
 // Modules
 export * from './home';
 export * from './discover';
+export * from './explore';
 export * from './profile';
 export * from './vouchers';
 export * from './reviews';

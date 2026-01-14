@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import InteractiveMap from '../../shared/components/InteractiveMap';
 import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
+import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
 
 // TypeScript interfaces
@@ -36,6 +37,7 @@ interface StoreData {
   coordinates: { lat: number; lng: number };
   coverPhoto: string;
   gallery: string[];
+  menuImages: string[];
   bio: string;
   menu: MenuItem[];
   operatingHours: {
@@ -58,6 +60,11 @@ const mockStoreData: StoreData = {
   coordinates: { lat: 34.0253, lng: -118.2831 },
   coverPhoto: DEFAULT_MERCHANT_ASSETS.COVER_PHOTO, // Use default cover photo
   gallery: DEFAULT_MERCHANT_ASSETS.DEFAULT_GALLERY, // Use default gallery
+  menuImages: [
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop", // Menu board
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop", // Restaurant menu
+    "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop"  // Digital menu display
+  ],
   bio: "Welcome to the heart of the Trojan community! Serving USC students and local residents 24/7. We offer high-speed Wi-Fi, ample indoor seating, and the classic taste you love. Perfect for late-night study sessions or pre-game meals.",
   operatingHours: {
     open: "06:00",
@@ -121,6 +128,16 @@ const StoreProfile: React.FC = () => {
     onConfirm: () => { }
   });
 
+  const [menuItemModal, setMenuItemModal] = useState<{
+    isOpen: boolean;
+    mode: 'add' | 'edit';
+    item: MenuItem | null;
+  }>({
+    isOpen: false,
+    mode: 'add',
+    item: null
+  });
+
   const handleSave = () => {
     setIsEditing(false);
     // Here you would typically save to backend
@@ -131,7 +148,7 @@ const StoreProfile: React.FC = () => {
     setStoreData(mockStoreData); // Reset to original data
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'gallery') => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'gallery' | 'menuImages') => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -139,11 +156,17 @@ const StoreProfile: React.FC = () => {
         const result = e.target?.result as string;
         if (type === 'cover') {
           setStoreData(prev => ({ ...prev, coverPhoto: result }));
-        } else {
+        } else if (type === 'gallery') {
           // For gallery, add to existing images
           setStoreData(prev => ({
             ...prev,
             gallery: [...prev.gallery, result]
+          }));
+        } else if (type === 'menuImages') {
+          // For menu images, add to existing images
+          setStoreData(prev => ({
+            ...prev,
+            menuImages: [...prev.menuImages, result]
           }));
         }
       };
@@ -175,6 +198,35 @@ const StoreProfile: React.FC = () => {
         setStoreData(prev => ({
           ...prev,
           gallery: prev.gallery.filter((_, i) => i !== index)
+        }));
+      }
+    });
+  };
+
+  const handleMenuImageEdit = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setStoreData(prev => ({
+          ...prev,
+          menuImages: prev.menuImages.map((img, i) => i === index ? result : img)
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteMenuImage = (index: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Menu Image',
+      message: 'Are you sure you want to delete this menu image? This action cannot be undone.',
+      onConfirm: () => {
+        setStoreData(prev => ({
+          ...prev,
+          menuImages: prev.menuImages.filter((_, i) => i !== index)
         }));
       }
     });
@@ -236,6 +288,54 @@ const StoreProfile: React.FC = () => {
 
   const closeConfirmDialog = () => {
     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleAddMenuItem = () => {
+    setMenuItemModal({
+      isOpen: true,
+      mode: 'add',
+      item: null
+    });
+  };
+
+  const handleEditMenuItem = (item: MenuItem) => {
+    setMenuItemModal({
+      isOpen: true,
+      mode: 'edit',
+      item
+    });
+  };
+
+  const handleSaveMenuItem = (itemData: Omit<MenuItem, 'id'> | MenuItem) => {
+    if (menuItemModal.mode === 'add') {
+      // Generate new ID
+      const newId = Math.max(...storeData.menu.map(item => item.id), 0) + 1;
+      const newItem: MenuItem = {
+        id: newId,
+        ...(itemData as Omit<MenuItem, 'id'>)
+      };
+      
+      setStoreData(prev => ({
+        ...prev,
+        menu: [...prev.menu, newItem]
+      }));
+    } else {
+      // Update existing item
+      setStoreData(prev => ({
+        ...prev,
+        menu: prev.menu.map(item =>
+          item.id === (itemData as MenuItem).id ? (itemData as MenuItem) : item
+        )
+      }));
+    }
+  };
+
+  const closeMenuItemModal = () => {
+    setMenuItemModal({
+      isOpen: false,
+      mode: 'add',
+      item: null
+    });
   };
 
   return (
@@ -687,17 +787,105 @@ const StoreProfile: React.FC = () => {
           )}
         </div>
 
+        {/* Menu Images */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Menu Images</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Upload photos of your physical menus, menu boards, or digital displays
+              </p>
+            </div>
+            {isEditing && (
+              <label className="flex items-center gap-2 px-3 py-2 text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors cursor-pointer">
+                <Plus size={16} />
+                Add Menu Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'menuImages')}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
+          {storeData.menuImages.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {storeData.menuImages.map((image, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-100">
+                    <img
+                      src={image}
+                      alt={`Menu ${index + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  
+                  {isEditing && (
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
+                        {/* Edit button */}
+                        <label className="p-2 bg-white bg-opacity-90 text-gray-700 rounded-full hover:bg-opacity-100 transition-all cursor-pointer shadow-lg">
+                          <Edit3 size={16} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleMenuImageEdit(index, e)}
+                            className="hidden"
+                          />
+                        </label>
+                        
+                        {/* Delete button */}
+                        <button
+                          onClick={() => handleDeleteMenuImage(index)}
+                          className="p-2 bg-red-600 bg-opacity-90 text-white rounded-full hover:bg-opacity-100 transition-all shadow-lg"
+                          title="Delete menu image"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+              <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-sm font-medium text-gray-900 mb-2">No menu images yet</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {isEditing 
+                  ? "Upload photos of your menus to help customers see what you offer"
+                  : "Menu images will appear here once added"
+                }
+              </p>
+              {isEditing && (
+                <label className="inline-flex items-center gap-2 px-4 py-2 text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors cursor-pointer">
+                  <Plus size={16} />
+                  Add First Menu Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'menuImages')}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Menu Items */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Menu & Products</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Add images to make your menu items more appealing to customers
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900">Star Products</h2>
             </div>
             {isEditing && (
-              <button className="flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
+              <button 
+                onClick={handleAddMenuItem}
+                className="flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
                 style={{ backgroundColor: '#FFBC0D' }}>
                 <Plus size={16} />
                 Add Item
@@ -797,7 +985,9 @@ const StoreProfile: React.FC = () => {
                         <p className="text-xl font-bold text-gray-900">${item.price}</p>
                         {isEditing && (
                           <div className="flex items-center gap-2 mt-2">
-                            <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                            <button 
+                              onClick={() => handleEditMenuItem(item)}
+                              className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                               <Edit3 size={16} />
                             </button>
                             <button
@@ -834,6 +1024,15 @@ const StoreProfile: React.FC = () => {
         title={confirmDialog.title}
         message={confirmDialog.message}
         type="danger"
+      />
+
+      {/* Menu Item Modal */}
+      <MenuItemModal
+        isOpen={menuItemModal.isOpen}
+        onClose={closeMenuItemModal}
+        onSave={handleSaveMenuItem}
+        item={menuItemModal.item}
+        mode={menuItemModal.mode}
       />
     </>
   );

@@ -4,6 +4,7 @@ import { Star, TrendingUp, Users, Gift, Trash2, ChevronDown, ChevronUp, Package,
 import TrafficChart from '../components/TrafficChart';
 import CouponManager from '../../marketing/components/CouponManager';
 import PackageManager from '../../marketing/components/PackageManager';
+import RedemptionButton from '../../marketing/components/RedemptionButton';
 import ReviewReplyModal from '../../reviews/components/ReviewReplyModal';
 import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
 import AllReviews from '../../reviews/pages/AllReviews';
@@ -359,7 +360,12 @@ const MerchantDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 relative">
+      {/* Redemption Button - Dashboard Only */}
+      <div className="fixed top-4 right-4 z-[60]">
+        <RedemptionButton />
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Your Store</h1>
