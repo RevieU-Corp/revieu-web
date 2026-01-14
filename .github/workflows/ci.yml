@@ -12,7 +12,7 @@ env:
   IMAGE_NAME_LC: ""
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -49,17 +49,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check and Build
-        run: npm run build
+      - name: Type check
+        run: npx tsc --noEmit
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-outputs
-          path: dist/
+      - name: Run tests
+        run: npm run test:run
 
   docker-build-push:
-    needs: build-and-test
+    needs: test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
     permissions:
