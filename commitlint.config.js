@@ -29,5 +29,6 @@ export default {
         'header-match-issue-id': [2, 'always'],
         'body-be-detailed': [2, 'always'],
         'body-leading-blank': [2, 'always'],
+        'references-empty': [2, 'never'],
     }
 };
