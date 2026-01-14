@@ -1,44 +1,32 @@
 # .github/CODEOWNERS
 
 # --------------------------------------------------------
-# 默认规则
+# 默认规则：没人管的文件归你
 # --------------------------------------------------------
 * @LosFurina
 
 # --------------------------------------------------------
-# 1. Infra 团队 (运维/基建/配置)
+# 1. Infra 团队 (负责基建、配置、CI)
 # --------------------------------------------------------
-# 容器化与服务器配置
-Dockerfile              @Infra-Team
-nginx/                  @Infra-Team
-
-# 工程化配置 (构建、测试、Lint、依赖)
-# 既然是做基建，这些配置文件变动应该经过 Infra 同意
-vite.config.ts          @Infra-Team
-vitest.config.ts        @Infra-Team
-commitlint.config.js    @Infra-Team
-tsconfig.json           @Infra-Team
-package.json            @Infra-Team
-package-lock.json       @Infra-Team
-
-# GitHub Actions (CI/CD 流程)
-.github/                @Infra-Team
+Dockerfile              @RevieU-Corp/Infra-Team
+nginx/                  @RevieU-Corp/Infra-Team
+vite.config.ts          @RevieU-Corp/Infra-Team
+vitest.config.ts        @RevieU-Corp/Infra-Team
+commitlint.config.js    @RevieU-Corp/Infra-Team
+tsconfig.json           @RevieU-Corp/Infra-Team
+package.json            @RevieU-Corp/Infra-Team
+package-lock.json       @RevieU-Corp/Infra-Team
+.github/                @RevieU-Corp/Infra-Team
 
 # --------------------------------------------------------
-# 2. Frontend 团队 (业务代码)
+# 2. Frontend 团队 (负责业务源码)
 # --------------------------------------------------------
-# 核心源码目录
-src/                    @Frontend-Devs
-
-# 入口文件
-index.html              @Frontend-Devs
+src/                    @RevieU-Corp/Frontend-Devs
+index.html              @RevieU-Corp/Frontend-Devs
 
 # --------------------------------------------------------
-# 3. Arch 团队 (文档/架构设计)
+# 3. Arch 团队 (负责文档、元数据)
 # --------------------------------------------------------
-# 项目说明与文档
-README.md               @Arch-Team
-docs/                   @Arch-Team
-
-# 元数据 (通常涉及项目定义，归架构管)
-metadata.json           @Arch-Team
+README.md               @RevieU-Corp/Arch-Team
+docs/                   @RevieU-Corp/Arch-Team
+metadata.json           @RevieU-Corp/Arch-Team
