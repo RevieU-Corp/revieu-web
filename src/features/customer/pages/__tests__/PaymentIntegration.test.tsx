@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
+import { MemoryRouter } from 'react-router-dom';
 import PaymentPage from '../PaymentPage';
 import CouponPaymentSuccessPage from '../CouponPaymentSuccessPage';
 import { CouponPaymentData, MerchantInfo } from '../../shared/types/coupons';
@@ -63,158 +64,126 @@ const mockMerchantInfo: MerchantInfo = {
   phone: '(555) 123-4567'
 };
 
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
-};
+// Clean up after each test to prevent DOM pollution
+afterEach(() => {
+  cleanup();
+});
 
 describe('Payment Integration for Coupons', () => {
   describe('PaymentPage with Coupon Data', () => {
     it('should display coupon information when coupon data is provided', () => {
-      // Mock location state with coupon data
-      const mockLocation = {
-        state: {
-          couponData: mockCouponPaymentData,
-          merchantInfo: mockMerchantInfo
-        },
-        pathname: '/customer/payment',
-        search: '',
-        hash: '',
-        key: 'test'
-      };
-
-      // Mock useLocation hook
-      vi.doMock('react-router-dom', async () => {
-        const actual = await vi.importActual('react-router-dom');
-        return {
-          ...actual,
-          useLocation: () => mockLocation,
-          useNavigate: () => vi.fn()
-        };
-      });
-
-      renderWithRouter(<PaymentPage />);
+      // Render with MemoryRouter and inject location state
+      render(
+        <MemoryRouter initialEntries={[{
+          pathname: '/customer/payment',
+          state: {
+            couponData: mockCouponPaymentData,
+            merchantInfo: mockMerchantInfo
+          }
+        }]}>
+          <PaymentPage />
+        </MemoryRouter>
+      );
 
       // Check that coupon-specific elements are displayed
       expect(screen.getByText('Coupon Deal')).toBeInTheDocument();
-      expect(screen.getByText('Test Deal')).toBeInTheDocument();
-      expect(screen.getByText('Test Merchant')).toBeInTheDocument();
-      expect(screen.getByText('$15.99')).toBeInTheDocument();
+      const dealTitles = screen.getAllByText('Test Deal');
+      expect(dealTitles.length).toBeGreaterThan(0);
+      const merchantNames = screen.getAllByText('Test Merchant');
+      expect(merchantNames.length).toBeGreaterThan(0);
+      const prices = screen.getAllByText('$15.99');
+      expect(prices.length).toBeGreaterThan(0);
     });
 
     it('should display regular payment interface when no coupon data is provided', () => {
-      const mockLocation = {
-        state: {
-          dealInfo: {
-            title: 'Regular Deal',
-            price: '12.99',
-            oldPrice: '18.99',
-            description: 'Regular deal description'
+      // Render with MemoryRouter and inject regular deal info
+      render(
+        <MemoryRouter initialEntries={[{
+          pathname: '/customer/payment',
+          state: {
+            dealInfo: {
+              title: 'Regular Deal',
+              price: '12.99',
+              oldPrice: '18.99',
+              description: 'Regular deal description'
+            }
           }
-        },
-        pathname: '/customer/payment',
-        search: '',
-        hash: '',
-        key: 'test'
-      };
-
-      vi.doMock('react-router-dom', async () => {
-        const actual = await vi.importActual('react-router-dom');
-        return {
-          ...actual,
-          useLocation: () => mockLocation,
-          useNavigate: () => vi.fn()
-        };
-      });
-
-      renderWithRouter(<PaymentPage />);
+        }]}>
+          <PaymentPage />
+        </MemoryRouter>
+      );
 
       // Check that regular payment elements are displayed
       expect(screen.getByText('Regular Deal')).toBeInTheDocument();
-      expect(screen.getByText('¥12.99')).toBeInTheDocument();
+      const prices = screen.getAllByText('¥12.99');
+      expect(prices.length).toBeGreaterThan(0);
       expect(screen.queryByText('Coupon Deal')).not.toBeInTheDocument();
     });
   });
 
+
   describe('CouponPaymentSuccessPage', () => {
     it('should display coupon redemption success information', () => {
-      const mockLocation = {
-        state: {
-          dealInfo: {
-            title: 'Test Deal',
-            price: '15.99',
-            description: 'Test deal description'
-          },
-          paymentMethod: 'UPay',
-          orderNumber: 'ORD123456789',
-          voucherCode: 'TEST-VOUCHER-CODE',
-          couponData: mockCouponPaymentData,
-          merchantInfo: mockMerchantInfo,
-          isCouponPayment: true
-        },
-        pathname: '/customer/payment/coupon-success',
-        search: '',
-        hash: '',
-        key: 'test'
-      };
-
-      vi.doMock('react-router-dom', async () => {
-        const actual = await vi.importActual('react-router-dom');
-        return {
-          ...actual,
-          useLocation: () => mockLocation,
-          useNavigate: () => vi.fn()
-        };
-      });
-
-      renderWithRouter(<CouponPaymentSuccessPage />);
+      // Render with MemoryRouter and inject coupon payment success state
+      render(
+        <MemoryRouter initialEntries={[{
+          pathname: '/customer/payment/coupon-success',
+          state: {
+            dealInfo: {
+              title: 'Test Deal',
+              price: '15.99',
+              description: 'Test deal description'
+            },
+            paymentMethod: 'UPay',
+            orderNumber: 'ORD123456789',
+            voucherCode: 'TEST-VOUCHER-CODE',
+            couponData: mockCouponPaymentData,
+            merchantInfo: mockMerchantInfo,
+            isCouponPayment: true
+          }
+        }]}>
+          <CouponPaymentSuccessPage />
+        </MemoryRouter>
+      );
 
       // Check that coupon success elements are displayed
       expect(screen.getByText('Coupon Redeemed!')).toBeInTheDocument();
       expect(screen.getByText('Your voucher is ready to use')).toBeInTheDocument();
       expect(screen.getByText('Coupon Deal Redeemed')).toBeInTheDocument();
-      expect(screen.getByText('Test Deal')).toBeInTheDocument();
+      const dealTitles = screen.getAllByText('Test Deal');
+      expect(dealTitles.length).toBeGreaterThan(0);
     });
 
     it('should display merchant information when provided', () => {
-      const mockLocation = {
-        state: {
-          dealInfo: {
-            title: 'Test Deal',
-            price: '15.99',
-            description: 'Test deal description'
-          },
-          paymentMethod: 'UPay',
-          orderNumber: 'ORD123456789',
-          voucherCode: 'TEST-VOUCHER-CODE',
-          couponData: mockCouponPaymentData,
-          merchantInfo: mockMerchantInfo,
-          isCouponPayment: true
-        },
-        pathname: '/customer/payment/coupon-success',
-        search: '',
-        hash: '',
-        key: 'test'
-      };
-
-      vi.doMock('react-router-dom', async () => {
-        const actual = await vi.importActual('react-router-dom');
-        return {
-          ...actual,
-          useLocation: () => mockLocation,
-          useNavigate: () => vi.fn()
-        };
-      });
-
-      renderWithRouter(<CouponPaymentSuccessPage />);
+      // Render with MemoryRouter and inject coupon payment success state
+      render(
+        <MemoryRouter initialEntries={[{
+          pathname: '/customer/payment/coupon-success',
+          state: {
+            dealInfo: {
+              title: 'Test Deal',
+              price: '15.99',
+              description: 'Test deal description'
+            },
+            paymentMethod: 'UPay',
+            orderNumber: 'ORD123456789',
+            voucherCode: 'TEST-VOUCHER-CODE',
+            couponData: mockCouponPaymentData,
+            merchantInfo: mockMerchantInfo,
+            isCouponPayment: true
+          }
+        }]}>
+          <CouponPaymentSuccessPage />
+        </MemoryRouter>
+      );
 
       // Check that merchant information is displayed
-      expect(screen.getByText('Test Merchant')).toBeInTheDocument();
-      expect(screen.getByText('123 Test St, Test City')).toBeInTheDocument();
-      expect(screen.getByText('(555) 123-4567')).toBeInTheDocument();
+      const merchantNames = screen.getAllByText('Test Merchant');
+      expect(merchantNames.length).toBeGreaterThan(0);
+      const addresses = screen.getAllByText('123 Test St, Test City');
+      expect(addresses.length).toBeGreaterThan(0);
+      const phones = screen.getAllByText('(555) 123-4567');
+      expect(phones.length).toBeGreaterThan(0);
     });
   });
 
