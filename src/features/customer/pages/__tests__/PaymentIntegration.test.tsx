@@ -63,7 +63,7 @@ const mockMerchantInfo: MerchantInfo = {
   phone: '(555) 123-4567'
 };
 
-const renderWithRouter = (component: React.ReactElement, initialState?: any) => {
+const renderWithRouter = (component: React.ReactElement) => {
   return render(
     <BrowserRouter>
       {component}
