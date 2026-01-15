@@ -20,7 +20,7 @@ import {
 
 describe('Data Model Validation Properties', () => {
   // Generators for property-based testing
-  
+
   const eligibilityRuleArb = fc.record({
     type: fc.constantFrom('new_user', 'membership_level', 'previous_purchase', 'location', 'age_restriction', 'single_use'),
     value: fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.object()),
@@ -28,63 +28,66 @@ describe('Data Model Validation Properties', () => {
   });
 
   const validCouponArb = fc.record({
-    id: fc.string({ minLength: 1 }),
-    merchantId: fc.string({ minLength: 1 }),
-    title: fc.string({ minLength: 1 }),
-    description: fc.string({ minLength: 1 }),
+    id: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'id'),
+    merchantId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'merchant'),
+    title: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'title'),
+    description: fc.string({ minLength: 1, maxLength: 500 }).map(s => s.trim() || 'description'),
     type: fc.constantFrom('free', 'paid'),
-    value: fc.string({ minLength: 1 }),
+    value: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'value'),
     price: fc.option(fc.float({ min: Math.fround(0.01), max: Math.fround(10000) })),
-    expiryDate: fc.date({ min: new Date(Date.now() + 86400000) }), // Future date
+    expiryDate: fc.date({ min: new Date(Date.now() + 86400000), noInvalidDate: true }), // Future date
     maxRedemptions: fc.option(fc.integer({ min: 1, max: 10000 })),
     currentRedemptions: fc.integer({ min: 0, max: 1000 }),
     eligibilityRules: fc.array(eligibilityRuleArb, { minLength: 0, maxLength: 5 }),
-    usageInstructions: fc.string({ minLength: 1 }),
+    usageInstructions: fc.string({ minLength: 1, maxLength: 500 }).map(s => s.trim() || 'instructions'),
     isActive: fc.boolean(),
-    createdAt: fc.date({ max: new Date() }),
-    updatedAt: fc.date({ max: new Date() })
+    createdAt: fc.date({ max: new Date(), noInvalidDate: true }),
+    updatedAt: fc.date({ max: new Date(), noInvalidDate: true })
   });
 
   const validVoucherArb = fc.record({
-    id: fc.string({ minLength: 1 }),
-    code: fc.string({ minLength: 8, maxLength: 12 }).map(s => s.toUpperCase().replace(/[^A-Z0-9]/g, 'A')),
-    couponId: fc.string({ minLength: 1 }),
-    userId: fc.string({ minLength: 1 }),
-    merchantId: fc.string({ minLength: 1 }),
+    id: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'id'),
+    code: fc.string({ minLength: 8, maxLength: 12 }).map(s => {
+      const cleaned = s.toUpperCase().replace(/[^A-Z0-9]/g, 'A');
+      return cleaned.padEnd(8, 'A').slice(0, 12);
+    }),
+    couponId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'coupon'),
+    userId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'user'),
+    merchantId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'merchant'),
     status: fc.constantFrom('active', 'used', 'expired'),
-    generatedAt: fc.date({ max: new Date() }),
-    expiryDate: fc.date({ min: new Date() }),
-    usedAt: fc.option(fc.date()),
-    qrCode: fc.string({ minLength: 1 }),
-    paymentId: fc.option(fc.string({ minLength: 1 })),
-    usageInstructions: fc.string({ minLength: 1 }),
-    merchantName: fc.string({ minLength: 1 }),
-    dealTitle: fc.string({ minLength: 1 }),
-    dealValue: fc.string({ minLength: 1 })
+    generatedAt: fc.date({ max: new Date(), noInvalidDate: true }),
+    expiryDate: fc.date({ min: new Date(), noInvalidDate: true }),
+    usedAt: fc.option(fc.date({ noInvalidDate: true })),
+    qrCode: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'qr'),
+    paymentId: fc.option(fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'payment')),
+    usageInstructions: fc.string({ minLength: 1, maxLength: 500 }).map(s => s.trim() || 'instructions'),
+    merchantName: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'merchant'),
+    dealTitle: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'deal'),
+    dealValue: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'value')
   });
 
   const validPaymentDataArb = fc.record({
-    couponId: fc.string({ minLength: 1 }),
+    couponId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'coupon'),
     dealInfo: fc.record({
-      id: fc.string({ minLength: 1 }),
-      title: fc.string({ minLength: 1 }),
-      description: fc.string({ minLength: 1 }),
-      value: fc.string({ minLength: 1 }),
+      id: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'deal'),
+      title: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'title'),
+      description: fc.string({ minLength: 1, maxLength: 500 }).map(s => s.trim() || 'description'),
+      value: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'value'),
       type: fc.constantFrom('free', 'paid'),
       price: fc.option(fc.float({ min: Math.fround(0.01) })),
-      expiryDate: fc.date({ min: new Date() }),
-      usageInstructions: fc.string({ minLength: 1 })
+      expiryDate: fc.date({ min: new Date(), noInvalidDate: true }),
+      usageInstructions: fc.string({ minLength: 1, maxLength: 500 }).map(s => s.trim() || 'instructions')
     }),
     merchantInfo: fc.record({
-      id: fc.string({ minLength: 1 }),
-      name: fc.string({ minLength: 1 }),
-      logo: fc.string({ minLength: 1 }),
-      address: fc.string({ minLength: 1 }),
-      phone: fc.string({ minLength: 1 })
+      id: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'merchant'),
+      name: fc.string({ minLength: 1, maxLength: 100 }).map(s => s.trim() || 'name'),
+      logo: fc.string({ minLength: 1, maxLength: 200 }).map(s => s.trim() || 'logo.png'),
+      address: fc.string({ minLength: 1, maxLength: 200 }).map(s => s.trim() || 'address'),
+      phone: fc.string({ minLength: 1, maxLength: 20 }).map(s => s.trim() || '1234567890')
     }),
-    paymentAmount: fc.float({ min: Math.fround(0.01), max: Math.fround(10000) }),
-    currency: fc.string({ minLength: 3, maxLength: 3 }).map(s => s.toUpperCase()),
-    userId: fc.string({ minLength: 1 })
+    paymentAmount: fc.float({ min: Math.fround(0.01), max: Math.fround(10000), noNaN: true }),
+    currency: fc.constantFrom('USD', 'EUR', 'GBP', 'JPY', 'CNY', 'CAD', 'AUD'),
+    userId: fc.string({ minLength: 1, maxLength: 50 }).map(s => s.trim() || 'user')
   });
 
   describe('Property 1: Coupon validation consistency', () => {
@@ -95,20 +98,20 @@ describe('Data Model Validation Properties', () => {
           if (couponData.type === 'paid' && !couponData.price) {
             couponData.price = 10.0;
           }
-          
+
           const validationResult = validateCouponData(couponData);
           const typeGuardResult = isCoupon(couponData);
           const schemaResult = couponValidationSchema.validate(couponData);
-          
+
           // All validation methods should agree on valid data
           expect(validationResult.success).toBe(true);
           expect(typeGuardResult).toBe(true);
           expect(schemaResult.success).toBe(true);
-          
+
           // Valid data should be returned
           expect(validationResult.data).toBeDefined();
           expect(schemaResult.data).toBeDefined();
-          
+
           // No errors should be present
           expect(validationResult.errors).toHaveLength(0);
           expect(schemaResult.errors).toHaveLength(0);
@@ -130,11 +133,11 @@ describe('Data Model Validation Properties', () => {
           (invalidData) => {
             const validationResult = validateCouponData(invalidData);
             const typeGuardResult = isCoupon(invalidData);
-            
+
             // Both should reject invalid data
             expect(validationResult.success).toBe(false);
             expect(typeGuardResult).toBe(false);
-            
+
             // Should have validation errors
             expect(validationResult.errors.length).toBeGreaterThan(0);
           }
@@ -147,10 +150,10 @@ describe('Data Model Validation Properties', () => {
       fc.assert(
         fc.property(eligibilityRuleArb, (rule) => {
           const isValidRule = isEligibilityRule(rule);
-          
+
           // Valid eligibility rules should pass type guard
           expect(isValidRule).toBe(true);
-          
+
           // Rule should have required properties
           expect(rule.type).toBeDefined();
           expect(rule.description).toBeDefined();
@@ -170,10 +173,10 @@ describe('Data Model Validation Properties', () => {
           })),
           (expiredCoupon) => {
             const validationResult = validateCouponData(expiredCoupon);
-            
+
             // Expired coupons should fail validation
             expect(validationResult.success).toBe(false);
-            
+
             // Should have specific error about expiry
             const hasExpiryError = validationResult.errors.some(
               error => error.field === 'expiryDate' && error.code === 'EXPIRED_DATE'
@@ -195,10 +198,10 @@ describe('Data Model Validation Properties', () => {
           })),
           (paidCouponWithoutPrice) => {
             const validationResult = validateCouponData(paidCouponWithoutPrice);
-            
+
             // Paid coupons without price should fail
             expect(validationResult.success).toBe(false);
-            
+
             // Should have specific error about price
             const hasPriceError = validationResult.errors.some(
               error => error.field === 'price' && error.code === 'INVALID_PRICE'
@@ -218,16 +221,16 @@ describe('Data Model Validation Properties', () => {
           const validationResult = validateVoucherData(voucherData);
           const typeGuardResult = isVoucher(voucherData);
           const schemaResult = voucherValidationSchema.validate(voucherData);
-          
+
           // All validation methods should agree on valid data
           expect(validationResult.success).toBe(true);
           expect(typeGuardResult).toBe(true);
           expect(schemaResult.success).toBe(true);
-          
+
           // Valid data should be returned
           expect(validationResult.data).toBeDefined();
           expect(schemaResult.data).toBeDefined();
-          
+
           // No errors should be present
           expect(validationResult.errors).toHaveLength(0);
           expect(schemaResult.errors).toHaveLength(0);
@@ -239,13 +242,18 @@ describe('Data Model Validation Properties', () => {
     it('should consistently validate voucher code formats', () => {
       fc.assert(
         fc.property(
-          fc.string({ minLength: 8, maxLength: 12 }).map(s => s.toUpperCase().replace(/[^A-Z0-9]/g, 'A')),
-          (validCode) => {
-            const voucher = fc.sample(validVoucherArb, 1)[0];
+          fc.tuple(
+            validVoucherArb,
+            fc.string({ minLength: 8, maxLength: 12 }).map(s => {
+              const cleaned = s.toUpperCase().replace(/[^A-Z0-9]/g, 'A');
+              return cleaned.padEnd(8, 'A').slice(0, 12);
+            })
+          ),
+          ([voucher, validCode]) => {
             voucher.code = validCode;
-            
+
             const validationResult = validateVoucherData(voucher);
-            
+
             // Valid voucher codes should pass validation
             expect(validationResult.success).toBe(true);
           }
@@ -260,7 +268,7 @@ describe('Data Model Validation Properties', () => {
       fc.assert(
         fc.property(validPaymentDataArb, (paymentData) => {
           const validationResult = validatePaymentData(paymentData);
-          
+
           // Valid payment data should pass validation
           expect(validationResult.success).toBe(true);
           expect(validationResult.data).toBeDefined();
@@ -284,10 +292,10 @@ describe('Data Model Validation Properties', () => {
           })),
           (invalidPaymentData) => {
             const validationResult = validatePaymentData(invalidPaymentData);
-            
+
             // Invalid payment amounts should fail validation
             expect(validationResult.success).toBe(false);
-            
+
             // Should have specific error about payment amount
             const hasAmountError = validationResult.errors.some(
               error => error.field === 'paymentAmount' && error.code === 'INVALID_AMOUNT'
@@ -309,15 +317,15 @@ describe('Data Model Validation Properties', () => {
             // Link voucher to coupon
             voucher.couponId = coupon.id;
             voucher.merchantId = coupon.merchantId;
-            
+
             const couponValidation = validateCouponData(coupon);
             const voucherValidation = validateVoucherData(voucher);
-            
+
             // If coupon is valid, voucher should also be valid when properly linked
             if (couponValidation.success) {
               expect(voucherValidation.success).toBe(true);
             }
-            
+
             // Both should have consistent merchant IDs
             if (couponValidation.success && voucherValidation.success) {
               expect(couponValidation.data?.merchantId).toBe(voucherValidation.data?.merchantId);
@@ -333,12 +341,12 @@ describe('Data Model Validation Properties', () => {
         fc.property(validCouponArb, (coupon) => {
           const fullValidation = couponValidationSchema.validate(coupon);
           const partialValidation = couponValidationSchema.validatePartial(coupon);
-          
+
           // If full validation passes, partial should also pass
           if (fullValidation.success) {
             expect(partialValidation.success).toBe(true);
           }
-          
+
           // Both should agree on data structure when valid
           if (fullValidation.success && partialValidation.success) {
             expect(fullValidation.data?.id).toBe(partialValidation.data?.id);
