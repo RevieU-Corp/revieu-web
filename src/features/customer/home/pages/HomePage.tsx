@@ -1,16 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { RangeSelector } from '../../../../components/common';
 import { StudentPost } from '../../reviews/components/StudentPost';
 import { ActivityCard, CityLocationButton } from '../components';
 import { useAutoScroll } from '../../shared/hooks/useAutoScroll';
-import { getPostCategoryTitle, showDevelopmentAlert } from '../../shared/utils/postUtils';
+import { showDevelopmentAlert } from '../../shared/utils/postUtils';
 import { activities, studentPosts } from '../../shared/constants/index';
 import { PostCategory } from '../../shared/types';
 
 const HomePage: React.FC = () => {
   const [activePostCategory, setActivePostCategory] = useState<PostCategory>('recommend');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const { handleMouseEnter, handleMouseLeave } = useAutoScroll(scrollContainerRef);
 
   const handlePostCategoryChange = (category: PostCategory) => {
@@ -19,6 +21,28 @@ const HomePage: React.FC = () => {
     }
     setActivePostCategory(category);
   };
+
+  // Check if tabs need scroll indicator
+  useEffect(() => {
+    const checkScroll = () => {
+      if (tabsContainerRef.current) {
+        const { scrollWidth, clientWidth, scrollLeft } = tabsContainerRef.current;
+        // Show indicator if there's more content to scroll
+        setShowScrollIndicator(scrollWidth > clientWidth && scrollLeft + clientWidth < scrollWidth - 5);
+      }
+    };
+
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+
+    const tabsContainer = tabsContainerRef.current;
+    tabsContainer?.addEventListener('scroll', checkScroll);
+
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      tabsContainer?.removeEventListener('scroll', checkScroll);
+    };
+  }, []);
 
   return (
     <div className="bg-white font-sans w-full">
@@ -130,77 +154,87 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Student Posts Grid */}
+        {/* Student Posts Section */}
         <div>
-          {/* Post Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-3 px-3 no-scrollbar">
-            <button
-              onClick={() => handlePostCategoryChange('recommend')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'recommend'
-                ? 'bg-[#990000] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+          {/* Category Tabs - Twitter Style */}
+          <div className="border-b border-gray-200 -mx-3 mb-5 relative">
+            <div
+              ref={tabsContainerRef}
+              className="flex gap-1 overflow-x-auto px-3 no-scrollbar scroll-smooth"
             >
-              推荐
-            </button>
-            <button
-              onClick={() => handlePostCategoryChange('follow')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'follow'
-                ? 'bg-[#990000] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              <button
+                onClick={() => handlePostCategoryChange('recommend')}
+                className={`px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+                  activePostCategory === 'recommend'
+                    ? 'text-[#990000]'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
-            >
-              关注
-            </button>
-            <button
-              onClick={() => handlePostCategoryChange('food')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'food'
-                ? 'bg-[#990000] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              >
+                推荐
+                {activePostCategory === 'recommend' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] rounded-t-full"></div>
+                )}
+              </button>
+              <button
+                onClick={() => handlePostCategoryChange('follow')}
+                className={`px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+                  activePostCategory === 'follow'
+                    ? 'text-[#990000]'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
-            >
-              美食
-            </button>
-            <button
-              onClick={() => handlePostCategoryChange('activity')}
-              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all relative overflow-hidden ${activePostCategory === 'activity'
-                ? 'shadow-lg transform scale-105'
-                : 'hover:shadow-md hover:scale-102'
+              >
+                关注
+                {activePostCategory === 'follow' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] rounded-t-full"></div>
+                )}
+              </button>
+              <button
+                onClick={() => handlePostCategoryChange('food')}
+                className={`px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+                  activePostCategory === 'food'
+                    ? 'text-[#990000]'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
-              style={{
-                background: 'linear-gradient(45deg, #FF6B35 0%, #F7931E 50%, #FFD700 100%)',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-              }}
-            >
-              <span className="relative z-10 font-extrabold tracking-wide text-white">
+              >
+                美食
+                {activePostCategory === 'food' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] rounded-t-full"></div>
+                )}
+              </button>
+              <button
+                onClick={() => handlePostCategoryChange('activity')}
+                className={`px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+                  activePostCategory === 'activity'
+                    ? 'text-[#990000]'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
                 🎪 活动
-              </span>
-              {activePostCategory === 'activity' && (
-                <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
-              )}
-            </button>
-            <button
-              onClick={() => handlePostCategoryChange('leisure')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${activePostCategory === 'leisure'
-                ? 'bg-[#990000] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                {activePostCategory === 'activity' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF6B35] via-[#F7931E] to-[#FFD700] rounded-t-full"></div>
+                )}
+              </button>
+              <button
+                onClick={() => handlePostCategoryChange('leisure')}
+                className={`px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
+                  activePostCategory === 'leisure'
+                    ? 'text-[#990000]'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
-            >
-              休闲
-            </button>
-          </div>
+              >
+                休闲
+                {activePostCategory === 'leisure' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] rounded-t-full"></div>
+                )}
+              </button>
+            </div>
 
-          {/* Post Section Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-lg text-gray-900">
-              {getPostCategoryTitle(activePostCategory)}
-            </h2>
-            <button
-              onClick={showDevelopmentAlert}
-              className="text-[#990000] text-sm font-semibold hover:underline"
-            >
-              Filter
-            </button>
+            {/* Scroll Indicator */}
+            {showScrollIndicator && (
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/90 to-transparent flex items-center justify-end pr-2 pointer-events-none">
+                <ChevronRight className="w-5 h-5 text-gray-400 animate-pulse" />
+              </div>
+            )}
           </div>
 
           {/* Posts Grid */}
