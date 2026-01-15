@@ -12,7 +12,8 @@ env:
   IMAGE_NAME_LC: ""
 
 jobs:
-  build-and-test:
+  test:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,13 +34,6 @@ jobs:
             exit 1
           fi
 
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "main" ]]; then
-            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
-              echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
-              exit 1
-            fi
-          fi
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,17 +43,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check and Build
-        run: npm run build
+      - name: Type check
+        run: npx tsc --noEmit
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-outputs
-          path: dist/
+      - name: Run tests
+        run: npm run test:run
 
   docker-build-push:
-    needs: build-and-test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
     permissions:
@@ -69,6 +59,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Enforce Merge Commit
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
+              echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
+              exit 1
+            fi
+          fi
 
       - name: Lowercase image name
         run: |
