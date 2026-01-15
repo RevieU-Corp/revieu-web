@@ -21,7 +21,8 @@ import {
   Messages,
   ChatDetail,
   SearchMessages,
-  Notifications
+  Notifications,
+  EmployeesPage
 } from '../features/merchant';
 
 const AppRouter: React.FC = () => {
@@ -67,6 +68,7 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.MERCHANT.ANALYTICS} element={<StoreAnalytics />} />
         <Route path={PATHS.MERCHANT.ADS} element={<AdManager />} />
         <Route path={PATHS.MERCHANT.PROFILE} element={<StoreProfile />} />
+        <Route path={PATHS.MERCHANT.EMPLOYEES} element={<EmployeesPage />} />
         <Route path={PATHS.MERCHANT.MESSAGES} element={<Messages />} />
         <Route path={PATHS.MERCHANT.CHAT_DETAIL} element={<ChatDetail />} />
         <Route path={PATHS.MERCHANT.CHAT_SEARCH} element={<SearchMessages />} />

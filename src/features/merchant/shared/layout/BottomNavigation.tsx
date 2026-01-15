@@ -6,7 +6,7 @@ import {
   Megaphone,
   Store,
   MessageCircle,
-  Bell,
+  Users,
   LucideIcon
 } from 'lucide-react';
 
@@ -32,10 +32,10 @@ const navigationItems: NavigationItem[] = [
     path: PATHS.MERCHANT.ADS
   },
   {
-    id: 'profile',
-    label: 'Store Profile',
-    icon: Store,
-    path: PATHS.MERCHANT.PROFILE
+    id: 'employees',
+    label: 'Employees',
+    icon: Users,
+    path: PATHS.MERCHANT.EMPLOYEES
   },
   {
     id: 'messages',
@@ -45,11 +45,10 @@ const navigationItems: NavigationItem[] = [
     badge: 3 // Mock unread count
   },
   {
-    id: 'notifications',
-    label: 'Notifications',
-    icon: Bell,
-    path: PATHS.MERCHANT.NOTIFICATIONS,
-    badge: 5 // Mock unread count
+    id: 'profile',
+    label: 'Profile',
+    icon: Store,
+    path: PATHS.MERCHANT.PROFILE
   }
 ];
 

@@ -44,5 +44,6 @@
         CHAT_SEARCH: '/merchant/messages/:chatId/search',
         SEARCH_MESSAGES: (chatId: string) => `/merchant/messages/${chatId}/search`,
         NOTIFICATIONS: '/merchant/notifications',
+        EMPLOYEES: '/merchant/employees',
     }
 };
