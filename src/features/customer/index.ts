@@ -11,5 +11,8 @@ export * from './profile';
 export * from './vouchers';
 export * from './reviews';
 
+// Pages
+export * from './pages';
+
 // Re-export CustomerLayout specifically if needed
 export { default as CustomerLayout } from './shared/layout/CustomerLayout';

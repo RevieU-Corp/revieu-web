@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
 import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget, FilterModal } from '../components';
 import { filterMerchantsByCategory } from '../../shared/utils/categoryUtils';
 import { generateRecommendations } from '../../shared/utils/recommendationUtils';
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../../shared/constants/categories';
 import { Merchant, RecommendedMerchant } from '../../shared/types';
+import { PATHS } from '../../../../routes/paths';
 import '../../shared/styles/DiscoverPage.css';
 
 // Mock Data - 保持现有的商家数据
@@ -78,6 +80,7 @@ const merchants: Merchant[] = [
 ];
 
 const DiscoverPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -87,6 +90,10 @@ const DiscoverPage: React.FC = () => {
     alert('此功能正在开发中');
   };
 
+  // 处理商家点击
+  const handleMerchantClick = (merchantId: number) => {
+    navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId.toString()));
+  };
   // 从所有商家中提取所有可用的 tags
   const availableTags = useMemo(() => {
     const tagsSet = new Set<string>();
@@ -216,11 +223,10 @@ const DiscoverPage: React.FC = () => {
           {/* 筛选按钮 */}
           <button
             onClick={() => setIsFilterModalOpen(true)}
-            className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm transition-colors ${
-              selectedTags.length > 0
-                ? 'bg-[#990000] text-white border-[#990000] hover:bg-[#880000]'
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-            }`}
+            className={`flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm transition-colors ${selectedTags.length > 0
+              ? 'bg-[#990000] text-white border-[#990000] hover:bg-[#880000]'
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filter</span>
@@ -234,7 +240,11 @@ const DiscoverPage: React.FC = () => {
 
         <div className="grid gap-4">
           {recommendations.map((merchant: RecommendedMerchant) => (
-            <div key={merchant.id} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]">
+            <div
+              key={merchant.id}
+              className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"
+              onClick={() => handleMerchantClick(merchant.id)}
+            >
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
                 <img src={merchant.image} alt={merchant.name} className="w-full h-full object-cover" />
                 {merchant.relevanceScore > 0.5 && (
