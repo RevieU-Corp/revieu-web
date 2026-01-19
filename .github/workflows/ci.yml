@@ -60,11 +60,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Enforce Merge Commit
+      - name: Enforce PR-based Workflow
         shell: bash
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            if [[ $(git show -s --format=%P HEAD | wc -w) -le 1 ]]; then
+            # Check if this is a PR merge by looking for PR references in commit message or merge commit parents
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            PARENT_COUNT=$(git show -s --format=%P HEAD | wc -w)
+
+            # Allow if: 1) It's a merge commit (2+ parents), OR 2) Commit message indicates PR merge
+            if [[ $PARENT_COUNT -le 1 ]] && ! echo "$COMMIT_MSG" | grep -qiE "(merge pull request|squash.*#[0-9]+|#[0-9]+.*\(#[0-9]+\))"; then
               echo "Error: Direct pushes to 'main' are not allowed. Please use a Pull Request from 'dev'."
               exit 1
             fi
