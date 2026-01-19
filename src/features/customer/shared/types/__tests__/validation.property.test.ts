@@ -169,7 +169,11 @@ describe('Data Model Validation Properties', () => {
         fc.property(
           validCouponArb.map(coupon => ({
             ...coupon,
-            expiryDate: fc.sample(fc.date({ max: new Date(Date.now() - 86400000) }), 1)[0] // Past date
+            expiryDate: fc.sample(fc.date({
+              min: new Date('2000-01-01'),
+              max: new Date(Date.now() - 86400000),
+              noInvalidDate: true
+            }), 1)[0] // Past date
           })),
           (expiredCoupon) => {
             const validationResult = validateCouponData(expiredCoupon);
