@@ -6,11 +6,11 @@ export default {
             rules: {
                 'header-match-issue-id': (parsed) => {
                     const { header } = parsed;
-                    const regex = /\s\(#\d+\)$/; // 检查 (#123)
+                    const regex = /\s\(#[a-z0-9]+\)$/i; // 检查 ClickUp ID (#86dzfegkp)
                     if (regex.test(header)) {
                         return [true];
                     }
-                    return [false, 'Header 必须以 (#issue-id) 结尾！例如: feat: fix bug (#123)'];
+                    return [false, 'Header 必须以 (#clickup-id) 结尾！例如: feat: fix bug (#86dzfegkp)'];
                 },
                 'body-be-detailed': (parsed) => {
                     const { body } = parsed;
