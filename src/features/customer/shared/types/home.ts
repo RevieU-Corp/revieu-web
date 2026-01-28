@@ -41,3 +41,48 @@ export interface StudentPostProps {
   likes: number;
   comments: number;
 }
+
+export interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  tag?: string;
+  rating?: number;
+  location: string;
+}
+
+export interface Merchant {
+  id: string;
+  name: string;
+  image: string;
+  category: string;
+  rating: number;
+  reviewCount: number;
+  distance: string;
+  status: 'Open' | 'Closed';
+  offer?: string;
+}
+
+export interface Review {
+  id: string;
+  author: string;
+  avatar: string;
+  timeAgo: string;
+  content: string;
+  image?: string;
+  likes: number;
+}
+
+export enum TabType {
+  HOME = 'HOME',
+  DISCOVER = 'DISCOVER',
+  EXPLORE = 'EXPLORE',
+  PROFILE = 'PROFILE'
+}
+
+export enum CategoryType {
+  RECOMMEND = 'Recommend',
+  FOLLOWING = 'Following',
+  ACTIVITIES = 'Activities'
+}
