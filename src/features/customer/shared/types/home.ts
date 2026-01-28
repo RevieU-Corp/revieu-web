@@ -52,7 +52,7 @@ export interface Activity {
   location: string;
 }
 
-export interface Merchant {
+export interface HomeMerchant {
   id: string;
   name: string;
   image: string;

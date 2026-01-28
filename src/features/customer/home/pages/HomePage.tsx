@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Header, FeatureBar, FeaturedSection, MerchantFeed } from '../components';
-import { Activity, Merchant } from '../../shared/types';
+import { Activity, HomeMerchant } from '../../shared/types';
 
 const MOCK_ACTIVITIES: Activity[] = [
   {
@@ -22,7 +22,7 @@ const MOCK_ACTIVITIES: Activity[] = [
   }
 ];
 
-const baseMerchants: Merchant[] = [
+const baseMerchants: HomeMerchant[] = [
   {
     id: 'm1',
     name: 'SunLife Organics',
@@ -58,7 +58,7 @@ const baseMerchants: Merchant[] = [
 ];
 
 // Generate 20 items by cycling through baseMerchants
-const MOCK_MERCHANTS: Merchant[] = Array.from({ length: 20 }).map((_, index) => {
+const MOCK_MERCHANTS: HomeMerchant[] = Array.from({ length: 20 }).map((_, index) => {
   const base = baseMerchants[index % baseMerchants.length];
   return {
     ...base,
@@ -70,11 +70,11 @@ const MOCK_MERCHANTS: Merchant[] = Array.from({ length: 20 }).map((_, index) => 
 });
 
 const HomePage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+
 
   return (
     <div className="bg-white min-h-screen pb-20 max-w-lg mx-auto overflow-x-hidden">
-      <Header onSearch={setSearchQuery} />
+      <Header />
 
       <main className="px-4 space-y-12 mt-6">
         <FeatureBar />

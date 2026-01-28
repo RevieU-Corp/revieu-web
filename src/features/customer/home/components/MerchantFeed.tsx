@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Merchant } from '../../shared/types';
+import { HomeMerchant } from '../../shared/types';
 
 interface MerchantFeedProps {
-    merchants: Merchant[];
+    merchants: HomeMerchant[];
 }
 
 const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {

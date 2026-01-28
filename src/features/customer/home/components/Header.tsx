@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 
 interface HeaderProps {
-    onSearch: (q: string) => void;
+    onSearch?: (q: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch = () => { } }) => {
     const [isFocused, setIsFocused] = useState(false);
 
     return (
