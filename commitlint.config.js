@@ -1,4 +1,5 @@
-// 注意这里：改成 export default
+
+// Note: Changed to export default
 export default {
     extends: ['@commitlint/config-conventional'],
     plugins: [
@@ -6,18 +7,19 @@ export default {
             rules: {
                 'header-match-issue-id': (parsed) => {
                     const { header } = parsed;
-                    const regex = /\s\(#[a-z0-9]+\)$/i; // 检查 ClickUp ID (#86dzfegkp)
+                    // Check for GitHub Issue ID, e.g., (#123) -> only digits
+                    const regex = /\s\(#[0-9]+\)$/;
                     if (regex.test(header)) {
                         return [true];
                     }
-                    return [false, 'Header 必须以 (#clickup-id) 结尾！例如: feat: fix bug (#86dzfegkp)'];
+                    return [false, 'Header must end with (#issue-id)! e.g. feat: fix bug (#123)'];
                 },
                 'body-be-detailed': (parsed) => {
                     const { body } = parsed;
                     if (body && body.length >= 10) {
                         return [true];
                     }
-                    return [false, 'Body 描述太短了！请详细说明改动内容 (至少10个字符)。'];
+                    return [false, 'Body is too short! Please provide a detailed description (at least 10 characters).'];
                 }
             }
         }
@@ -29,6 +31,8 @@ export default {
         'header-match-issue-id': [2, 'always'],
         'body-be-detailed': [2, 'always'],
         'body-leading-blank': [2, 'always'],
+        // "Force footer keywords" - enforcing references (like 'Closes #123')
         'references-empty': [2, 'never'],
+        'footer-leading-blank': [2, 'always'],
     }
 };
