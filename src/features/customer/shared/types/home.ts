@@ -81,7 +81,7 @@ export enum TabType {
   PROFILE = 'PROFILE'
 }
 
-export enum CategoryType {
+export enum HomeCategoryType {
   RECOMMEND = 'Recommend',
   FOLLOWING = 'Following',
   ACTIVITIES = 'Activities'
