@@ -3,7 +3,7 @@
         LOGIN: '/login',
         REGISTER: '/register',
         FORGOT_PASSWORD: '/forgot-password',
-        GOOGLE_CALLBACK: '/auth/callback/google',
+        GOOGLE_CALLBACK: '/auth/callback',
     },
     CUSTOMER: {
         ROOT: '/customer',

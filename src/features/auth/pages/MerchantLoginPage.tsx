@@ -20,63 +20,7 @@ const MerchantLoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { setUser } = useAuth();
-
-    // Development helper functions
-    if (typeof window !== 'undefined') {
-        (window as any).testMerchantLogin = () => {
-            setEmail('merchant@test.com');
-            setPassword('password123');
-            console.log('Test credentials filled. Click "Merchant Sign in" to test the flow.');
-        };
-
-        (window as any).clearMerchantData = () => {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            // Clear all verification keys
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('merchantVerificationCompleted_')) {
-                    localStorage.removeItem(key);
-                }
-            });
-            localStorage.removeItem('merchantVerificationCompleted');
-            console.log('All merchant data cleared. Refresh to start fresh.');
-        };
-
-        (window as any).testDirectDashboard = () => {
-            const testUser = {
-                id: 'test_merchant_direct',
-                email: 'test@merchant.com',
-                name: 'Test Merchant',
-                avatar: 'TM',
-                role: 'merchant',
-                merchantProfile: {
-                    businessId: 'test_biz_123',
-                    verificationStatus: 'verified',
-                    subscriptionTier: 'basic',
-                    joinDate: new Date()
-                }
-            };
-            
-            localStorage.setItem('authToken', 'test-merchant-token');
-            localStorage.setItem('user', JSON.stringify(testUser));
-            localStorage.setItem(`merchantVerificationCompleted_${testUser.id}`, 'true');
-            
-            console.log('Test merchant user created. Navigate to /merchant/dashboard to test.');
-            return testUser;
-        };
-
-        (window as any).testAccountSetup = () => {
-            // Clear verification status to trigger the account setup flow
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('merchantVerificationCompleted_')) {
-                    localStorage.removeItem(key);
-                }
-            });
-            localStorage.removeItem('merchantVerificationCompleted');
-            console.log('Verification status cleared. Go through verification to test account setup flow.');
-        };
-    }
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -84,40 +28,19 @@ const MerchantLoginPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Create a verified merchant user directly (skip verification)
-            const merchantUser = {
-                id: 'verified_merchant_' + Date.now(),
-                email: email,
-                name: 'Verified Merchant',
-                avatar: 'VM',
-                role: 'merchant' as const,
-                merchantProfile: {
-                    businessId: 'verified_biz_' + Date.now(),
-                    verificationStatus: 'verified' as const,
-                    subscriptionTier: 'basic' as const,
-                    joinDate: new Date()
+            // Call real backend API through AuthContext
+            await login(email, password);
+
+            // After successful login, check user role
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (user.role === 'merchant') {
+                    navigate(PATHS.MERCHANT.DASHBOARD);
+                } else {
+                    setError('This account is not registered as a merchant.');
                 }
-            };
-
-            // Set authentication data
-            localStorage.setItem('authToken', 'verified-merchant-token');
-            localStorage.setItem('user', JSON.stringify(merchantUser));
-            
-            // Mark verification as completed to skip verification modal
-            const verificationKey = `merchantVerificationCompleted_${merchantUser.id}`;
-            localStorage.setItem(verificationKey, 'true');
-
-            // Update the auth context directly instead of calling login
-            setUser(merchantUser);
-            
-            console.log('✅ Merchant login successful:', {
-                user: merchantUser,
-                verificationCompleted: true,
-                navigatingTo: PATHS.MERCHANT.DASHBOARD
-            });
-            
-            // Navigate to dashboard
-            navigate(PATHS.MERCHANT.DASHBOARD);
+            }
         } catch (err: any) {
             console.error('Merchant login error:', err);
             const message = err.response?.data?.message || 'Login failed. Please check your credentials.';

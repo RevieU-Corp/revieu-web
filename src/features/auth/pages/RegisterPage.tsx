@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { PATHS } from '../../../routes/paths';
 import { authService } from '../api/authService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 
 const RegisterPage: React.FC = () => {
@@ -16,6 +17,7 @@ const RegisterPage: React.FC = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { setUser } = useAuth();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -74,10 +76,38 @@ const RegisterPage: React.FC = () => {
             console.log('Registration response:', response.data);
 
             if (response.status === 201 || response.data.code === 0) {
-                // Success
-                // In a real app, you might want to show a success message about email verification
-                // For now, navigate to login
-                navigate(PATHS.AUTH.LOGIN);
+                // Success - backend returns token
+                const { token } = response.data;
+
+                if (token) {
+                    // Store token
+                    localStorage.setItem('authToken', token);
+
+                    // Fetch user profile
+                    const userResponse = await authService.getMe();
+                    const userData = userResponse.data;
+
+                    // Transform backend user data to frontend User format
+                    const transformedUser = {
+                        id: userData.user_id.toString(),
+                        email: userData.email,
+                        name: userData.email.split('@')[0],
+                        role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
+                    };
+
+                    setUser(transformedUser);
+                    localStorage.setItem('user', JSON.stringify(transformedUser));
+
+                    // Navigate to appropriate page based on role
+                    if (transformedUser.role === 'merchant') {
+                        navigate(PATHS.MERCHANT.DASHBOARD);
+                    } else {
+                        navigate(PATHS.CUSTOMER.HOME);
+                    }
+                } else {
+                    // No token returned, navigate to login
+                    navigate(PATHS.AUTH.LOGIN);
+                }
             } else {
                 setError(response.data.message || 'Registration failed.');
             }
