@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService } from '../features/auth/api/authService';
 
 interface User {
   id: string;
@@ -45,56 +46,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on app start
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+    // Validate token on app start
+    const validateToken = async () => {
+      const token = localStorage.getItem('authToken');
+
+      if (token) {
+        try {
+          // Validate token by calling /auth/me
+          const response = await authService.getMe();
+          const userData = response.data;
+
+          // Transform backend user data to frontend User format
+          const transformedUser: User = {
+            id: userData.user_id.toString(),
+            email: userData.email,
+            name: userData.email.split('@')[0], // Use email prefix as name for now
+            role: userData.role === 'merchant' ? 'merchant' : 'user',
+          };
+
+          setUser(transformedUser);
+          localStorage.setItem('user', JSON.stringify(transformedUser));
+        } catch (error) {
+          console.error('Token validation failed:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+        }
       }
-    }
-    
-    setIsLoading(false);
+
+      setIsLoading(false);
+    };
+
+    validateToken();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // This would normally make an API call
-    // For now, we'll simulate a successful login with role detection
-    console.log('Login attempt for:', email, 'with password length:', password.length);
-    
-    // Simulate role detection based on email domain or other logic
-    // For demo purposes, make it easier to test merchant access
-    const isMerchantEmail = email.includes('business') || 
-                           email.includes('merchant') || 
-                           email.includes('shop') ||
-                           email.includes('admin') ||
-                           email === 'merchant@test.com';
-    
-    const mockUser: User = {
-      id: '1',
-      email: email,
-      name: isMerchantEmail ? 'Business Owner' : 'Tommy Trojan',
-      avatar: isMerchantEmail ? 'BO' : 'TJ',
-      role: isMerchantEmail ? 'merchant' : 'user',
-      ...(isMerchantEmail && {
-        merchantProfile: {
-          businessId: 'biz_123',
-          verificationStatus: 'verified' as const,
-          subscriptionTier: 'basic' as const,
-          joinDate: new Date()
-        }
-      })
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('authToken', 'mock-token');
-    localStorage.setItem('user', JSON.stringify(mockUser));
+    try {
+      // Call real backend API
+      const response = await authService.login({ email, password });
+      const { token } = response.data;
+
+      // Store token
+      localStorage.setItem('authToken', token);
+
+      // Fetch user profile
+      const userResponse = await authService.getMe();
+      const userData = userResponse.data;
+
+      // Transform backend user data to frontend User format
+      const transformedUser: User = {
+        id: userData.user_id.toString(),
+        email: userData.email,
+        name: userData.email.split('@')[0], // Use email prefix as name for now
+        role: userData.role === 'merchant' ? 'merchant' : 'user',
+      };
+
+      setUser(transformedUser);
+      localStorage.setItem('user', JSON.stringify(transformedUser));
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
   };
 
   const logout = () => {

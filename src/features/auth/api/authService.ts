@@ -5,7 +5,7 @@ const BASE_PATH = '/auth';
 
 export const authService = {
     login: (credentials: any) =>
-        apiClient.post(`${BASE_PATH}/login/revieu`, credentials),
+        apiClient.post(`${BASE_PATH}/login`, credentials),
 
     register: (data: any) =>
         apiClient.post(`${BASE_PATH}/register`, data),
@@ -15,4 +15,10 @@ export const authService = {
 
     getGoogleLoginUrl: () =>
         `${config.apiBaseUrl}${BASE_PATH}/login/google`,
+
+    getMe: () =>
+        apiClient.get(`${BASE_PATH}/me`),
+
+    getUserProfile: () =>
+        apiClient.get('/user/profile'),
 };
