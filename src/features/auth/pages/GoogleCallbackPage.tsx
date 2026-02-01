@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PATHS } from '../../../routes/paths';
 import { useAuth } from '../../../contexts/AuthContext';
 import { authService } from '../api/authService';
+import { userService } from '../../../api/userService';
 
 const GoogleCallbackPage: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -30,11 +31,21 @@ const GoogleCallbackPage: React.FC = () => {
                 const response = await authService.getMe();
                 const userData = response.data;
 
+                // Try to get profile data for avatar and other info
+                let profileData = null;
+                try {
+                    const profileResponse = await userService.getProfile();
+                    profileData = profileResponse.data;
+                } catch (profileError) {
+                    console.log('Profile data not available:', profileError);
+                }
+
                 // Transform backend user data to frontend User format
                 const transformedUser = {
                     id: userData.user_id.toString(),
                     email: userData.email,
-                    name: userData.email.split('@')[0],
+                    name: profileData?.nickname || userData.email.split('@')[0],
+                    avatar: profileData?.avatar_url,
                     role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
                 };
 
