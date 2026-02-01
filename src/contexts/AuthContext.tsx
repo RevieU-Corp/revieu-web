@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             id: userData.user_id.toString(),
             email: userData.email,
             name: userData.email.split('@')[0], // Use email prefix as name for now
-            role: userData.role === 'merchant' ? 'merchant' : 'user',
+            role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
           };
 
           setUser(transformedUser);
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: userData.user_id.toString(),
         email: userData.email,
         name: userData.email.split('@')[0], // Use email prefix as name for now
-        role: userData.role === 'merchant' ? 'merchant' : 'user',
+        role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
       };
 
       setUser(transformedUser);

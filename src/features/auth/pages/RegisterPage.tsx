@@ -92,7 +92,7 @@ const RegisterPage: React.FC = () => {
                         id: userData.user_id.toString(),
                         email: userData.email,
                         name: userData.email.split('@')[0],
-                        role: userData.role === 'merchant' ? 'merchant' : 'user',
+                        role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
                     };
 
                     setUser(transformedUser);
