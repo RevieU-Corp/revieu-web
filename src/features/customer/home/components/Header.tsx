@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 interface HeaderProps {
     onSearch?: (q: string) => void;
@@ -7,6 +8,10 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onSearch = () => { } }) => {
     const [isFocused, setIsFocused] = useState(false);
+    const { user } = useAuth();
+
+    // Use user avatar from AuthContext, fallback to placeholder
+    const avatarUrl = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`;
 
     return (
         <header className="px-4 pt-4 pb-6 bg-white/80 backdrop-blur-xl sticky top-0 z-40 transition-all border-b border-black/[0.03]">
@@ -28,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { } }) => {
                         </svg>
                     </button>
                     <div className="w-10 h-10 rounded-full p-0.5 border border-[#990000]/20 overflow-hidden shadow-sm">
-                        <img src="https://i.pravatar.cc/150?u=usc-trojan" className="w-full h-full rounded-full object-cover" alt="Profile" />
+                        <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Profile" />
                     </div>
                 </div>
             </div>

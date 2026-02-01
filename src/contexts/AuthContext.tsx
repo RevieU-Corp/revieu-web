@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../features/auth/api/authService';
+import { userService } from '../api/userService';
 
 interface User {
   id: string;
@@ -56,11 +57,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const response = await authService.getMe();
           const userData = response.data;
 
+          // Try to get profile data for avatar and other info
+          let profileData = null;
+          try {
+            const profileResponse = await userService.getProfile();
+            profileData = profileResponse.data;
+          } catch (profileError) {
+            console.log('Profile data not available:', profileError);
+          }
+
           // Transform backend user data to frontend User format
           const transformedUser: User = {
             id: userData.user_id.toString(),
             email: userData.email,
-            name: userData.email.split('@')[0], // Use email prefix as name for now
+            name: profileData?.nickname || userData.email.split('@')[0],
+            avatar: profileData?.avatar_url,
             role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
           };
 
@@ -92,11 +103,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userResponse = await authService.getMe();
       const userData = userResponse.data;
 
+      // Try to get profile data for avatar and other info
+      let profileData = null;
+      try {
+        const profileResponse = await userService.getProfile();
+        profileData = profileResponse.data;
+      } catch (profileError) {
+        console.log('Profile data not available:', profileError);
+      }
+
       // Transform backend user data to frontend User format
       const transformedUser: User = {
         id: userData.user_id.toString(),
         email: userData.email,
-        name: userData.email.split('@')[0], // Use email prefix as name for now
+        name: profileData?.nickname || userData.email.split('@')[0],
+        avatar: profileData?.avatar_url,
         role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
       };
 
