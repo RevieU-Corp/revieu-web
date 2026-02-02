@@ -136,6 +136,183 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
         '400':
           $ref: '#/components/responses/ErrorResponse'
+  /feed/home:
+    get:
+      tags: [feed]
+      summary: Home feed
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FeedItem'
+  /merchants:
+    get:
+      tags: [merchants]
+      summary: List merchants
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: tags
+          schema:
+            type: string
+        - in: query
+          name: lat
+          schema:
+            type: number
+        - in: query
+          name: lng
+          schema:
+            type: number
+        - in: query
+          name: radius
+          schema:
+            type: number
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Merchant'
+  /merchants/{id}:
+    get:
+      tags: [merchants]
+      summary: Merchant detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Merchant'
+  /merchants/{id}/reviews:
+    get:
+      tags: [merchants]
+      summary: Merchant reviews
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+  /reviews:
+    get:
+      tags: [reviews]
+      summary: List user reviews
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+    post:
+      tags: [reviews]
+      summary: Create review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+  /reviews/{id}:
+    get:
+      tags: [reviews]
+      summary: Review detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+  /reviews/{id}/like:
+    post:
+      tags: [reviews]
+      summary: Like review
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /reviews/{id}/comments:
+    post:
+      tags: [reviews]
+      summary: Comment on review
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+      responses:
+        '201':
+          description: Created
 components:
   securitySchemes:
     bearerAuth:
@@ -211,3 +388,60 @@ components:
           type: string
         location:
           type: string
+    FeedItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [activity, merchant]
+        title:
+          type: string
+        image:
+          type: string
+    Merchant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        distance:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        coverImage:
+          type: string
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        merchantId:
+          type: string
+        userId:
+          type: string
+        rating:
+          type: number
+        text:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
