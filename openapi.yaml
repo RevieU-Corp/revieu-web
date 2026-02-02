@@ -313,6 +313,236 @@ paths:
       responses:
         '201':
           description: Created
+  /coupons/{id}/validate:
+    post:
+      tags: [coupons]
+      summary: Validate coupon
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /coupons/{id}/payment/initiate:
+    post:
+      tags: [coupons]
+      summary: Initiate coupon payment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+      responses:
+        '200':
+          description: OK
+  /coupons/{id}/redeem:
+    post:
+      tags: [coupons]
+      summary: Redeem free coupon
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /vouchers:
+    post:
+      tags: [vouchers]
+      summary: Create voucher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Voucher'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voucher'
+    get:
+      tags: [vouchers]
+      summary: List vouchers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Voucher'
+  /vouchers/{id}:
+    get:
+      tags: [vouchers]
+      summary: Voucher detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voucher'
+  /vouchers/code/{code}:
+    get:
+      tags: [vouchers]
+      summary: Voucher by code
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voucher'
+  /vouchers/{id}/use:
+    patch:
+      tags: [vouchers]
+      summary: Mark voucher used
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /vouchers/{id}/status:
+    patch:
+      tags: [vouchers]
+      summary: Update voucher status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /vouchers/share/email:
+    post:
+      tags: [vouchers]
+      summary: Share voucher via email
+      responses:
+        '200':
+          description: OK
+  /vouchers/share/sms:
+    post:
+      tags: [vouchers]
+      summary: Share voucher via sms
+      responses:
+        '200':
+          description: OK
+  /payments:
+    post:
+      tags: [payments]
+      summary: Create payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /payments/{id}:
+    get:
+      tags: [payments]
+      summary: Payment detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /media/uploads:
+    post:
+      tags: [media]
+      summary: Create upload URL
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaUpload'
+  /media/{id}/analysis:
+    post:
+      tags: [media]
+      summary: Analyze media
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /ai/reviews/suggestions:
+    post:
+      tags: [ai]
+      summary: Generate review suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AISuggestionsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AISuggestionsResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -445,3 +675,83 @@ components:
         createdAt:
           type: string
           format: date-time
+    Coupon:
+      type: object
+      properties:
+        id:
+          type: string
+        merchantId:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: [free, paid]
+        value:
+          type: string
+        price:
+          type: number
+        expiryDate:
+          type: string
+          format: date-time
+    Voucher:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        couponId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [active, used, expired]
+        expiryDate:
+          type: string
+          format: date-time
+        qrCode:
+          type: string
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+        couponId:
+          type: string
+        merchantId:
+          type: string
+    MediaUpload:
+      type: object
+      properties:
+        id:
+          type: string
+        uploadUrl:
+          type: string
+        fileUrl:
+          type: string
+    AISuggestionsRequest:
+      type: object
+      properties:
+        overallRating:
+          type: number
+        businessCategory:
+          type: string
+        currentText:
+          type: string
+        merchantName:
+          type: string
+    AISuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: string
