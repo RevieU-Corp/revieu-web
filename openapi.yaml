@@ -19,7 +19,123 @@ tags:
   - name: payments
   - name: media
   - name: ai
-paths: {}
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Send reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Get current user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /auth/login/google:
+    get:
+      tags: [auth]
+      summary: Get Google OAuth URL
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+  /user/profile:
+    get:
+      tags: [users]
+      summary: Get user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -44,3 +160,54 @@ components:
           type: string
         details:
           type: object
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthRegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthTokenResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    AuthUser:
+      type: object
+      required: [user_id, email, role]
+      properties:
+        user_id:
+          type: integer
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, merchant]
+    UserProfile:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        nickname:
+          type: string
+        avatar_url:
+          type: string
+        intro:
+          type: string
+        location:
+          type: string
