@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
-import { 
-  ReviewContextState, 
-  ReviewContextActions, 
-  ReviewData, 
+import {
+  ReviewContextState,
+  ReviewContextActions,
+  ReviewData,
   ValidationErrors,
   DraftState,
   UploadState,
@@ -12,6 +12,8 @@ import {
   UploadedImage
 } from '../types';
 import { AIAssistRequest, generateReviewSuggestions } from '../services/gemini';
+import { mediaApi, uploadToR2 } from '../../../../api/media';
+import { reviewsApi, CreateReviewRequest } from '../../../../api/reviews';
 
 // Initial states
 const initialReviewData: Partial<ReviewData> = {
@@ -105,7 +107,10 @@ type ReviewAction =
   | { type: 'LOAD_DRAFT'; payload: any }
   | { type: 'VALIDATE_FORM' }
   | { type: 'SET_SUBMITTING'; payload: boolean }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'UPDATE_IMAGE_UPLOAD_STATUS'; payload: { imageId: string; status: UploadState['status']; progress?: number; error?: string; fileUrl?: string } }
+  | { type: 'SET_UPLOAD_ERROR'; payload: string }
+  | { type: 'CLEAR_UPLOAD_ERROR' };
 
 // Reducer
 const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewContextState => {
@@ -415,11 +420,11 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
 
     case 'VALIDATE_FORM':
       const errors: ValidationErrors = {};
-      
+
       if (!state.reviewData.overallRating || state.reviewData.overallRating < 0.5) {
         errors.rating = 'Please provide a rating';
       }
-      
+
       if (state.reviewData.reviewText && state.reviewData.reviewText.length > 200) {
         errors.text = 'Review must be less than 200 characters';
       }
@@ -437,6 +442,49 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
 
     case 'RESET':
       return initialState;
+
+    case 'UPDATE_IMAGE_UPLOAD_STATUS':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          images: state.reviewData.images?.map(img =>
+            img.id === action.payload.imageId
+              ? {
+                ...img,
+                uploadState: {
+                  ...img.uploadState,
+                  status: action.payload.status,
+                  progress: action.payload.progress ?? img.uploadState.progress,
+                  error: action.payload.error,
+                },
+                uploadProgress: action.payload.progress ?? img.uploadProgress,
+                fileUrl: action.payload.fileUrl ?? img.fileUrl,
+              }
+              : img
+          ) || [],
+        },
+      };
+
+    case 'SET_UPLOAD_ERROR':
+      return {
+        ...state,
+        uploadState: {
+          ...state.uploadState,
+          status: 'error',
+          error: action.payload,
+        },
+      };
+
+    case 'CLEAR_UPLOAD_ERROR':
+      return {
+        ...state,
+        uploadState: {
+          ...state.uploadState,
+          status: 'pending',
+          error: undefined,
+        },
+      };
 
     default:
       return state;
@@ -457,9 +505,9 @@ interface ReviewProviderProps {
   merchantCategory?: BusinessCategory;
 }
 
-export const ReviewProvider: React.FC<ReviewProviderProps> = ({ 
-  children, 
-  merchantId, 
+export const ReviewProvider: React.FC<ReviewProviderProps> = ({
+  children,
+  merchantId,
 }) => {
   const [state, dispatch] = useReducer(reviewReducer, {
     ...initialState,
@@ -522,7 +570,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'GENERATE_AI_SUGGESTIONS_START' });
       try {
         const response = await generateReviewSuggestions(request);
-        
+
         if (response.error) {
           dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: response.error });
         } else {
@@ -563,6 +611,116 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
     reset: useCallback(() => {
       dispatch({ type: 'RESET' });
     }, []),
+
+    // Upload images to R2 using presigned URLs
+    uploadImages: useCallback(async (): Promise<boolean> => {
+      const images = state.reviewData.images || [];
+      const pendingImages = images.filter(img => img.uploadState.status === 'pending');
+
+      if (pendingImages.length === 0) {
+        return true; // No images to upload
+      }
+
+      try {
+        dispatch({ type: 'CLEAR_UPLOAD_ERROR' });
+
+        // Get presigned URLs for all pending images
+        const uploadUrlsResponse = await mediaApi.getUploadUrls({
+          files: pendingImages.map(img => ({
+            filename: img.file.name,
+            contentType: img.file.type,
+            size: img.file.size,
+          })),
+        });
+
+        // Upload each image in parallel
+        await Promise.all(
+          uploadUrlsResponse.uploads.map(async (upload, index) => {
+            const image = pendingImages[index];
+
+            // Update status to uploading
+            dispatch({
+              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+              payload: { imageId: image.id, status: 'uploading', progress: 0 },
+            });
+
+            try {
+              // Upload to R2
+              await uploadToR2(upload.uploadUrl, image.file, (progress) => {
+                dispatch({
+                  type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+                  payload: { imageId: image.id, status: 'uploading', progress },
+                });
+              });
+
+              // Mark as complete with the CDN URL
+              dispatch({
+                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+                payload: {
+                  imageId: image.id,
+                  status: 'complete',
+                  progress: 100,
+                  fileUrl: upload.fileUrl,
+                },
+              });
+            } catch (error) {
+              dispatch({
+                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+                payload: {
+                  imageId: image.id,
+                  status: 'error',
+                  error: error instanceof Error ? error.message : 'Upload failed',
+                },
+              });
+              throw error;
+            }
+          })
+        );
+
+        return true;
+      } catch (error) {
+        dispatch({
+          type: 'SET_UPLOAD_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to upload images',
+        });
+        return false;
+      }
+    }, [state.reviewData.images]),
+
+    // Submit review to backend
+    submitReview: useCallback(async (): Promise<boolean> => {
+      dispatch({ type: 'SET_SUBMITTING', payload: true });
+
+      try {
+        // Get all image URLs (either already uploaded fileUrl or need to check)
+        const images = state.reviewData.images || [];
+        const imageUrls = images
+          .filter(img => img.uploadState.status === 'complete' && img.fileUrl)
+          .map(img => img.fileUrl!);
+
+        const request: CreateReviewRequest = {
+          merchantId: state.reviewData.merchantId || '',
+          overallRating: state.reviewData.overallRating || 0,
+          detailedRatings: state.reviewData.detailedRatings,
+          text: state.reviewData.reviewText,
+          images: imageUrls,
+          tags: state.reviewData.tags,
+          locationVerified: state.reviewData.locationVerified,
+        };
+
+        await reviewsApi.create(request);
+
+        dispatch({ type: 'SET_SUBMITTING', payload: false });
+        return true;
+      } catch (error) {
+        dispatch({ type: 'SET_SUBMITTING', payload: false });
+        dispatch({
+          type: 'SET_UPLOAD_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to submit review',
+        });
+        return false;
+      }
+    }, [state.reviewData]),
   };
 
   return (
