@@ -1,6 +1,7 @@
 import { Home, Search, Compass, User, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { PATHS } from "../../../../../routes/paths";
 import { useAuth } from "../../../../../contexts/AuthContext";
 
@@ -90,14 +91,14 @@ export function BottomNav() {
         <NavTab path={PATHS.CUSTOMER.ME.ROOT} icon={User} label="Profile" />
       </div>
 
-      {/* Login Required Modal */}
-      {showLoginModal && (
+      {/* Login Required Modal - Portal to body */}
+      {showLoginModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowLoginModal(false)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
@@ -125,7 +126,8 @@ export function BottomNav() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
