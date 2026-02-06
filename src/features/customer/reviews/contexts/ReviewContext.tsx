@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, ReactNode, useEffect } from 'react';
 import {
   ReviewContextState,
   ReviewContextActions,
@@ -14,6 +14,7 @@ import {
 import { AIAssistRequest, generateReviewSuggestions } from '../services/gemini';
 import { mediaApi, uploadToR2 } from '../../../../api/media';
 import { reviewsApi, CreateReviewRequest } from '../../../../api/reviews';
+import { loadDraft as loadDraftFromStorage, saveDraft as saveDraftToStorage } from '../utils/draftStorage';
 
 // Initial states
 const initialReviewData: Partial<ReviewData> = {
@@ -76,6 +77,54 @@ const initialState: ReviewContextState = {
   aiAssistantState: initialAIAssistantState,
   validationErrors: {},
   isSubmitting: false,
+  submitError: undefined,
+  draftNotice: undefined,
+};
+
+type StoredReviewDraft = {
+  reviewText?: string;
+  overallRating?: number;
+  detailedRatings?: ReviewData['detailedRatings'];
+  tags?: string[];
+  locationVerified?: boolean;
+  imageUrls?: string[];
+  visitDate?: string;
+};
+
+const DRAFT_SAVE_DELAY_MS = 800;
+
+const buildDraftPayload = (reviewData: Partial<ReviewData>): StoredReviewDraft => ({
+  reviewText: reviewData.reviewText,
+  overallRating: reviewData.overallRating,
+  detailedRatings: reviewData.detailedRatings,
+  tags: reviewData.tags,
+  locationVerified: reviewData.locationVerified,
+  imageUrls: reviewData.images
+    ?.filter(image => image.fileUrl)
+    .map(image => image.fileUrl!) ?? [],
+  visitDate: reviewData.visitDate ? reviewData.visitDate.toISOString() : undefined,
+});
+
+const buildDraftImages = (imageUrls: string[]): UploadedImage[] => {
+  return imageUrls.map((url, index) => {
+    const placeholderFile = new File([], `draft-${index}.jpg`, { type: 'image/jpeg' });
+    return {
+      id: `draft_${Date.now()}_${index}`,
+      file: placeholderFile,
+      url,
+      thumbnail: url,
+      type: 'image',
+      uploadState: {
+        status: 'complete',
+        progress: 100,
+        retryCount: 0,
+      },
+      originalSize: 0,
+      compressedSize: 0,
+      uploadProgress: 100,
+      fileUrl: url,
+    };
+  });
 };
 
 // Action types
@@ -91,6 +140,7 @@ type ReviewAction =
   | { type: 'REMOVE_IMAGE'; payload: string }
   | { type: 'UPDATE_IMAGE_ORDER'; payload: string[] }
   | { type: 'UPDATE_IMAGES'; payload: UploadedImage[] }
+  | { type: 'RETRY_IMAGE'; payload: { imageId: string } }
   | { type: 'START_AI_STREAMING'; payload: string }
   | { type: 'AI_CHUNK_RECEIVED'; payload: string }
   | { type: 'AI_STREAMING_COMPLETE' }
@@ -110,7 +160,10 @@ type ReviewAction =
   | { type: 'RESET' }
   | { type: 'UPDATE_IMAGE_UPLOAD_STATUS'; payload: { imageId: string; status: UploadState['status']; progress?: number; error?: string; fileUrl?: string } }
   | { type: 'SET_UPLOAD_ERROR'; payload: string }
-  | { type: 'CLEAR_UPLOAD_ERROR' };
+  | { type: 'CLEAR_UPLOAD_ERROR' }
+  | { type: 'SET_SUBMIT_ERROR'; payload: string }
+  | { type: 'CLEAR_SUBMIT_ERROR' }
+  | { type: 'CLEAR_DRAFT_NOTICE' };
 
 // Reducer
 const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewContextState => {
@@ -274,6 +327,30 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         },
       };
 
+    case 'RETRY_IMAGE':
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          images: state.reviewData.images?.map(img =>
+            img.id === action.payload.imageId
+              ? {
+                ...img,
+                uploadState: {
+                  ...img.uploadState,
+                  status: 'pending',
+                  progress: 0,
+                  error: undefined,
+                  retryCount: img.uploadState.retryCount + 1,
+                },
+                uploadProgress: 0,
+                fileUrl: undefined,
+              }
+              : img
+          ) || [],
+        },
+      };
+
     case 'START_AI_STREAMING':
       return {
         ...state,
@@ -418,6 +495,32 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         },
       };
 
+    case 'LOAD_DRAFT': {
+      const draft = action.payload as StoredReviewDraft;
+      const draftImages = draft.imageUrls ? buildDraftImages(draft.imageUrls) : undefined;
+      const reviewText = draft.reviewText ?? state.reviewData.reviewText;
+
+      return {
+        ...state,
+        reviewData: {
+          ...state.reviewData,
+          reviewText,
+          overallRating: draft.overallRating ?? state.reviewData.overallRating,
+          detailedRatings: draft.detailedRatings ?? state.reviewData.detailedRatings,
+          tags: draft.tags ?? state.reviewData.tags,
+          locationVerified: draft.locationVerified ?? state.reviewData.locationVerified,
+          images: draftImages ?? state.reviewData.images,
+          characterCount: reviewText ? reviewText.length : state.reviewData.characterCount,
+          visitDate: draft.visitDate ? new Date(draft.visitDate) : state.reviewData.visitDate,
+        },
+        draftState: {
+          ...state.draftState,
+          hasUnsavedChanges: false,
+        },
+        draftNotice: 'Draft restored',
+      };
+    }
+
     case 'VALIDATE_FORM':
       const errors: ValidationErrors = {};
 
@@ -486,6 +589,24 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         },
       };
 
+    case 'SET_SUBMIT_ERROR':
+      return {
+        ...state,
+        submitError: action.payload,
+      };
+
+    case 'CLEAR_SUBMIT_ERROR':
+      return {
+        ...state,
+        submitError: undefined,
+      };
+
+    case 'CLEAR_DRAFT_NOTICE':
+      return {
+        ...state,
+        draftNotice: undefined,
+      };
+
     default:
       return state;
   }
@@ -516,6 +637,92 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       merchantId,
     },
   });
+
+  useEffect(() => {
+    const draft = loadDraftFromStorage<StoredReviewDraft>();
+    if (draft) {
+      dispatch({ type: 'LOAD_DRAFT', payload: draft });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!state.draftState.hasUnsavedChanges) return;
+
+    const timer = window.setTimeout(() => {
+      dispatch({ type: 'SAVE_DRAFT_START' });
+      const payload = buildDraftPayload(state.reviewData);
+      saveDraftToStorage(payload);
+      dispatch({ type: 'SAVE_DRAFT_SUCCESS', payload: new Date() });
+    }, DRAFT_SAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [state.reviewData, state.draftState.hasUnsavedChanges]);
+
+  const uploadPendingImages = useCallback(async (pendingImages: UploadedImage[]): Promise<boolean> => {
+    if (pendingImages.length === 0) {
+      return true;
+    }
+
+    try {
+      dispatch({ type: 'CLEAR_UPLOAD_ERROR' });
+
+      const uploadUrlsResponse = await mediaApi.getUploadUrls({
+        files: pendingImages.map(img => ({
+          filename: img.file.name,
+          contentType: img.file.type,
+          size: img.file.size,
+        })),
+      });
+
+      await Promise.all(
+        uploadUrlsResponse.uploads.map(async (upload, index) => {
+          const image = pendingImages[index];
+
+          dispatch({
+            type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+            payload: { imageId: image.id, status: 'uploading', progress: 0 },
+          });
+
+          try {
+            await uploadToR2(upload.uploadUrl, image.file, (progress) => {
+              dispatch({
+                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+                payload: { imageId: image.id, status: 'uploading', progress },
+              });
+            });
+
+            dispatch({
+              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+              payload: {
+                imageId: image.id,
+                status: 'complete',
+                progress: 100,
+                fileUrl: upload.fileUrl,
+              },
+            });
+          } catch (error) {
+            dispatch({
+              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+              payload: {
+                imageId: image.id,
+                status: 'error',
+                error: error instanceof Error ? error.message : 'Upload failed',
+              },
+            });
+            throw error;
+          }
+        })
+      );
+
+      return true;
+    } catch (error) {
+      dispatch({
+        type: 'SET_UPLOAD_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to upload images',
+      });
+      return false;
+    }
+  }, [dispatch]);
 
   const actions: ReviewContextActions = {
     updateRating: useCallback((rating: number) => {
@@ -562,6 +769,36 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'UPDATE_IMAGES', payload: images });
     }, []),
 
+    retryImage: useCallback(async (imageId: string): Promise<boolean> => {
+      const images = state.reviewData.images || [];
+      const targetImage = images.find(img => img.id === imageId);
+
+      if (!targetImage) {
+        return false;
+      }
+
+      if (targetImage.uploadState.status !== 'error') {
+        return true;
+      }
+
+      const nextRetryCount = targetImage.uploadState.retryCount + 1;
+      const pendingImage: UploadedImage = {
+        ...targetImage,
+        uploadState: {
+          ...targetImage.uploadState,
+          status: 'pending',
+          progress: 0,
+          error: undefined,
+          retryCount: nextRetryCount,
+        },
+        uploadProgress: 0,
+        fileUrl: undefined,
+      };
+
+      dispatch({ type: 'RETRY_IMAGE', payload: { imageId } });
+      return uploadPendingImages([pendingImage]);
+    }, [dispatch, state.reviewData.images, uploadPendingImages]),
+
     streamAIText: useCallback((prompt: string) => {
       dispatch({ type: 'START_AI_STREAMING', payload: prompt });
     }, []),
@@ -595,13 +832,16 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
     saveDraft: useCallback(() => {
       dispatch({ type: 'SAVE_DRAFT_START' });
-      setTimeout(() => {
-        dispatch({ type: 'SAVE_DRAFT_SUCCESS', payload: new Date() });
-      }, 1000);
-    }, []),
+      const payload = buildDraftPayload(state.reviewData);
+      saveDraftToStorage(payload);
+      dispatch({ type: 'SAVE_DRAFT_SUCCESS', payload: new Date() });
+    }, [state.reviewData]),
 
     loadDraft: useCallback((draftId: string) => {
-      dispatch({ type: 'LOAD_DRAFT', payload: draftId });
+      const draft = loadDraftFromStorage<StoredReviewDraft>();
+      if (draft) {
+        dispatch({ type: 'LOAD_DRAFT', payload: draft });
+      }
     }, []),
 
     validateForm: useCallback(() => {
@@ -612,84 +852,34 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'RESET' });
     }, []),
 
+    setUploadError: useCallback((message: string) => {
+      dispatch({ type: 'SET_UPLOAD_ERROR', payload: message });
+    }, []),
+
+    clearUploadError: useCallback(() => {
+      dispatch({ type: 'CLEAR_UPLOAD_ERROR' });
+    }, []),
+
+    clearSubmitError: useCallback(() => {
+      dispatch({ type: 'CLEAR_SUBMIT_ERROR' });
+    }, []),
+
+    clearDraftNotice: useCallback(() => {
+      dispatch({ type: 'CLEAR_DRAFT_NOTICE' });
+    }, []),
+
     // Upload images to R2 using presigned URLs
     uploadImages: useCallback(async (): Promise<boolean> => {
       const images = state.reviewData.images || [];
       const pendingImages = images.filter(img => img.uploadState.status === 'pending');
 
-      if (pendingImages.length === 0) {
-        return true; // No images to upload
-      }
-
-      try {
-        dispatch({ type: 'CLEAR_UPLOAD_ERROR' });
-
-        // Get presigned URLs for all pending images
-        const uploadUrlsResponse = await mediaApi.getUploadUrls({
-          files: pendingImages.map(img => ({
-            filename: img.file.name,
-            contentType: img.file.type,
-            size: img.file.size,
-          })),
-        });
-
-        // Upload each image in parallel
-        await Promise.all(
-          uploadUrlsResponse.uploads.map(async (upload, index) => {
-            const image = pendingImages[index];
-
-            // Update status to uploading
-            dispatch({
-              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
-              payload: { imageId: image.id, status: 'uploading', progress: 0 },
-            });
-
-            try {
-              // Upload to R2
-              await uploadToR2(upload.uploadUrl, image.file, (progress) => {
-                dispatch({
-                  type: 'UPDATE_IMAGE_UPLOAD_STATUS',
-                  payload: { imageId: image.id, status: 'uploading', progress },
-                });
-              });
-
-              // Mark as complete with the CDN URL
-              dispatch({
-                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
-                payload: {
-                  imageId: image.id,
-                  status: 'complete',
-                  progress: 100,
-                  fileUrl: upload.fileUrl,
-                },
-              });
-            } catch (error) {
-              dispatch({
-                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
-                payload: {
-                  imageId: image.id,
-                  status: 'error',
-                  error: error instanceof Error ? error.message : 'Upload failed',
-                },
-              });
-              throw error;
-            }
-          })
-        );
-
-        return true;
-      } catch (error) {
-        dispatch({
-          type: 'SET_UPLOAD_ERROR',
-          payload: error instanceof Error ? error.message : 'Failed to upload images',
-        });
-        return false;
-      }
-    }, [state.reviewData.images]),
+      return uploadPendingImages(pendingImages);
+    }, [state.reviewData.images, uploadPendingImages]),
 
     // Submit review to backend
     submitReview: useCallback(async (): Promise<boolean> => {
       dispatch({ type: 'SET_SUBMITTING', payload: true });
+      dispatch({ type: 'CLEAR_SUBMIT_ERROR' });
 
       try {
         // Get all image URLs (either already uploaded fileUrl or need to check)
@@ -715,7 +905,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       } catch (error) {
         dispatch({ type: 'SET_SUBMITTING', payload: false });
         dispatch({
-          type: 'SET_UPLOAD_ERROR',
+          type: 'SET_SUBMIT_ERROR',
           payload: error instanceof Error ? error.message : 'Failed to submit review',
         });
         return false;
