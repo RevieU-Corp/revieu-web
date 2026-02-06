@@ -302,6 +302,8 @@ export interface ReviewContextState {
   aiAssistantState: AIAssistantState; // New: AI Assistant state
   validationErrors: ValidationErrors;
   isSubmitting: boolean;
+  submitError?: string;
+  draftNotice?: string;
 }
 
 export interface DraftState {
@@ -334,8 +336,13 @@ export interface ReviewContextActions {
   toggleAIAssistant: () => void;
   clearAISuggestions: () => void;
   // New Upload & Submit Actions
+  retryImage: (imageId: string) => Promise<boolean>;
   uploadImages: () => Promise<boolean>;
   submitReview: () => Promise<boolean>;
+  setUploadError: (message: string) => void;
+  clearUploadError: () => void;
+  clearSubmitError: () => void;
+  clearDraftNotice: () => void;
 }
 
 // Legacy compatibility

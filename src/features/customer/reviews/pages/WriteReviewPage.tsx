@@ -137,6 +137,43 @@ const WriteReviewForm: React.FC = () => {
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto">
+        {(state.draftNotice || state.uploadState.error || state.submitError) && (
+          <div className="space-y-2">
+            {state.draftNotice && (
+              <div className="flex items-start justify-between rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                <span>{state.draftNotice}</span>
+                <button
+                  onClick={actions.clearDraftNotice}
+                  className="ml-3 text-blue-600 hover:text-blue-800"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            {state.uploadState.error && (
+              <div className="flex items-start justify-between rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <span>{state.uploadState.error}</span>
+                <button
+                  onClick={actions.clearUploadError}
+                  className="ml-3 text-red-600 hover:text-red-800"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            {state.submitError && (
+              <div className="flex items-start justify-between rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <span>{state.submitError}</span>
+                <button
+                  onClick={actions.clearSubmitError}
+                  className="ml-3 text-red-600 hover:text-red-800"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {/* Enhanced Photo Upload - Xiaomi card style */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100/50">
           <div className="flex items-center space-x-2 mb-4">
@@ -150,6 +187,8 @@ const WriteReviewForm: React.FC = () => {
           <ImageUploadGrid
             images={state.reviewData.images || []}
             onImagesChange={actions.updateImages}
+            onRetry={actions.retryImage}
+            onSelectionError={actions.setUploadError}
             maxImages={9}
             onImageAnalysis={(image: any, tags: any) => {
               console.log('Image analysis:', image, tags);
