@@ -837,7 +837,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'SAVE_DRAFT_SUCCESS', payload: new Date() });
     }, [state.reviewData]),
 
-    loadDraft: useCallback((draftId: string) => {
+    loadDraft: useCallback((_draftId: string) => {
       const draft = loadDraftFromStorage<StoredReviewDraft>();
       if (draft) {
         dispatch({ type: 'LOAD_DRAFT', payload: draft });
