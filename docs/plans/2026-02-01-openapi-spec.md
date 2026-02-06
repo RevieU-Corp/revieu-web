@@ -1,3 +1,23 @@
+# OpenAPI Spec Generation Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Generate a complete OpenAPI 3.0 YAML spec for the Auth + Customer APIs defined in `openapi-design-plan.md`.
+
+**Architecture:** Single-file `openapi.yaml` at repo root, with shared `components/schemas`, `components/responses`, and `components/securitySchemes`; paths grouped by tags (auth, users, feed, merchants, reviews, coupons, vouchers, payments, media, ai).
+
+**Tech Stack:** OpenAPI 3.0, YAML.
+
+---
+
+### Task 1: Create OpenAPI base skeleton
+
+**Files:**
+- Create: `openapi.yaml`
+
+**Step 1: Write the base skeleton**
+
+```yaml
 openapi: 3.0.3
 info:
   title: RevieU API
@@ -19,6 +39,95 @@ tags:
   - name: payments
   - name: media
   - name: ai
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+```
+
+**Step 2: Run lint to verify YAML parses**
+
+Run: `npx @redocly/cli lint openapi.yaml`
+Expected: PASS or only warnings about missing paths
+
+**Step 3: Commit**
+
+```bash
+git add openapi.yaml
+git commit -m "docs: add openapi base skeleton"
+```
+
+---
+
+### Task 2: Add Auth + User Profile paths and schemas
+
+**Files:**
+- Modify: `openapi.yaml`
+
+**Step 1: Add schemas**
+
+```yaml
+components:
+  schemas:
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    AuthRegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username: { type: string }
+        email: { type: string, format: email }
+        password: { type: string }
+    AuthTokenResponse:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    AuthUser:
+      type: object
+      required: [user_id, email, role]
+      properties:
+        user_id: { type: integer }
+        email: { type: string, format: email }
+        role: { type: string, enum: [user, merchant] }
+    UserProfile:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        avatar_url: { type: string }
+        intro: { type: string }
+        location: { type: string }
+```
+
+**Step 2: Add paths**
+
+```yaml
 paths:
   /auth/login:
     post:
@@ -37,8 +146,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthTokenResponse'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
+        '400': { $ref: '#/components/responses/ErrorResponse' }
   /auth/register:
     post:
       tags: [auth]
@@ -56,8 +164,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthTokenResponse'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
+        '400': { $ref: '#/components/responses/ErrorResponse' }
   /auth/forgot-password:
     post:
       tags: [auth]
@@ -70,14 +177,10 @@ paths:
               type: object
               required: [email]
               properties:
-                email:
-                  type: string
-                  format: email
+                email: { type: string, format: email }
       responses:
-        '200':
-          description: OK
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/ErrorResponse' }
   /auth/me:
     get:
       tags: [auth]
@@ -89,8 +192,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthUser'
-        '401':
-          $ref: '#/components/responses/ErrorResponse'
+        '401': { $ref: '#/components/responses/ErrorResponse' }
   /auth/login/google:
     get:
       tags: [auth]
@@ -103,8 +205,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  url:
-                    type: string
+                  url: { type: string }
   /user/profile:
     get:
       tags: [users]
@@ -116,8 +217,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-        '401':
-          $ref: '#/components/responses/ErrorResponse'
+        '401': { $ref: '#/components/responses/ErrorResponse' }
     put:
       tags: [users]
       summary: Update user profile
@@ -134,8 +234,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-        '400':
-          $ref: '#/components/responses/ErrorResponse'
+        '400': { $ref: '#/components/responses/ErrorResponse' }
+```
+
+**Step 3: Run lint**
+
+Run: `npx @redocly/cli lint openapi.yaml`
+Expected: PASS or only warnings
+
+**Step 4: Commit**
+
+```bash
+git add openapi.yaml
+git commit -m "docs: add auth and user profile endpoints"
+```
+
+---
+
+### Task 3: Add Feed + Merchants + Reviews endpoints and schemas
+
+**Files:**
+- Modify: `openapi.yaml`
+
+**Step 1: Add schemas**
+
+```yaml
+components:
+  schemas:
+    FeedItem:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [activity, merchant] }
+        title: { type: string }
+        image: { type: string }
+    Merchant:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        rating: { type: number }
+        reviewCount: { type: integer }
+        distance: { type: string }
+        tags: { type: array, items: { type: string } }
+        coverImage: { type: string }
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        merchantId: { type: string }
+        userId: { type: string }
+        rating: { type: number }
+        text: { type: string }
+        images: { type: array, items: { type: string } }
+        tags: { type: array, items: { type: string } }
+        createdAt: { type: string, format: date-time }
+```
+
+**Step 2: Add paths**
+
+```yaml
+paths:
   /feed/home:
     get:
       tags: [feed]
@@ -159,24 +319,19 @@ paths:
       parameters:
         - in: query
           name: category
-          schema:
-            type: string
+          schema: { type: string }
         - in: query
           name: tags
-          schema:
-            type: string
+          schema: { type: string }
         - in: query
           name: lat
-          schema:
-            type: number
+          schema: { type: number }
         - in: query
           name: lng
-          schema:
-            type: number
+          schema: { type: number }
         - in: query
           name: radius
-          schema:
-            type: number
+          schema: { type: number }
       responses:
         '200':
           description: OK
@@ -197,8 +352,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -214,8 +368,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -268,8 +421,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -285,11 +437,9 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /reviews/{id}/comments:
     post:
       tags: [reviews]
@@ -298,8 +448,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -308,11 +457,89 @@ paths:
               type: object
               required: [text]
               properties:
-                text:
-                  type: string
+                text: { type: string }
       responses:
-        '201':
-          description: Created
+        '201': { description: Created }
+```
+
+**Step 3: Run lint**
+
+Run: `npx @redocly/cli lint openapi.yaml`
+Expected: PASS or only warnings
+
+**Step 4: Commit**
+
+```bash
+git add openapi.yaml
+git commit -m "docs: add feed, merchants, reviews endpoints"
+```
+
+---
+
+### Task 4: Add Coupons, Vouchers, Payments, Media, AI endpoints and schemas
+
+**Files:**
+- Modify: `openapi.yaml`
+
+**Step 1: Add schemas**
+
+```yaml
+components:
+  schemas:
+    Coupon:
+      type: object
+      properties:
+        id: { type: string }
+        merchantId: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [free, paid] }
+        value: { type: string }
+        price: { type: number }
+        expiryDate: { type: string, format: date-time }
+    Voucher:
+      type: object
+      properties:
+        id: { type: string }
+        code: { type: string }
+        couponId: { type: string }
+        userId: { type: string }
+        status: { type: string, enum: [active, used, expired] }
+        expiryDate: { type: string, format: date-time }
+        qrCode: { type: string }
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status: { type: string }
+        couponId: { type: string }
+        merchantId: { type: string }
+    MediaUpload:
+      type: object
+      properties:
+        id: { type: string }
+        uploadUrl: { type: string }
+        fileUrl: { type: string }
+    AISuggestionsRequest:
+      type: object
+      properties:
+        overallRating: { type: number }
+        businessCategory: { type: string }
+        currentText: { type: string }
+        merchantName: { type: string }
+    AISuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items: { type: string }
+```
+
+**Step 2: Add paths**
+
+```yaml
+paths:
   /coupons/{id}/validate:
     post:
       tags: [coupons]
@@ -321,11 +548,9 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /coupons/{id}/payment/initiate:
     post:
       tags: [coupons]
@@ -334,8 +559,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -344,11 +568,9 @@ paths:
               type: object
               required: [userId]
               properties:
-                userId:
-                  type: string
+                userId: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /coupons/{id}/redeem:
     post:
       tags: [coupons]
@@ -357,11 +579,9 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /vouchers:
     post:
       tags: [vouchers]
@@ -402,8 +622,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -419,8 +638,7 @@ paths:
         - in: path
           name: code
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -436,11 +654,9 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /vouchers/{id}/status:
     patch:
       tags: [vouchers]
@@ -449,25 +665,21 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /vouchers/share/email:
     post:
       tags: [vouchers]
       summary: Share voucher via email
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /vouchers/share/sms:
     post:
       tags: [vouchers]
       summary: Share voucher via sms
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /payments:
     post:
       tags: [payments]
@@ -493,8 +705,7 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -521,11 +732,9 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
+        '200': { description: OK }
   /ai/reviews/suggestions:
     post:
       tags: [ai]
@@ -543,215 +752,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AISuggestionsResponse'
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-  responses:
-    ErrorResponse:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  schemas:
-    Error:
-      type: object
-      required: [code, message]
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        details:
-          type: object
-    AuthLoginRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-    AuthRegisterRequest:
-      type: object
-      required: [username, email, password]
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-    AuthTokenResponse:
-      type: object
-      required: [token]
-      properties:
-        token:
-          type: string
-    AuthUser:
-      type: object
-      required: [user_id, email, role]
-      properties:
-        user_id:
-          type: integer
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-          enum: [user, merchant]
-    UserProfile:
-      type: object
-      properties:
-        user_id:
-          type: integer
-        nickname:
-          type: string
-        avatar_url:
-          type: string
-        intro:
-          type: string
-        location:
-          type: string
-    FeedItem:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum: [activity, merchant]
-        title:
-          type: string
-        image:
-          type: string
-    Merchant:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        category:
-          type: string
-        rating:
-          type: number
-        reviewCount:
-          type: integer
-        distance:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-        coverImage:
-          type: string
-    Review:
-      type: object
-      properties:
-        id:
-          type: string
-        merchantId:
-          type: string
-        userId:
-          type: string
-        rating:
-          type: number
-        text:
-          type: string
-        images:
-          type: array
-          items:
-            type: string
-        tags:
-          type: array
-          items:
-            type: string
-        createdAt:
-          type: string
-          format: date-time
-    Coupon:
-      type: object
-      properties:
-        id:
-          type: string
-        merchantId:
-          type: string
-        title:
-          type: string
-        type:
-          type: string
-          enum: [free, paid]
-        value:
-          type: string
-        price:
-          type: number
-        expiryDate:
-          type: string
-          format: date-time
-    Voucher:
-      type: object
-      properties:
-        id:
-          type: string
-        code:
-          type: string
-        couponId:
-          type: string
-        userId:
-          type: string
-        status:
-          type: string
-          enum: [active, used, expired]
-        expiryDate:
-          type: string
-          format: date-time
-        qrCode:
-          type: string
-    Payment:
-      type: object
-      properties:
-        id:
-          type: string
-        amount:
-          type: number
-        currency:
-          type: string
-        status:
-          type: string
-        couponId:
-          type: string
-        merchantId:
-          type: string
-    MediaUpload:
-      type: object
-      properties:
-        id:
-          type: string
-        uploadUrl:
-          type: string
-        fileUrl:
-          type: string
-    AISuggestionsRequest:
-      type: object
-      properties:
-        overallRating:
-          type: number
-        businessCategory:
-          type: string
-        currentText:
-          type: string
-        merchantName:
-          type: string
-    AISuggestionsResponse:
-      type: object
-      properties:
-        suggestions:
-          type: array
-          items:
-            type: string
+```
+
+**Step 3: Run lint**
+
+Run: `npx @redocly/cli lint openapi.yaml`
+Expected: PASS or only warnings
+
+**Step 4: Commit**
+
+```bash
+git add openapi.yaml
+git commit -m "docs: add coupons, vouchers, payments, media, ai endpoints"
+```
