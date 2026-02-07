@@ -873,10 +873,14 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
     // Upload images to R2 using presigned URLs, returns uploaded URLs
     uploadImages: useCallback(async (): Promise<string[] | null> => {
       const images = state.reviewData.images || [];
+      console.log('[uploadImages] Total images:', images.length);
+      console.log('[uploadImages] Images:', images.map(img => ({ id: img.id, status: img.uploadState.status, fileUrl: img.fileUrl })));
       const pendingImages = images.filter(img => img.uploadState.status === 'pending');
+      console.log('[uploadImages] Pending images:', pendingImages.length);
       const alreadyUploadedUrls = images
         .filter(img => img.uploadState.status === 'complete' && img.fileUrl)
         .map(img => img.fileUrl!);
+      console.log('[uploadImages] Already uploaded URLs:', alreadyUploadedUrls);
 
       if (pendingImages.length === 0) {
         return alreadyUploadedUrls;
@@ -893,6 +897,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
         });
 
         const newUrls: string[] = [];
+        console.log('[uploadImages] Starting upload for', pendingImages.length, 'images');
         await Promise.all(
           uploadUrlsResponse.uploads.map(async (upload, index) => {
             const image = pendingImages[index];
@@ -920,10 +925,13 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
             });
 
             newUrls.push(upload.fileUrl);
+            console.log('[uploadImages] Uploaded image, fileUrl:', upload.fileUrl);
           })
         );
 
-        return [...alreadyUploadedUrls, ...newUrls];
+        const result = [...alreadyUploadedUrls, ...newUrls];
+        console.log('[uploadImages] Final URLs:', result);
+        return result;
       } catch (error) {
         dispatch({
           type: 'SET_UPLOAD_ERROR',
@@ -935,6 +943,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
     // Submit review to backend
     submitReview: useCallback(async (uploadedImageUrls?: string[]): Promise<boolean> => {
+      console.log('[submitReview] Called with uploadedImageUrls:', uploadedImageUrls);
       dispatch({ type: 'SET_SUBMITTING', payload: true });
       dispatch({ type: 'CLEAR_SUBMIT_ERROR' });
 
@@ -957,6 +966,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
             : new Date().toISOString().split('T')[0],
           locationVerified: state.reviewData.locationVerified,
         };
+        console.log('[submitReview] Request:', JSON.stringify(request, null, 2));
 
         await reviewsApi.create(request);
 
