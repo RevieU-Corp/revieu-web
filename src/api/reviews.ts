@@ -45,7 +45,15 @@ export const reviewsApi = {
      * Create a new review
      */
     create: async (request: CreateReviewRequest): Promise<ReviewResponse> => {
-        const response = await apiClient.post<ReviewResponse>('/reviews', request);
+        // Transform to backend format (rating instead of overallRating)
+        const backendRequest = {
+            merchantId: request.merchantId,
+            rating: request.overallRating,
+            text: request.text,
+            images: request.images,
+            tags: request.tags,
+        };
+        const response = await apiClient.post<ReviewResponse>('/reviews', backendRequest);
         return response.data;
     },
 
