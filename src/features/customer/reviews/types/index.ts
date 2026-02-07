@@ -76,6 +76,7 @@ export interface CombinedRatingProps {
 export interface ReviewData {
   id: string;
   merchantId: string;
+  venueId: string;
   userId: string;
   overallRating: number;
   detailedRatings: {

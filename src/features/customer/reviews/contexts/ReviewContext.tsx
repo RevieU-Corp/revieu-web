@@ -889,11 +889,15 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
         const request: CreateReviewRequest = {
           merchantId: state.reviewData.merchantId || '',
+          venueId: state.reviewData.venueId || '',
           overallRating: state.reviewData.overallRating || 0,
           detailedRatings: state.reviewData.detailedRatings,
           text: state.reviewData.reviewText,
           images: imageUrls,
           tags: state.reviewData.tags,
+          visitDate: state.reviewData.visitDate
+            ? state.reviewData.visitDate.toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
           locationVerified: state.reviewData.locationVerified,
         };
 
