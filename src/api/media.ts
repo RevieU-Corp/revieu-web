@@ -1,20 +1,30 @@
 import { apiClient } from './apiClient';
 
-// Request types
+// Request types (matches backend snake_case)
 export interface UploadFileInfo {
     filename: string;
     contentType: string;
-    size: number;
 }
 
 export interface GetUploadUrlsRequest {
     files: UploadFileInfo[];
 }
 
-// Response types
+// Backend response types (snake_case)
+interface BackendUploadInfo {
+    id: string;
+    upload_url: string;
+    file_url: string;
+    expires_at: string;
+}
+
+interface BackendGetUploadUrlsResponse {
+    uploads: BackendUploadInfo[];
+}
+
+// Frontend response types (camelCase)
 export interface UploadInfo {
     id: string;
-    filename: string;
     uploadUrl: string;
     fileUrl: string;
     expiresAt: string;
@@ -32,8 +42,28 @@ export const mediaApi = {
      * Get presigned URLs for uploading files to R2
      */
     getUploadUrls: async (request: GetUploadUrlsRequest): Promise<GetUploadUrlsResponse> => {
-        const response = await apiClient.post<GetUploadUrlsResponse>('/media/uploads', request);
-        return response.data;
+        // Transform request to snake_case for backend
+        const backendRequest = {
+            files: request.files.map(f => ({
+                filename: f.filename,
+                content_type: f.contentType,
+            })),
+        };
+
+        const response = await apiClient.post<BackendGetUploadUrlsResponse>(
+            '/media/presigned-urls',
+            backendRequest
+        );
+
+        // Transform response to camelCase for frontend
+        return {
+            uploads: response.data.uploads.map(u => ({
+                id: u.id,
+                uploadUrl: u.upload_url,
+                fileUrl: u.file_url,
+                expiresAt: u.expires_at,
+            })),
+        };
     },
 };
 

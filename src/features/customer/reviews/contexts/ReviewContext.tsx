@@ -670,7 +670,6 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
         files: pendingImages.map(img => ({
           filename: img.file.name,
           contentType: img.file.type,
-          size: img.file.size,
         })),
       });
 
