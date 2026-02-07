@@ -47,21 +47,16 @@ const WriteReviewForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Step 1: Upload images to R2
-      const images = state.reviewData.images || [];
-      const hasImagesToUpload = images.some(img => img.uploadState.status === 'pending');
-
-      if (hasImagesToUpload) {
-        const uploadSuccess = await actions.uploadImages();
-        if (!uploadSuccess) {
-          setIsSubmitting(false);
-          console.error('Failed to upload images');
-          return;
-        }
+      // Step 1: Upload images to R2 and get URLs
+      const imageUrls = await actions.uploadImages();
+      if (imageUrls === null) {
+        setIsSubmitting(false);
+        console.error('Failed to upload images');
+        return;
       }
 
-      // Step 2: Submit review to backend
-      const submitSuccess = await actions.submitReview();
+      // Step 2: Submit review to backend with uploaded image URLs
+      const submitSuccess = await actions.submitReview(imageUrls);
 
       if (submitSuccess) {
         navigate(PATHS.CUSTOMER.REVIEW_SUCCESS);

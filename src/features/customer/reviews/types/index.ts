@@ -338,8 +338,8 @@ export interface ReviewContextActions {
   clearAISuggestions: () => void;
   // New Upload & Submit Actions
   retryImage: (imageId: string) => Promise<boolean>;
-  uploadImages: () => Promise<boolean>;
-  submitReview: () => Promise<boolean>;
+  uploadImages: () => Promise<string[] | null>;
+  submitReview: (uploadedImageUrls?: string[]) => Promise<boolean>;
   setUploadError: (message: string) => void;
   clearUploadError: () => void;
   clearSubmitError: () => void;

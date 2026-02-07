@@ -870,25 +870,79 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'CLEAR_DRAFT_NOTICE' });
     }, []),
 
-    // Upload images to R2 using presigned URLs
-    uploadImages: useCallback(async (): Promise<boolean> => {
+    // Upload images to R2 using presigned URLs, returns uploaded URLs
+    uploadImages: useCallback(async (): Promise<string[] | null> => {
       const images = state.reviewData.images || [];
       const pendingImages = images.filter(img => img.uploadState.status === 'pending');
+      const alreadyUploadedUrls = images
+        .filter(img => img.uploadState.status === 'complete' && img.fileUrl)
+        .map(img => img.fileUrl!);
 
-      return uploadPendingImages(pendingImages);
-    }, [state.reviewData.images, uploadPendingImages]),
+      if (pendingImages.length === 0) {
+        return alreadyUploadedUrls;
+      }
+
+      try {
+        dispatch({ type: 'CLEAR_UPLOAD_ERROR' });
+
+        const uploadUrlsResponse = await mediaApi.getUploadUrls({
+          files: pendingImages.map(img => ({
+            filename: img.file.name,
+            contentType: img.file.type,
+          })),
+        });
+
+        const newUrls: string[] = [];
+        await Promise.all(
+          uploadUrlsResponse.uploads.map(async (upload, index) => {
+            const image = pendingImages[index];
+
+            dispatch({
+              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+              payload: { imageId: image.id, status: 'uploading', progress: 0 },
+            });
+
+            await uploadToR2(upload.uploadUrl, image.file, (progress) => {
+              dispatch({
+                type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+                payload: { imageId: image.id, status: 'uploading', progress },
+              });
+            });
+
+            dispatch({
+              type: 'UPDATE_IMAGE_UPLOAD_STATUS',
+              payload: {
+                imageId: image.id,
+                status: 'complete',
+                progress: 100,
+                fileUrl: upload.fileUrl,
+              },
+            });
+
+            newUrls.push(upload.fileUrl);
+          })
+        );
+
+        return [...alreadyUploadedUrls, ...newUrls];
+      } catch (error) {
+        dispatch({
+          type: 'SET_UPLOAD_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to upload images',
+        });
+        return null;
+      }
+    }, [state.reviewData.images]),
 
     // Submit review to backend
-    submitReview: useCallback(async (): Promise<boolean> => {
+    submitReview: useCallback(async (uploadedImageUrls?: string[]): Promise<boolean> => {
       dispatch({ type: 'SET_SUBMITTING', payload: true });
       dispatch({ type: 'CLEAR_SUBMIT_ERROR' });
 
       try {
-        // Get all image URLs (either already uploaded fileUrl or need to check)
-        const images = state.reviewData.images || [];
-        const imageUrls = images
-          .filter(img => img.uploadState.status === 'complete' && img.fileUrl)
-          .map(img => img.fileUrl!);
+        // Use provided URLs or get from state
+        const imageUrls = uploadedImageUrls ?? state.reviewData.images
+          ?.filter(img => img.uploadState.status === 'complete' && img.fileUrl)
+          .map(img => img.fileUrl!) ?? [];
 
         const request: CreateReviewRequest = {
           merchantId: state.reviewData.merchantId || '',
