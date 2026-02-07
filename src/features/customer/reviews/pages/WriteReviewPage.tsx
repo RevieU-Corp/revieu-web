@@ -423,9 +423,11 @@ const WriteReviewForm: React.FC = () => {
 };
 
 const WriteReviewPage: React.FC = () => {
+  // TODO: Get merchantId and venueId from route params or props
   return (
     <ReviewProvider
-      merchantId="temp-merchant-id"
+      merchantId="1"
+      venueId="1"
       merchantName="Sample Restaurant"
       merchantCategory={BusinessCategory.RESTAURANT}
     >

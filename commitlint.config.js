@@ -7,12 +7,12 @@ export default {
             rules: {
                 'header-match-issue-id': (parsed) => {
                     const { header } = parsed;
-                    // Check for GitHub Issue ID, e.g., (#123) -> only digits
-                    const regex = /\s\(#[0-9]+\)$/;
+                    // Check for GitHub Issue ID: (#123) or cross-repo (owner/repo#123)
+                    const regex = /\s\((#[0-9]+|[\w-]+\/[\w-]+#[0-9]+)\)$/;
                     if (regex.test(header)) {
                         return [true];
                     }
-                    return [false, 'Header must end with (#issue-id)! e.g. feat: fix bug (#123)'];
+                    return [false, 'Header must end with (#issue-id) or (owner/repo#issue-id)! e.g. feat: fix bug (#123) or feat: fix bug (org/repo#123)'];
                 },
                 'body-be-detailed': (parsed) => {
                     const { body } = parsed;

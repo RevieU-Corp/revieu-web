@@ -622,6 +622,7 @@ const ReviewContext = createContext<{
 interface ReviewProviderProps {
   children: ReactNode;
   merchantId?: string;
+  venueId?: string;
   merchantName?: string;
   merchantCategory?: BusinessCategory;
 }
@@ -629,12 +630,14 @@ interface ReviewProviderProps {
 export const ReviewProvider: React.FC<ReviewProviderProps> = ({
   children,
   merchantId,
+  venueId,
 }) => {
   const [state, dispatch] = useReducer(reviewReducer, {
     ...initialState,
     reviewData: {
       ...initialState.reviewData,
       merchantId,
+      venueId,
     },
   });
 
