@@ -33,6 +33,10 @@ export interface ReviewResponse {
     tags: string[];
     createdAt: string;
     status?: string;
+    businessName: string;
+    businessImage: string;
+    location: string;
+    likeCount: number;
 }
 
 export interface ReviewListResponse {

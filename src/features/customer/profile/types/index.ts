@@ -31,6 +31,7 @@ export interface Review {
   content: string;
   images: string[];
   helpfulCount: number;
+  createdAt: string;
 }
 
 // Coupon Types

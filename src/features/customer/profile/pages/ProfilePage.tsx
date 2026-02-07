@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { PATHS } from '../../../../routes/paths';
@@ -14,55 +14,42 @@ import {
 } from '../components';
 import { generateCreativeBio } from '../services/profileService';
 import { UserProfile, Review, Coupon, Order } from '../types';
+import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
 
-// --- MOCK DATA ---
-// TODO: Replace with API calls
-const MOCK_REVIEWS: Review[] = [
-  {
-    id: '1',
-    businessName: 'Golden Gate Bakery',
-    businessImage: 'https://picsum.photos/id/292/100/100',
-    location: 'Chinatown',
-    rating: 5,
-    date: '2d ago',
-    content: 'Best egg tarts in the city, hands down! The line was long but totally worth the wait. Make sure to bring cash as they do not accept cards.',
-    images: ['https://picsum.photos/id/493/400/300', 'https://picsum.photos/id/30/400/300'],
-    helpfulCount: 24
-  },
-  {
-    id: '2',
-    businessName: 'Blue Bottle Coffee',
-    businessImage: 'https://picsum.photos/id/1060/100/100',
-    location: 'Ferry Building',
-    rating: 4,
-    date: '1w ago',
-    content: 'Great atmosphere and solid espresso. A bit pricey compared to other local spots, but the view of the bay is unbeatable.',
-    images: [],
-    helpfulCount: 8
-  },
-  {
-    id: '3',
-    businessName: 'Arsicault Bakery',
-    businessImage: 'https://picsum.photos/id/102/100/100',
-    location: 'Inner Richmond',
-    rating: 5,
-    date: '2w ago',
-    content: 'The croissants here are life-changing. Flaky, buttery perfection.',
-    images: ['https://picsum.photos/id/430/400/300'],
-    helpfulCount: 156
-  },
-  {
-    id: '4',
-    businessName: 'Mister Jiu\'s',
-    businessImage: 'https://picsum.photos/id/338/100/100',
-    location: 'Chinatown',
-    rating: 5,
-    date: '3w ago',
-    content: 'An absolute gem. The roast duck is a must-order. The cocktail program is also top-tier.',
-    images: [],
-    helpfulCount: 42
-  }
-];
+// Helper function to format date as relative time
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffWeeks < 4) return `${diffWeeks}w ago`;
+  return `${diffMonths}mo ago`;
+}
+
+// Transform API response to Review type
+function transformReviewResponse(response: ReviewResponse): Review {
+  return {
+    id: response.id,
+    businessName: response.businessName || 'Unknown Business',
+    businessImage: response.businessImage || 'https://via.placeholder.com/100',
+    location: response.location || '',
+    rating: response.overallRating,
+    date: formatRelativeTime(response.createdAt),
+    content: response.text || '',
+    images: response.images || [],
+    helpfulCount: response.likeCount || 0,
+    createdAt: response.createdAt,
+  };
+}
 
 const MOCK_COUPONS: Coupon[] = [
   {
@@ -123,6 +110,29 @@ const ProfilePage: React.FC = () => {
   const { user: authUser, logout } = useAuth();
   const [currentView, setCurrentView] = useState<'profile' | 'reviews'>('profile');
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+
+  // Fetch reviews from API
+  useEffect(() => {
+    const fetchReviews = async () => {
+      setReviewsLoading(true);
+      setReviewsError(null);
+      try {
+        const response = await reviewsApi.list();
+        const transformedReviews = response.data.map(transformReviewResponse);
+        setReviews(transformedReviews);
+      } catch (err) {
+        setReviewsError('Failed to load reviews');
+        console.error('Error fetching reviews:', err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   // Create UserProfile from AuthContext user data
   const [user, setUser] = useState<UserProfile>({
@@ -187,7 +197,18 @@ const ProfilePage: React.FC = () => {
 
           {/* List */}
           <div className="px-4 md:px-6 pb-20 space-y-4">
-            {MOCK_REVIEWS.map(review => (
+            {reviewsLoading && (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+              </div>
+            )}
+            {reviewsError && (
+              <div className="text-center py-8 text-red-500">{reviewsError}</div>
+            )}
+            {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+              <div className="text-center py-8 text-gray-500">No reviews yet</div>
+            )}
+            {!reviewsLoading && !reviewsError && reviews.map(review => (
               <ReviewCard key={review.id} review={review} />
             ))}
           </div>
