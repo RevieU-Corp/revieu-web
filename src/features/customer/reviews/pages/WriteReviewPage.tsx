@@ -5,6 +5,7 @@ import { useReviewContext } from '../contexts/ReviewContext';
 import { ReviewProvider } from '../contexts/ReviewContext';
 import { CombinedRatingComponent, ImageUploadGrid, AIAssistantButton, AISuggestionsList } from '../components';
 import { BusinessCategory } from '../types';
+import { PATHS } from '../../../../routes/paths';
 
 // Internal component that uses the review context
 const WriteReviewForm: React.FC = () => {
@@ -63,7 +64,7 @@ const WriteReviewForm: React.FC = () => {
       const submitSuccess = await actions.submitReview();
 
       if (submitSuccess) {
-        navigate('/home');
+        navigate(PATHS.CUSTOMER.REVIEW_SUCCESS);
       } else {
         console.error('Failed to submit review');
       }

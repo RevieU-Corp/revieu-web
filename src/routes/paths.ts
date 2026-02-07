@@ -24,6 +24,7 @@
         POST: (id: string) => `/customer/post/${id}`,
         POST_DETAIL: '/customer/post/:id',
         WRITE_REVIEW: '/customer/write-review',
+        REVIEW_SUCCESS: '/customer/review-success',
         EXPLORE: '/customer/explore',
         MERCHANT_INFO: (id: string) => `/customer/merchant/${id}`,
         MERCHANT_DETAIL: '/customer/merchant/:id',
