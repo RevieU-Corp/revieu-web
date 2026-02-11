@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { PATHS } from '../../../../routes/paths';
@@ -6,14 +6,18 @@ import {
   Icons,
   ReviewCard,
   CouponCard,
-  OrderCard,
   StatsBar,
   ProfileNavbar,
-  SettingItem,
-  NavCard
+  SectionHeading,
+  AccountSection,
+  PendingReviewMerchants,
+  MyHistorySection
 } from '../components';
-import { generateCreativeBio } from '../services/profileService';
-import { UserProfile, Review, Coupon, Order } from '../types';
+import {
+  generateCreativeBio,
+  getLatestVisitedMerchantsWithoutReview,
+} from '../services/profileService';
+import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
 
 // Helper function to format date as relative time
@@ -84,27 +88,6 @@ const MOCK_COUPONS: Coupon[] = [
   }
 ];
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: 'o1',
-    businessName: 'Sushirrito',
-    businessImage: 'https://picsum.photos/id/292/100/100',
-    date: 'Yesterday',
-    items: ['Sumo Crunch', 'Lava Nachos'],
-    total: '$18.50',
-    status: 'completed'
-  },
-  {
-    id: 'o2',
-    businessName: 'Philz Coffee',
-    businessImage: 'https://picsum.photos/id/431/100/100',
-    date: 'Oct 24',
-    items: ['Mint Mojito', 'Avocado Toast'],
-    total: '$12.00',
-    status: 'completed'
-  }
-];
-
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user: authUser, logout } = useAuth();
@@ -113,6 +96,8 @@ const ProfilePage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [pendingReviewMerchants, setPendingReviewMerchants] = useState<PendingReviewMerchant[]>([]);
+  const [pendingMerchantsLoading, setPendingMerchantsLoading] = useState(false);
 
   // Fetch reviews from API
   useEffect(() => {
@@ -134,6 +119,23 @@ const ProfilePage: React.FC = () => {
     fetchReviews();
   }, []);
 
+  useEffect(() => {
+    const fetchPendingReviewMerchants = async () => {
+      setPendingMerchantsLoading(true);
+      try {
+        const merchants = await getLatestVisitedMerchantsWithoutReview();
+        setPendingReviewMerchants(merchants);
+      } catch (err) {
+        console.error('Error fetching pending review merchants:', err);
+        setPendingReviewMerchants([]);
+      } finally {
+        setPendingMerchantsLoading(false);
+      }
+    };
+
+    fetchPendingReviewMerchants();
+  }, []);
+
   // Create UserProfile from AuthContext user data
   const [user, setUser] = useState<UserProfile>({
     name: authUser?.name || 'User',
@@ -150,7 +152,8 @@ const ProfilePage: React.FC = () => {
       totalReviews: 142, // TODO: Get from API
       photosUploaded: 856, // TODO: Get from API
       helpfulVotes: 4205, // TODO: Get from API
-      views: '2.4M' // TODO: Get from API
+      views: '2.4M', // TODO: Get from API
+      following: 318, // TODO: Get from API
     }
   });
 
@@ -168,7 +171,29 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleWriteReviewFromMerchant = (merchant: PendingReviewMerchant) => {
+    navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
+      state: {
+        merchantId: merchant.id,
+        merchantName: merchant.businessName,
+      },
+    });
+  };
+
+  const handleStorageClick = () => {
+    // Placeholder entry reserved for future storage feature.
+  };
+
   const activeCoupons = MOCK_COUPONS.filter(c => c.status === 'active');
+  const latestReview = useMemo(() => {
+    if (reviews.length === 0) {
+      return null;
+    }
+
+    return [...reviews].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+  }, [reviews]);
 
   // --- REVIEWS PAGE VIEW ---
   if (currentView === 'reviews') {
@@ -301,21 +326,15 @@ const ProfilePage: React.FC = () => {
 
                 <StatsBar stats={user.stats} />
 
-                {/* Desktop Settings Menu */}
+                {/* Desktop Account Menu */}
                 <div className="hidden lg:block mt-8">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Preferences</h3>
-                  <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                    <div onClick={() => navigate(PATHS.CUSTOMER.ME.NOTIFICATIONS)}>
-                      <SettingItem icon={<Icons.Bell />} label="Notifications" badge="2" />
-                    </div>
-                    <div onClick={() => navigate(PATHS.CUSTOMER.ME.PRIVACY)}>
-                      <SettingItem icon={<Icons.Shield />} label="Privacy & Security" />
-                    </div>
-                    <div className="h-[1px] bg-gray-100 mx-5 my-1"></div>
-                    <div onClick={handleLogout}>
-                      <SettingItem icon={<Icons.LogOut />} label="Sign Out" isDestructive />
-                    </div>
-                  </div>
+                  <AccountSection
+                    onAccountSecurity={() => navigate(PATHS.CUSTOMER.ME.PRIVACY)}
+                    onNotification={() => navigate(PATHS.CUSTOMER.ME.NOTIFICATIONS)}
+                    onStorage={handleStorageClick}
+                    onSupport={() => navigate(PATHS.CUSTOMER.ME.HELP)}
+                    onLogout={handleLogout}
+                  />
                 </div>
               </div>
             </div>
@@ -324,44 +343,23 @@ const ProfilePage: React.FC = () => {
           {/* --- Right Column: Content Feed --- */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-10 px-4 md:px-0 py-6 md:py-0 pb-20">
 
-            {/* 1. Share & Orders Section */}
-            <section className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Activity</h2>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* Featured Card */}
-                <div className="rounded-[24px] p-7 text-white shadow-[0_12px_30px_-8px_rgba(153,0,0,0.3)] relative overflow-hidden flex flex-col justify-between min-h-[180px] group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_-10px_rgba(153,0,0,0.4)]">
-                  <div className="absolute inset-0 bg-[#990000]"></div>
-                  <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#FFCC00] rounded-full blur-[80px] opacity-40 -translate-y-1/2 translate-x-1/3"></div>
-                  <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-purple-900 rounded-full blur-[60px] opacity-30 translate-y-1/2 -translate-x-1/3"></div>
-
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="bg-white/20 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide">Featured Mission</span>
-                    </div>
-                    <h3 className="font-bold text-2xl mb-2 leading-tight">Share your vibe</h3>
-                    <p className="text-white/80 text-sm mb-6 max-w-[85%] font-medium">Rate {MOCK_ORDERS[0].businessName} to unlock the "Taste Maker" badge.</p>
-                    <button className="bg-white text-brand-red px-6 py-2.5 rounded-full text-xs font-bold hover:bg-gray-50 transition-colors shadow-sm active:scale-95 transform">Write Review</button>
-                  </div>
-                  <Icons.MessageSquare className="absolute -bottom-6 -right-6 text-white/10 w-40 h-40 group-hover:scale-110 group-hover:rotate-6 transition-all duration-700" />
-                </div>
-                {/* Latest Order */}
-                <OrderCard order={MOCK_ORDERS[0]} />
-              </div>
-            </section>
+            <PendingReviewMerchants
+              merchants={pendingReviewMerchants}
+              loading={pendingMerchantsLoading}
+              onWriteReview={handleWriteReviewFromMerchant}
+            />
 
             {/* 2. Wallet Section */}
             <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-gray-900 to-black text-white p-2 rounded-xl shadow-md">
-                    <Icons.Wallet size={18} className="fill-current" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">My Rewards</h2>
-                </div>
-                <span className="text-xs font-bold text-brand-red bg-brand-red/5 px-3 py-1.5 rounded-full border border-brand-red/10">{activeCoupons.length} Available</span>
-              </div>
+              <SectionHeading
+                icon={<Icons.Wallet />}
+                title="My Rewards"
+                rightSlot={(
+                  <span className="text-xs font-bold text-brand-red bg-brand-red/5 px-3 py-1.5 rounded-full border border-brand-red/10">
+                    {activeCoupons.length} Available
+                  </span>
+                )}
+              />
 
               <div className="flex overflow-x-auto gap-5 pb-6 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory md:grid md:grid-cols-2 xl:grid-cols-3 md:overflow-visible md:pb-0 md:mx-0 md:px-0">
                 {activeCoupons.map((coupon) => (
@@ -378,44 +376,21 @@ const ProfilePage: React.FC = () => {
               </div>
             </section>
 
-            {/* 3. My Content Grid */}
-            <section className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-5">Contributions</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
-                {/* REVIEWS BOX */}
-                <NavCard
-                  icon={<Icons.Review />}
-                  title="My Reviews"
-                  subtitle={`${user.stats.totalReviews} posted • 80k views`}
-                  onClick={() => setCurrentView('reviews')}
-                />
-
-                {/* PHOTOS BOX */}
-                <NavCard
-                  icon={<Icons.Camera />}
-                  title="Photos"
-                  subtitle={`${user.stats.photosUploaded} uploaded • 2.1M views`}
-                  colorClass="text-brand-darkGold"
-                  onClick={() => {}} // TODO: Implement photos view
-                />
-              </div>
-            </section>
+            <MyHistorySection
+              latestReview={latestReview}
+              loading={reviewsLoading}
+              onViewAllReviews={() => setCurrentView('reviews')}
+            />
 
             {/* Mobile Settings */}
             <section className="lg:hidden mt-8 mb-12">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Account</h3>
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                <div onClick={() => navigate(PATHS.CUSTOMER.ME.NOTIFICATIONS)}>
-                  <SettingItem icon={<Icons.Bell />} label="Notifications" badge="2" />
-                </div>
-                <div onClick={() => navigate(PATHS.CUSTOMER.ME.PRIVACY)}>
-                  <SettingItem icon={<Icons.Shield />} label="Security" />
-                </div>
-                <div onClick={handleLogout}>
-                  <SettingItem icon={<Icons.LogOut />} label="Log Out" isDestructive />
-                </div>
-              </div>
+              <AccountSection
+                onAccountSecurity={() => navigate(PATHS.CUSTOMER.ME.PRIVACY)}
+                onNotification={() => navigate(PATHS.CUSTOMER.ME.NOTIFICATIONS)}
+                onStorage={handleStorageClick}
+                onSupport={() => navigate(PATHS.CUSTOMER.ME.HELP)}
+                onLogout={handleLogout}
+              />
             </section>
 
           </div>
