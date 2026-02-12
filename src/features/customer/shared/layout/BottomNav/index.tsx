@@ -1,4 +1,4 @@
-import { Home, Search, Compass, User, Plus } from "lucide-react";
+import { Home, User, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -61,7 +61,6 @@ export function BottomNav() {
 
       <div className="flex items-end justify-around h-24 max-w-md mx-auto px-4 pb-4">
         <NavTab path={PATHS.CUSTOMER.HOME} icon={Home} label="Home" />
-        <NavTab path={PATHS.CUSTOMER.DISCOVER} icon={Search} label="Discover" />
 
         {/* 3D Sphere FAB Integrated */}
         <div className="relative w-16 h-16 flex flex-col items-center justify-end pb-1">
@@ -87,7 +86,6 @@ export function BottomNav() {
           <span className="text-[8px] font-black text-gray-900 mt-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Review</span>
         </div>
 
-        <NavTab path={PATHS.CUSTOMER.EXPLORE} icon={Compass} label="Explore" />
         <NavTab path={PATHS.CUSTOMER.ME.ROOT} icon={User} label="Profile" />
       </div>
 
