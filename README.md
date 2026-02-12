@@ -1,24 +1,42 @@
 # RevieU Web 🌟
 
-RevieU is a modern, feature-rich review platform designed to bridge the gap between customers and merchants. Built with performance and user experience in mind, it provides a seamless interface for discovering, sharing, and managing reviews.
+RevieU Web is the frontend application for the RevieU platform, serving both customer and merchant experiences in a single React codebase.
+
+It currently includes end-to-end flows for authentication, customer discovery, review writing/upload, coupon/payment journeys, and merchant-side operations (dashboard, profile, messaging, marketing). Some modules are already wired to backend APIs, while others still use mock/local state as the project is actively moving toward Beta.
 
 ---
 
-## 🚀 Features
+## 🚀 Product Overview
 
 ### 👤 For Customers
-- **Personalized Home**: Stay updated with the latest reviews and trending stores.
-- **Smart Discover**: Find the best local businesses with advanced search and filtering.
-- **Social Integration**: Seamless login and registration with Google Auth.
-- **Rich Reviews**: Share experiences with photos, ratings, and detailed descriptions.
-- **User Profiles**: Manage your contributions and follow your favorite local spots.
+- **Authentication**: Email login/register, Google OAuth callback handling, session restore on app start.
+- **Discovery**: Home feed, Discover categories/tags, map-based Explore, merchant detail/reviews pages.
+- **Review System**: Write review with ratings/tags/media, R2 upload via presigned URL, draft persistence.
+- **Coupon & Payment**: Coupon validation/redeem flows, payment pages, voucher display/share flow.
+- **Profile**: Personal profile, review history, settings-related pages.
 
 ### 🏪 For Merchants
-- **Insightful Dashboard**: Monitor store performance and customer sentiment at a glance.
-- **Ad Manager**: Target the right audience with integrated advertisement campaigns.
-- **Store Profile**: Customize your digital storefront to attract more customers.
-- **Direct Messaging**: Engage directly with customers to resolve issues or show appreciation.
-- **Instant Notifications**: Never miss a beat with real-time alerts for new reviews and messages.
+- **Merchant Auth & Verification Flow**: Merchant login and onboarding/verification UX.
+- **Operations Console**: Dashboard, coupon/package management, review reply workflows, store profile editing.
+- **Messaging**: Chat list, chat detail, search in conversation, group creation/deletion flows.
+- **Marketing & Analytics Pages**: Post creation, store analytics, ads/notifications pages (some are still placeholder-driven).
+
+### 📌 Current Delivery Status
+- **API-connected flows exist** in Auth, Review upload/submit, and parts of Coupon/Voucher logic.
+- **Mock/local-state flows remain** in several customer and merchant modules and are being replaced iteratively.
+
+---
+
+## 📋 Requirements Matrix
+
+The latest functional requirements matrix for this frontend project is maintained at:
+
+- `docs/requirements/README.md`
+
+This file is the source of truth for:
+- module-by-module functional scope
+- implementation status (`已实现 / 部分实现 / Mock / 未实现`)
+- Beta target matrix and non-functional requirements (NFR)
 
 ---
 
@@ -122,4 +140,4 @@ When adding new functionality (e.g., a "Product Gallery"), create a new folder i
 
 ## 📄 License
 
-This project is private and intended for internal use only2.
+This project is private and intended for internal use only.
