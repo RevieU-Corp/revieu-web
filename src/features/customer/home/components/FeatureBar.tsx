@@ -1,45 +1,84 @@
+import React from 'react';
 
-import React, { useState } from 'react';
+export type FeatureType = 'Street Food' | 'Open Now' | 'Top Rated' | 'Nearby';
 
-const FEATURES = [
-    { label: 'Coupons', icon: '🎟️' },
-    { label: 'Open Now', icon: '⚡' },
+interface FeatureBarProps {
+    activeFeature: FeatureType;
+    onFeatureChange: (feature: FeatureType) => void;
+    showDistanceSlider: boolean;
+    selectedDistance: number;
+    onDistanceChange: (distance: number) => void;
+}
+
+const FEATURES: { label: FeatureType; icon: string }[] = [
     { label: 'Top Rated', icon: '★' },
-    { label: 'Budget', icon: '$' },
+    { label: 'Street Food', icon: '🌮' },
+    { label: 'Open Now', icon: '⚡' },
+    { label: 'Nearby', icon: '📍' },
 ];
 
-const FeatureBar: React.FC = () => {
-    const [active, setActive] = useState('Coupons');
+const DISTANCE_OPTIONS = [1, 3, 5, 10];
 
+const FeatureBar: React.FC<FeatureBarProps> = ({ 
+    activeFeature, 
+    onFeatureChange,
+    showDistanceSlider,
+    selectedDistance,
+    onDistanceChange
+}) => {
     return (
-        <div className="flex items-center space-x-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-            {FEATURES.map((feature) => (
-                <button
-                    key={feature.label}
-                    onClick={() => setActive(feature.label)}
-                    className={`flex-shrink-0 min-w-[105px] p-4 rounded-3xl transition-all duration-300 transform active:scale-95 ${active === feature.label
-                            ? 'bg-white shadow-md border border-[#990000]/10'
-                            : 'bg-gray-100/50 border border-transparent'
+        <div>
+            <div className="grid grid-cols-4 gap-2 -mx-4 px-4 pb-2">
+                {FEATURES.map((feature) => (
+                    <button
+                        key={feature.label}
+                        onClick={() => onFeatureChange(feature.label)}
+                        className={`h-[70px] rounded-2xl transition-all duration-200 transform active:scale-95 flex flex-col items-center justify-center gap-1 ${
+                            activeFeature === feature.label
+                                ? 'bg-[#990000] shadow-lg shadow-[#990000]/30'
+                                : 'bg-gray-100/80 border border-gray-200'
                         }`}
-                >
-                    <div className="flex flex-col items-center space-y-3">
-                        <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center text-[20px] transition-all ${active === feature.label
-                                    ? feature.label === 'Top Rated' ? 'bg-[#FFCC00] text-white' : 'bg-[#990000] text-white shadow-sm'
-                                    : 'bg-white border border-gray-100'
-                                }`}
-                        >
-                            <span className={active !== feature.label ? 'grayscale opacity-40' : ''}>
-                                {feature.icon}
-                            </span>
+                    >
+                        <div className={`text-[22px] transition-all ${
+                            activeFeature === feature.label ? '' : 'grayscale opacity-50'
+                        }`}>
+                            {feature.icon}
                         </div>
-                        <span className={`block text-[13px] font-[800] tracking-tight ${active === feature.label ? 'text-[#1A1A1A]' : 'text-gray-500'
-                            }`}>
+                        <span className={`text-[9px] font-[800] tracking-tight leading-none text-center ${
+                            activeFeature === feature.label ? 'text-white' : 'text-gray-600'
+                        }`}>
                             {feature.label}
                         </span>
+                    </button>
+                ))}
+            </div>
+
+            {/* Distance Slider - Only show when Nearby is active */}
+            {showDistanceSlider && (
+                <div className="mt-3 -mx-4 px-4 pb-2 animate-in slide-in-from-top duration-200">
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-[11px] font-[800] text-gray-700 uppercase tracking-widest">Distance</span>
+                            <span className="text-[13px] font-[900] text-[#990000]">{selectedDistance} mi</span>
+                        </div>
+                        <div className="flex gap-2">
+                            {DISTANCE_OPTIONS.map((distance) => (
+                                <button
+                                    key={distance}
+                                    onClick={() => onDistanceChange(distance)}
+                                    className={`flex-1 py-2 rounded-xl text-[11px] font-[800] transition-all ${
+                                        selectedDistance === distance
+                                            ? 'bg-[#990000] text-white shadow-md'
+                                            : 'bg-white text-gray-600 border border-gray-200'
+                                    }`}
+                                >
+                                    {distance} mi
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </button>
-            ))}
+                </div>
+            )}
         </div>
     );
 };
