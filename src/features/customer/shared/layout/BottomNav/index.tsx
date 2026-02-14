@@ -1,12 +1,25 @@
-import { Home, Search, Compass, User, Plus } from "lucide-react";
+import { Home, User, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import { PATHS } from "../../../../../routes/paths";
+import { useAuth } from "../../../../../contexts/AuthContext";
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handlePostClick = () => {
+    if (isAuthenticated) {
+      navigate(PATHS.CUSTOMER.WRITE_REVIEW);
+    } else {
+      setShowLoginModal(true);
+    }
+  };
 
   const NavTab = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => {
     const active = isActive(path);
@@ -48,12 +61,11 @@ export function BottomNav() {
 
       <div className="flex items-end justify-around h-24 max-w-md mx-auto px-4 pb-4">
         <NavTab path={PATHS.CUSTOMER.HOME} icon={Home} label="Home" />
-        <NavTab path={PATHS.CUSTOMER.DISCOVER} icon={Search} label="Discover" />
 
         {/* 3D Sphere FAB Integrated */}
         <div className="relative w-16 h-16 flex flex-col items-center justify-end pb-1">
           <button
-            onClick={() => navigate(PATHS.CUSTOMER.WRITE_REVIEW)}
+            onClick={handlePostClick}
             className="relative group w-14 h-14 rounded-full transition-all duration-500 active:scale-90 hover:scale-110 z-10"
           >
             {/* The 3D Sphere Body */}
@@ -74,9 +86,47 @@ export function BottomNav() {
           <span className="text-[8px] font-black text-gray-900 mt-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Review</span>
         </div>
 
-        <NavTab path={PATHS.CUSTOMER.EXPLORE} icon={Compass} label="Explore" />
         <NavTab path={PATHS.CUSTOMER.ME.ROOT} icon={User} label="Profile" />
       </div>
+
+      {/* Login Required Modal - Portal to body */}
+      {showLoginModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#E5B80B] via-[#b80000] to-[#660000] flex items-center justify-center">
+                <Plus className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Login Required</h3>
+              <p className="text-gray-500 mb-6">Please login to share your review with the community.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="flex-1 py-3 px-4 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate(PATHS.AUTH.LOGIN);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#990000] to-[#660000] text-white font-medium hover:opacity-90 transition-opacity"
+                >
+                  Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

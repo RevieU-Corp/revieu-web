@@ -76,6 +76,7 @@ export interface CombinedRatingProps {
 export interface ReviewData {
   id: string;
   merchantId: string;
+  venueId: string;
   userId: string;
   overallRating: number;
   detailedRatings: {
@@ -109,7 +110,8 @@ export interface ReviewData {
 export interface UploadedImage {
   id: string;
   file: File;
-  url: string;
+  url: string;          // Local blob URL for preview
+  fileUrl?: string;     // R2 CDN URL after upload
   thumbnail: string;
   type: 'image' | 'video';
   // Enhanced upload state management
@@ -301,6 +303,8 @@ export interface ReviewContextState {
   aiAssistantState: AIAssistantState; // New: AI Assistant state
   validationErrors: ValidationErrors;
   isSubmitting: boolean;
+  submitError?: string;
+  draftNotice?: string;
 }
 
 export interface DraftState {
@@ -332,6 +336,14 @@ export interface ReviewContextActions {
   selectAISuggestion: (suggestion: string) => void;
   toggleAIAssistant: () => void;
   clearAISuggestions: () => void;
+  // New Upload & Submit Actions
+  retryImage: (imageId: string) => Promise<boolean>;
+  uploadImages: () => Promise<string[] | null>;
+  submitReview: (uploadedImageUrls?: string[]) => Promise<boolean>;
+  setUploadError: (message: string) => void;
+  clearUploadError: () => void;
+  clearSubmitError: () => void;
+  clearDraftNotice: () => void;
 }
 
 // Legacy compatibility

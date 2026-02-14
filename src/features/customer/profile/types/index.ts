@@ -18,6 +18,7 @@ export interface UserStats {
   photosUploaded: number;
   helpfulVotes: number;
   views: string;
+  following: number;
 }
 
 // Review Types
@@ -31,6 +32,7 @@ export interface Review {
   content: string;
   images: string[];
   helpfulCount: number;
+  createdAt: string;
 }
 
 // Coupon Types
@@ -54,4 +56,12 @@ export interface Order {
   items: string[];
   total: string;
   status: 'completed' | 'pending' | 'cancelled';
+}
+
+export interface PendingReviewMerchant {
+  id: string;
+  businessName: string;
+  businessImage: string;
+  lastVisitedAt: string;
+  lastOrderItems: string[];
 }

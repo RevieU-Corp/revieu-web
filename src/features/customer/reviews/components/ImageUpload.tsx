@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, DragEvent } from 'react';
 import { Camera, X, Video, Upload, AlertCircle } from 'lucide-react';
 import { UploadedImage } from '../types';
+import { prepareUploadEntry } from '../utils/filePreparation';
 
 // ============================================================================
 // IMAGE UPLOAD GRID COMPONENT
@@ -9,6 +10,8 @@ import { UploadedImage } from '../types';
 export interface ImageUploadGridProps {
   images: UploadedImage[];
   onImagesChange: (images: UploadedImage[]) => void;
+  onRetry?: (imageId: string) => void | Promise<boolean>;
+  onSelectionError?: (message: string) => void;
   maxImages?: number;
   onImageAnalysis?: (image: UploadedImage, tags: string[]) => void;
   className?: string;
@@ -18,6 +21,8 @@ export interface ImageUploadGridProps {
 export const ImageUploadGrid: React.FC<ImageUploadGridProps> = ({
   images,
   onImagesChange,
+  onRetry,
+  onSelectionError,
   maxImages = 9,
   // onImageAnalysis,
   className = '',
@@ -27,46 +32,34 @@ export const ImageUploadGrid: React.FC<ImageUploadGridProps> = ({
   // const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Generate unique ID for images
-  const generateImageId = useCallback(() => {
-    return `img_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }, []);
-
   // Handle file selection
-  const handleFileSelect = useCallback((files: FileList | null) => {
+  const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files || disabled) return;
 
-    const newImages: UploadedImage[] = [];
     const remainingSlots = maxImages - images.length;
-    const filesToProcess = Math.min(files.length, remainingSlots);
+    if (remainingSlots <= 0) return;
 
-    for (let i = 0; i < filesToProcess; i++) {
-      const file = files[i];
-      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-        const imageId = generateImageId();
-        const newImage: UploadedImage = {
-          id: imageId,
-          file,
-          url: URL.createObjectURL(file),
-          thumbnail: URL.createObjectURL(file),
-          type: file.type.startsWith('video/') ? 'video' : 'image',
-          uploadState: {
-            status: 'pending',
-            progress: 0,
-            retryCount: 0,
-          },
-          originalSize: file.size,
-          compressedSize: file.size,
-          uploadProgress: 0,
-        };
-        newImages.push(newImage);
+    const selectedFiles = Array.from(files).slice(0, remainingSlots);
+    const newImages: UploadedImage[] = [];
+    const errors: string[] = [];
+
+    for (const file of selectedFiles) {
+      const result = await prepareUploadEntry(file, { maxSizeMB: 10 });
+      if (result.entry) {
+        newImages.push(result.entry);
+      } else if (result.error) {
+        errors.push(result.error);
       }
     }
 
     if (newImages.length > 0) {
       onImagesChange([...images, ...newImages]);
     }
-  }, [images, maxImages, disabled, onImagesChange, generateImageId]);
+    if (errors.length > 0 && onSelectionError) {
+      const message = Array.from(new Set(errors)).join(' ');
+      onSelectionError(message);
+    }
+  }, [images, maxImages, disabled, onImagesChange, onSelectionError]);
 
   // Handle drag and drop
   const handleDragOver = useCallback((e: DragEvent) => {
@@ -148,49 +141,79 @@ export const ImageUploadGrid: React.FC<ImageUploadGridProps> = ({
       ) : (
         <div className={`grid gap-2 ${getGridLayout()}`}>
           {/* Existing Images */}
-          {images.map((image, index) => (
-            <div
-              key={image.id}
-              className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group"
-            >
-              {/* Image/Video Preview */}
-              {image.type === 'video' ? (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <Video className="w-8 h-8 text-gray-400" />
-                </div>
-              ) : (
-                <img
-                  src={image.url}
-                  alt={`Upload ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              )}
+          {images.map((image, index) => {
+            const canRetry = !disabled && image.uploadState.status === 'error' && Boolean(onRetry);
+            const isUploading = image.uploadState.status === 'uploading';
 
-              {/* Upload Progress */}
-              {image.uploadState.status === 'uploading' && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="text-white text-sm">
-                    {image.uploadProgress}%
-                  </div>
-                </div>
-              )}
+            const handleRetry = () => {
+              if (canRetry && onRetry) {
+                onRetry(image.id);
+              }
+            };
 
-              {/* Error State */}
-              {image.uploadState.status === 'error' && (
-                <div className="absolute inset-0 bg-red-500 bg-opacity-75 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-white" />
-                </div>
-              )}
+            const handleRetryKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+              if (!canRetry) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleRetry();
+              }
+            };
 
-              {/* Remove Button */}
-              <button
-                onClick={() => removeImage(image.id)}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            return (
+              <div
+                key={image.id}
+                className={`relative aspect-square bg-gray-100 rounded-lg overflow-hidden group ${canRetry ? 'cursor-pointer hover:ring-2 hover:ring-red-300' : ''}`}
+                onClick={canRetry ? handleRetry : undefined}
+                onKeyDown={canRetry ? handleRetryKeyDown : undefined}
+                role={canRetry ? 'button' : undefined}
+                tabIndex={canRetry ? 0 : undefined}
+                aria-label={canRetry ? 'Retry upload' : undefined}
+                title={canRetry ? 'Tap to retry' : undefined}
               >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+                {/* Image/Video Preview */}
+                {image.type === 'video' ? (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <Video className="w-8 h-8 text-gray-400" />
+                  </div>
+                ) : (
+                  <img
+                    src={image.url}
+                    alt={`Upload ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
+                {/* Upload Progress */}
+                {isUploading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="text-white text-2xl font-semibold">
+                      {image.uploadProgress}%
+                    </div>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {image.uploadState.status === 'error' && (
+                  <div className="absolute inset-0 bg-red-500 bg-opacity-75 flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-white" />
+                  </div>
+                )}
+
+                {/* Remove Button */}
+                {!isUploading && (
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      removeImage(image.id);
+                    }}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
 
           {/* Add More Button */}
           {canAddMore && (
@@ -217,7 +240,7 @@ export const ImageUploadGrid: React.FC<ImageUploadGridProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/*,video/*"
+        accept="image/*,video/mp4,video/webm"
         className="hidden"
         onChange={(e) => handleFileSelect(e.target.files)}
         disabled={disabled}
