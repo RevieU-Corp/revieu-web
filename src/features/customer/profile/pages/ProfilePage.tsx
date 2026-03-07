@@ -20,6 +20,8 @@ import {
 import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
 
+const REVIEW_PAGE_SIZE = 20;
+
 // Helper function to format date as relative time
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
@@ -95,9 +97,21 @@ const ProfilePage: React.FC = () => {
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [reviewsCursor, setReviewsCursor] = useState<string | undefined>(undefined);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
   const [pendingReviewMerchants, setPendingReviewMerchants] = useState<PendingReviewMerchant[]>([]);
   const [pendingMerchantsLoading, setPendingMerchantsLoading] = useState(false);
+
+  const applyReviewPage = (responses: ReviewResponse[], total: number, cursor?: string, append = false) => {
+    const transformedReviews = responses.map(transformReviewResponse);
+    setReviews(previousReviews =>
+      append ? [...previousReviews, ...transformedReviews] : transformedReviews
+    );
+    setReviewsTotal(total);
+    setReviewsCursor(cursor);
+  };
 
   // Fetch reviews from API
   useEffect(() => {
@@ -105,9 +119,8 @@ const ProfilePage: React.FC = () => {
       setReviewsLoading(true);
       setReviewsError(null);
       try {
-        const response = await reviewsApi.list();
-        const transformedReviews = response.data.map(transformReviewResponse);
-        setReviews(transformedReviews);
+        const response = await reviewsApi.list({ limit: REVIEW_PAGE_SIZE });
+        applyReviewPage(response.data, response.total, response.cursor);
       } catch (err) {
         setReviewsError('Failed to load reviews');
         console.error('Error fetching reviews:', err);
@@ -184,6 +197,24 @@ const ProfilePage: React.FC = () => {
     // Placeholder entry reserved for future storage feature.
   };
 
+  const handleLoadMoreReviews = async () => {
+    if (!reviewsCursor || reviewsLoadingMore) {
+      return;
+    }
+
+    setReviewsLoadingMore(true);
+    setReviewsError(null);
+    try {
+      const response = await reviewsApi.list({ limit: REVIEW_PAGE_SIZE, cursor: reviewsCursor });
+      applyReviewPage(response.data, response.total, response.cursor, true);
+    } catch (err) {
+      setReviewsError('Failed to load reviews');
+      console.error('Error loading more reviews:', err);
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
+
   const activeCoupons = MOCK_COUPONS.filter(c => c.status === 'active');
   const latestReview = useMemo(() => {
     if (reviews.length === 0) {
@@ -216,7 +247,7 @@ const ProfilePage: React.FC = () => {
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">My Reviews</h1>
-              <p className="text-xs text-gray-500 font-medium">{user.stats.totalReviews} total contributions</p>
+              <p className="text-xs text-gray-500 font-medium">{reviewsTotal} total contributions</p>
             </div>
           </div>
 
@@ -236,6 +267,18 @@ const ProfilePage: React.FC = () => {
             {!reviewsLoading && !reviewsError && reviews.map(review => (
               <ReviewCard key={review.id} review={review} />
             ))}
+            {!reviewsLoading && !reviewsError && reviewsCursor && reviews.length > 0 && (
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreReviews}
+                  disabled={reviewsLoadingMore}
+                  className="rounded-full border border-[#C41111]/15 bg-white px-5 py-2 text-sm font-semibold text-[#C41111] shadow-sm transition-colors hover:bg-[#C41111]/5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {reviewsLoadingMore ? 'Loading more reviews...' : 'Load more reviews'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

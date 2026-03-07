@@ -41,10 +41,14 @@ export interface ReviewResponse {
     businessImage: string;
     location: string;
     likeCount: number;
+    commentCount?: number;
+    isLiked?: boolean;
 }
 
 export interface ReviewListResponse {
     data: ReviewResponse[];
+    total: number;
+    cursor?: string;
 }
 
 interface BackendReviewResponse {
@@ -66,8 +70,36 @@ interface BackendReviewResponse {
     likeCount: number;
 }
 
-interface BackendReviewListResponse {
-    data: BackendReviewResponse[];
+interface BackendContentReviewItem {
+    id: number;
+    rating: number;
+    rating_env?: number;
+    rating_service?: number;
+    rating_value?: number;
+    content: string;
+    images?: string[];
+    avg_cost?: number;
+    like_count: number;
+    comment_count: number;
+    is_liked: boolean;
+    merchant: {
+        id: number;
+        name: string;
+        category?: string;
+    };
+    tags?: string[];
+    created_at: string;
+}
+
+interface BackendContentReviewListResponse {
+    reviews: BackendContentReviewItem[];
+    total: number;
+    cursor?: number;
+}
+
+export interface ReviewListRequest {
+    cursor?: string;
+    limit?: number;
 }
 
 function mapReviewResponse(review: BackendReviewResponse): ReviewResponse {
@@ -115,10 +147,37 @@ export const reviewsApi = {
     /**
      * Get user's reviews
      */
-    list: async (): Promise<ReviewListResponse> => {
-        const response = await apiClient.get<BackendReviewListResponse>('/reviews');
+    list: async (request: ReviewListRequest = {}): Promise<ReviewListResponse> => {
+        const response = await apiClient.get<BackendContentReviewListResponse>('/user/reviews', {
+            params: {
+                cursor: request.cursor,
+                limit: request.limit,
+            },
+        });
         return {
-            data: response.data.data.map(mapReviewResponse),
+            data: response.data.reviews.map((review) => ({
+                id: String(review.id),
+                merchantId: String(review.merchant.id),
+                userId: '',
+                overallRating: review.rating,
+                detailedRatings: {
+                    quality: review.rating_env ?? 0,
+                    environment: review.rating_value ?? 0,
+                    service: review.rating_service ?? 0,
+                },
+                text: review.content,
+                images: review.images ?? [],
+                tags: review.tags ?? [],
+                createdAt: review.created_at,
+                businessName: review.merchant.name,
+                businessImage: '',
+                location: '',
+                likeCount: review.like_count,
+                commentCount: review.comment_count,
+                isLiked: review.is_liked,
+            })),
+            total: response.data.total,
+            cursor: response.data.cursor !== undefined ? String(response.data.cursor) : undefined,
         };
     },
 

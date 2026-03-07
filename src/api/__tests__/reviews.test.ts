@@ -70,21 +70,49 @@ describe('reviewsApi', () => {
     });
   });
 
-  test('list maps backend rating fields for frontend consumers', async () => {
+  test('list calls paginated my-reviews API and maps content review fields', async () => {
     mockGet.mockResolvedValue({
       data: {
-        data: [backendReview],
+        reviews: [
+          {
+            id: 99,
+            rating: 4.5,
+            content: 'Excellent noodles',
+            images: ['https://cdn.revieu.com/reviews/noodles.jpg'],
+            like_count: 8,
+            comment_count: 3,
+            is_liked: true,
+            merchant: {
+              id: 12,
+              name: 'Northern Cafe',
+              category: 'restaurant',
+            },
+            tags: ['#noodles'],
+            created_at: '2026-03-07T10:00:00Z',
+          },
+        ],
+        total: 7,
+        cursor: 55,
       },
     });
 
-    const response = await reviewsApi.list();
+    const response = await reviewsApi.list({ limit: 20, cursor: '55' });
 
-    expect(mockGet).toHaveBeenCalledWith('/reviews');
+    expect(mockGet).toHaveBeenCalledWith('/user/reviews', {
+      params: {
+        limit: 20,
+        cursor: '55',
+      },
+    });
     expect(response.data).toHaveLength(1);
     expect(response.data[0]).toMatchObject({
       id: '99',
       overallRating: 4.5,
       businessName: 'Northern Cafe',
+      likeCount: 8,
+      commentCount: 3,
     });
+    expect(response.total).toBe(7);
+    expect(response.cursor).toBe('55');
   });
 });
