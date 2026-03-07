@@ -1,24 +1,33 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { PATHS } from '../../../../routes/paths';
 
 const RestaurantDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const handleBack = () => {
     navigate(PATHS.CUSTOMER.DISCOVER);
   };
 
   const handleViewAllReviews = () => {
-    // Navigate to reviews page using existing MERCHANT_INFO pattern
-    const merchantId = '1'; // 这里应该从URL参数或props中获取实际的商户ID
+    const merchantId = id ?? '1';
     navigate(`/customer/merchant/${merchantId}/reviews`);
+  };
+
+  const handleWriteReview = () => {
+    navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
+      state: {
+        merchantId: id,
+      },
+    });
   };
 
   return (
     <RestaurantDetail 
       onBack={handleBack}
       onViewAllReviews={handleViewAllReviews}
+      onWriteReview={handleWriteReview}
     />
   );
 };

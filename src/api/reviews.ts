@@ -3,7 +3,8 @@ import { apiClient } from './apiClient';
 // Request types
 export interface CreateReviewRequest {
     merchantId: string;
-    venueId: string;
+    storeId?: string;
+    venueId?: string;
     overallRating: number;
     detailedRatings?: {
         quality: number;
@@ -21,6 +22,8 @@ export interface CreateReviewRequest {
 export interface ReviewResponse {
     id: string;
     merchantId: string;
+    venueId?: string;
+    storeId?: string;
     userId: string;
     overallRating: number;
     detailedRatings?: {
@@ -31,6 +34,7 @@ export interface ReviewResponse {
     text?: string;
     images: string[];
     tags: string[];
+    visitDate?: string;
     createdAt: string;
     status?: string;
     businessName: string;
@@ -43,6 +47,50 @@ export interface ReviewListResponse {
     data: ReviewResponse[];
 }
 
+interface BackendReviewResponse {
+    id: string;
+    merchantId: string;
+    venueId?: string;
+    storeId?: string;
+    userId: string;
+    rating: number;
+    text?: string;
+    images?: string[];
+    tags?: string[];
+    visitDate?: string;
+    createdAt: string;
+    status?: string;
+    businessName: string;
+    businessImage: string;
+    location: string;
+    likeCount: number;
+}
+
+interface BackendReviewListResponse {
+    data: BackendReviewResponse[];
+}
+
+function mapReviewResponse(review: BackendReviewResponse): ReviewResponse {
+    return {
+        id: review.id,
+        merchantId: review.merchantId,
+        venueId: review.venueId,
+        storeId: review.storeId,
+        userId: review.userId,
+        overallRating: review.rating,
+        text: review.text,
+        images: review.images ?? [],
+        tags: review.tags ?? [],
+        visitDate: review.visitDate,
+        createdAt: review.createdAt,
+        status: review.status,
+        businessName: review.businessName,
+        businessImage: review.businessImage,
+        location: review.location,
+        likeCount: review.likeCount,
+    };
+}
+
 /**
  * Reviews API service
  */
@@ -51,34 +99,35 @@ export const reviewsApi = {
      * Create a new review
      */
     create: async (request: CreateReviewRequest): Promise<ReviewResponse> => {
-        // Transform to backend format (rating instead of overallRating)
         const backendRequest = {
             merchantId: request.merchantId,
-            venueId: request.venueId,
+            storeId: request.storeId ?? request.venueId,
             rating: request.overallRating,
             text: request.text,
             images: request.images,
             tags: request.tags,
             visitDate: request.visitDate,
         };
-        const response = await apiClient.post<ReviewResponse>('/reviews', backendRequest);
-        return response.data;
+        const response = await apiClient.post<BackendReviewResponse>('/reviews', backendRequest);
+        return mapReviewResponse(response.data);
     },
 
     /**
      * Get user's reviews
      */
     list: async (): Promise<ReviewListResponse> => {
-        const response = await apiClient.get<ReviewListResponse>('/reviews');
-        return response.data;
+        const response = await apiClient.get<BackendReviewListResponse>('/reviews');
+        return {
+            data: response.data.data.map(mapReviewResponse),
+        };
     },
 
     /**
      * Get review by ID
      */
     getById: async (id: string): Promise<ReviewResponse> => {
-        const response = await apiClient.get<ReviewResponse>(`/reviews/${id}`);
-        return response.data;
+        const response = await apiClient.get<BackendReviewResponse>(`/reviews/${id}`);
+        return mapReviewResponse(response.data);
     },
 
     /**

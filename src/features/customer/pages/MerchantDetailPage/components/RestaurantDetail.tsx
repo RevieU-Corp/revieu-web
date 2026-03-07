@@ -12,9 +12,10 @@ import { MenuUploadWidget } from './MenuUploadWidget';
 interface RestaurantDetailProps {
   onBack?: () => void;
   onViewAllReviews?: () => void;
+  onWriteReview?: () => void;
 }
 
-export function RestaurantDetail({ onBack, onViewAllReviews }: RestaurantDetailProps) {
+export function RestaurantDetail({ onBack, onViewAllReviews, onWriteReview }: RestaurantDetailProps) {
   const [activeTab, setActiveTab] = useState<'deals' | 'menu' | 'reviews'>('deals');
 
   return (
@@ -318,7 +319,7 @@ export function RestaurantDetail({ onBack, onViewAllReviews }: RestaurantDetailP
       </div>
 
       {/* Glossy Bottom Navigation */}
-      <GlossyBottomNav onBack={onBack} />
+      <GlossyBottomNav onBack={onBack} onWriteReview={onWriteReview} />
     </div>
   );
 }
