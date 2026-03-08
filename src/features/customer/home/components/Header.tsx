@@ -88,6 +88,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                             </svg>
                         </button>
                     </div>
+                    </div>
                     <button className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
                         <img src={micIcon} className="w-[25px] h-[25px]">
                         </img>
