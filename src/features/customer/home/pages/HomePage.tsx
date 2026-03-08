@@ -20,7 +20,7 @@ const MOCK_ACTIVITIES: Activity[] = [
     id: '2',
     title: 'SunLife Organic',
     description: 'Exclusive 20% savings.',
-    image: 'https://images.unsplash.com/photo-1556742049-0ad335687440?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=800',
     tag: 'Exclusive',
     location: 'USC Village'
   },
@@ -192,7 +192,7 @@ const HomePage: React.FC = () => {
       {/* Compact Header */}
       <Header onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)} />
 
-      <main className="px-4 space-y-6 mt-4">
+      <main className="px-8 space-y-6 mt-4">
         {/* Compact Feature Buttons with Distance Slider */}
         <FeatureBar 
           activeFeature={activeFeature}
@@ -202,14 +202,14 @@ const HomePage: React.FC = () => {
           onDistanceChange={setSelectedDistance}
         />
 
-        {/* Trojan Metrics Section - Horizontal Scrolling Cards */}
+        {/* Discount Section - Horizontal Scrolling Cards */}
         <section>
           <div className="flex justify-between items-end mb-6">
             <div>
-              <h2 className="text-[24px] font-[900] text-gray-900 tracking-tight leading-none">Trojan Metrics</h2>
-              <p className="text-[10px] font-black text-[#990000] uppercase tracking-widest mt-1.5 opacity-70">Daily Performance</p>
+              <h2 className="text-[20px] font-[700] text-[#4B4B4B] tracking-tight leading-none">Discount</h2>
+              <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-[3px]">Daily Performance</p>
             </div>
-            <button className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Detail</button>
+            <button className="font-['Roboto'] text-[12px] font-[525] text-[#7F7D92]">Detail</button>
           </div>
           <FeaturedSection activities={MOCK_ACTIVITIES} />
         </section>
@@ -217,12 +217,12 @@ const HomePage: React.FC = () => {
         {/* Filtered Merchant List with Dropdown Filter */}
         <section>
           <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               <div>
-                <h2 className="text-[24px] font-[900] text-gray-900 tracking-tight leading-none">
+                <h2 className="text-[20px] font-[700] text-[rgba(75,_75,_75,_1)] tracking-tight leading-none">
                   {getFeatureTitle()}
                 </h2>
-                <p className="text-[10px] font-black text-[#990000] uppercase tracking-widest mt-1.5 opacity-70">
+                <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-1 leading-none tracking-normal">
                   {filteredCount} of {totalCount} places
                 </p>
               </div>
