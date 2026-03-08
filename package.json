@@ -11,9 +11,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "prepare": "husky",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "prepare": "husky"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -51,16 +49,6 @@
     "jsdom": "^27.4.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
-    "vitest": "^4.0.16",
-    "storybook": "^10.2.16",
-    "@storybook/react-vite": "^10.2.16",
-    "@chromatic-com/storybook": "^5.0.1",
-    "@storybook/addon-vitest": "^10.2.16",
-    "@storybook/addon-a11y": "^10.2.16",
-    "@storybook/addon-docs": "^10.2.16",
-    "@storybook/addon-onboarding": "^10.2.16",
-    "playwright": "^1.58.2",
-    "@vitest/browser-playwright": "^4.0.16",
-    "@vitest/coverage-v8": "^4.0.16"
+    "vitest": "^4.0.16"
   }
 }
