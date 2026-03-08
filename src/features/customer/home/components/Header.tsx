@@ -3,9 +3,10 @@ import { useAuth } from '../../../../contexts/AuthContext';
 
 interface HeaderProps {
     onSearch?: (q: string) => void;
+    onSearchTap?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch = () => { } }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) => {
     const [isFocused, setIsFocused] = useState(false);
     const { user } = useAuth();
 
@@ -53,6 +54,25 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { } }) => {
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         placeholder="Search USC..."
+                        readOnly={Boolean(onSearchTap)}
+                        onMouseDown={(e) => {
+                            if (!onSearchTap) {
+                                return;
+                            }
+
+                            e.preventDefault();
+                            onSearchTap();
+                        }}
+                        onKeyDown={(e) => {
+                            if (!onSearchTap) {
+                                return;
+                            }
+
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onSearchTap();
+                            }
+                        }}
                         onChange={(e) => onSearch(e.target.value)}
                         className="flex-1 bg-transparent border-none py-2.5 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
                     />

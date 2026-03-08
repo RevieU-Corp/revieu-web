@@ -28,6 +28,8 @@
         EXPLORE: '/customer/explore',
         MERCHANT_INFO: (id: string) => `/customer/merchant/${id}`,
         MERCHANT_DETAIL: '/customer/merchant/:id',
+        MERCHANT_PROFILE_COUPON: (id: string) => `/customer/merchant/${id}/coupon`,
+        MERCHANT_PROFILE_COUPON_DETAIL: '/customer/merchant/:id/coupon',
         VOUCHERS: '/customer/vouchers',
     },
     MERCHANT: {
