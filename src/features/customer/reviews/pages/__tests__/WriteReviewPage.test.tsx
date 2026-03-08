@@ -1,7 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { vi, test, expect } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { PATHS } from '../../../../../routes/paths';
+
+const { reviewProviderSpy } = vi.hoisted(() => ({
+  reviewProviderSpy: vi.fn(({ children }: { children: React.ReactNode }) => <div>{children}</div>),
+}));
 
 vi.mock('../../contexts/ReviewContext', () => ({
   useReviewContext: () => ({
@@ -33,10 +38,11 @@ vi.mock('../../contexts/ReviewContext', () => ({
       clearDraftNotice: vi.fn(),
     },
   }),
-  ReviewProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ReviewProvider: reviewProviderSpy,
 }));
 
 test('renders upload, submit, and draft banners', async () => {
+  reviewProviderSpy.mockClear();
   const { default: WriteReviewPage } = await import('../WriteReviewPage');
   render(
     <MemoryRouter>
@@ -46,4 +52,37 @@ test('renders upload, submit, and draft banners', async () => {
   expect(screen.getByText(/upload failed/i)).toBeInTheDocument();
   expect(screen.getByText(/submit failed/i)).toBeInTheDocument();
   expect(screen.getByText(/draft restored/i)).toBeInTheDocument();
+});
+
+test('passes merchant context from router state into ReviewProvider', async () => {
+  reviewProviderSpy.mockClear();
+  const { default: WriteReviewPage } = await import('../WriteReviewPage');
+
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: PATHS.CUSTOMER.WRITE_REVIEW,
+          state: {
+            merchantId: '42',
+            merchantName: 'Golden Spoon',
+            storeId: '108',
+          },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  expect(reviewProviderSpy).toHaveBeenCalledWith(
+    expect.objectContaining({
+      merchantId: '42',
+      merchantName: 'Golden Spoon',
+      storeId: '108',
+    }),
+    expect.anything()
+  );
 });

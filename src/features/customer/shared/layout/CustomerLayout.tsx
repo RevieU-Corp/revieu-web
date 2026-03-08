@@ -16,11 +16,12 @@ const CustomerLayout: React.FC = () => {
   ];
 
   const isMainTab = mainTabPaths.includes(location.pathname);
+  const hideGlobalBackButton = /^\/customer\/merchant\/[^/]+(?:\/coupon)?$/.test(location.pathname);
 
   return (
     <div className="h-screen w-full overflow-hidden bg-white flex flex-col relative">
       {/* Floating Back Button */}
-      {!isMainTab && <BackButton />}
+      {!isMainTab && !hideGlobalBackButton && <BackButton />}
 
       {/* Scrollable content area */}
       <main className="flex-1 overflow-y-auto custom-scrollbar relative">

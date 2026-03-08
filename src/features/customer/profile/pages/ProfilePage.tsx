@@ -20,6 +20,8 @@ import {
 import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
 
+const REVIEW_PAGE_SIZE = 20;
+
 // Helper function to format date as relative time
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
@@ -64,7 +66,7 @@ const MOCK_COUPONS: Coupon[] = [
     code: 'BOGO-URBAN',
     status: 'active',
     logo: 'https://picsum.photos/id/63/100/100',
-    color: '#990000'
+    color: '#C41111'
   },
   {
     id: 'c2',
@@ -74,7 +76,7 @@ const MOCK_COUPONS: Coupon[] = [
     code: 'READMORE15',
     status: 'active',
     logo: 'https://picsum.photos/id/24/100/100',
-    color: '#1A1A1A'
+    color: '#F97316'
   },
   {
     id: 'c3',
@@ -84,7 +86,7 @@ const MOCK_COUPONS: Coupon[] = [
     code: 'PIZZA5',
     status: 'expired',
     logo: 'https://picsum.photos/id/338/100/100',
-    color: '#D4A000'
+    color: '#F7CD46'
   }
 ];
 
@@ -95,9 +97,21 @@ const ProfilePage: React.FC = () => {
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [reviewsCursor, setReviewsCursor] = useState<string | undefined>(undefined);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
   const [pendingReviewMerchants, setPendingReviewMerchants] = useState<PendingReviewMerchant[]>([]);
   const [pendingMerchantsLoading, setPendingMerchantsLoading] = useState(false);
+
+  const applyReviewPage = (responses: ReviewResponse[], total: number, cursor?: string, append = false) => {
+    const transformedReviews = responses.map(transformReviewResponse);
+    setReviews(previousReviews =>
+      append ? [...previousReviews, ...transformedReviews] : transformedReviews
+    );
+    setReviewsTotal(total);
+    setReviewsCursor(cursor);
+  };
 
   // Fetch reviews from API
   useEffect(() => {
@@ -105,9 +119,8 @@ const ProfilePage: React.FC = () => {
       setReviewsLoading(true);
       setReviewsError(null);
       try {
-        const response = await reviewsApi.list();
-        const transformedReviews = response.data.map(transformReviewResponse);
-        setReviews(transformedReviews);
+        const response = await reviewsApi.list({ limit: REVIEW_PAGE_SIZE });
+        applyReviewPage(response.data, response.total, response.cursor);
       } catch (err) {
         setReviewsError('Failed to load reviews');
         console.error('Error fetching reviews:', err);
@@ -184,6 +197,24 @@ const ProfilePage: React.FC = () => {
     // Placeholder entry reserved for future storage feature.
   };
 
+  const handleLoadMoreReviews = async () => {
+    if (!reviewsCursor || reviewsLoadingMore) {
+      return;
+    }
+
+    setReviewsLoadingMore(true);
+    setReviewsError(null);
+    try {
+      const response = await reviewsApi.list({ limit: REVIEW_PAGE_SIZE, cursor: reviewsCursor });
+      applyReviewPage(response.data, response.total, response.cursor, true);
+    } catch (err) {
+      setReviewsError('Failed to load reviews');
+      console.error('Error loading more reviews:', err);
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
+
   const activeCoupons = MOCK_COUPONS.filter(c => c.status === 'active');
   const latestReview = useMemo(() => {
     if (reviews.length === 0) {
@@ -198,16 +229,16 @@ const ProfilePage: React.FC = () => {
   // --- REVIEWS PAGE VIEW ---
   if (currentView === 'reviews') {
     return (
-      <div className="min-h-screen bg-[#F2F2F7] font-sans text-gray-900">
+      <div className="min-h-screen bg-[#FDFDFD] font-sans text-gray-900">
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-brand-red/5 rounded-full blur-[80px] mix-blend-multiply opacity-40"></div>
+          <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-[#C41111]/8 rounded-full blur-[80px] mix-blend-multiply opacity-45"></div>
         </div>
 
         <ProfileNavbar />
 
         <div className="max-w-[800px] mx-auto min-h-screen flex flex-col relative z-10 animate-fade-in-right">
           {/* Header */}
-          <div className="sticky top-14 z-20 bg-[#F2F2F7]/90 backdrop-blur-xl p-4 md:px-6 md:py-6 flex items-center gap-4">
+          <div className="sticky top-14 z-20 bg-[#FDFDFD]/90 backdrop-blur-xl p-4 md:px-6 md:py-6 flex items-center gap-4">
             <button
               onClick={() => setCurrentView('profile')}
               className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 hover:text-brand-red hover:shadow-md transition-all active:scale-95"
@@ -216,7 +247,7 @@ const ProfilePage: React.FC = () => {
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">My Reviews</h1>
-              <p className="text-xs text-gray-500 font-medium">{user.stats.totalReviews} total contributions</p>
+              <p className="text-xs text-gray-500 font-medium">{reviewsTotal} total contributions</p>
             </div>
           </div>
 
@@ -224,7 +255,7 @@ const ProfilePage: React.FC = () => {
           <div className="px-4 md:px-6 pb-20 space-y-4">
             {reviewsLoading && (
               <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C41111]"></div>
               </div>
             )}
             {reviewsError && (
@@ -236,6 +267,18 @@ const ProfilePage: React.FC = () => {
             {!reviewsLoading && !reviewsError && reviews.map(review => (
               <ReviewCard key={review.id} review={review} />
             ))}
+            {!reviewsLoading && !reviewsError && reviewsCursor && reviews.length > 0 && (
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreReviews}
+                  disabled={reviewsLoadingMore}
+                  className="rounded-full border border-[#C41111]/15 bg-white px-5 py-2 text-sm font-semibold text-[#C41111] shadow-sm transition-colors hover:bg-[#C41111]/5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {reviewsLoadingMore ? 'Loading more reviews...' : 'Load more reviews'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -244,12 +287,12 @@ const ProfilePage: React.FC = () => {
 
   // --- PROFILE VIEW ---
   return (
-    <div className="min-h-screen bg-[#F2F2F7] font-sans text-gray-900 relative selection:bg-brand-red/20 selection:text-brand-red">
+    <div className="min-h-screen bg-[#FDFDFD] font-sans text-gray-900 relative selection:bg-[#C41111]/20 selection:text-[#C41111]">
 
       {/* 1. Ambient Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-brand-gold/10 rounded-full blur-[100px] mix-blend-multiply opacity-60 animate-pulse-slow"></div>
-        <div className="absolute top-[10%] -right-[10%] w-[500px] h-[500px] bg-brand-red/5 rounded-full blur-[80px] mix-blend-multiply opacity-60"></div>
+        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-[#F7CD46]/12 rounded-full blur-[100px] mix-blend-multiply opacity-60 animate-pulse-slow"></div>
+        <div className="absolute top-[10%] -right-[10%] w-[500px] h-[500px] bg-[#C41111]/8 rounded-full blur-[80px] mix-blend-multiply opacity-60"></div>
       </div>
 
       <ProfileNavbar />
@@ -292,7 +335,7 @@ const ProfilePage: React.FC = () => {
                   </div>
                   <button
                     onClick={() => navigate(PATHS.CUSTOMER.ME.PROFILE)}
-                    className="bg-gray-900 text-white px-6 py-2.5 rounded-full text-[13px] font-bold shadow-lg shadow-gray-200 active:scale-95 transition-all hover:bg-black hover:shadow-xl"
+                    className="bg-gradient-to-r from-[#C41111] via-[#B20808] to-[#930404] text-white px-6 py-2.5 rounded-full text-[13px] font-bold shadow-lg shadow-[#C41111]/25 active:scale-95 transition-all hover:brightness-110 hover:shadow-xl"
                   >
                     Edit Profile
                   </button>
@@ -302,10 +345,10 @@ const ProfilePage: React.FC = () => {
                   <h1 className="text-[28px] font-bold text-gray-900 leading-tight tracking-tight mb-1">{user.name}</h1>
                   <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                     <span className="flex items-center gap-1 text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
-                      <Icons.MapPin size={12} className="text-brand-red" /> {user.location}
+                      <Icons.MapPin size={12} className="text-[#C41111]" /> {user.location}
                     </span>
                     <span>•</span>
-                    <span className="text-brand-red font-semibold">Level {user.level} Guide</span>
+                    <span className="text-[#C41111] font-semibold">Level {user.level} Guide</span>
                   </div>
                 </div>
 
@@ -317,7 +360,7 @@ const ProfilePage: React.FC = () => {
                   <button
                     onClick={handleGenerateBio}
                     disabled={isGeneratingBio}
-                    className="absolute -right-2 -top-2 p-2 text-brand-red/60 hover:text-brand-red bg-transparent hover:bg-brand-red/5 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                    className="absolute -right-2 -top-2 p-2 text-[#C41111]/60 hover:text-[#C41111] bg-transparent hover:bg-[#C41111]/5 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                     title="AI Enhance"
                   >
                     <Icons.Sparkles size={16} className={isGeneratingBio ? "animate-spin" : ""} />
@@ -355,7 +398,7 @@ const ProfilePage: React.FC = () => {
                 icon={<Icons.Wallet />}
                 title="My Rewards"
                 rightSlot={(
-                  <span className="text-xs font-bold text-brand-red bg-brand-red/5 px-3 py-1.5 rounded-full border border-brand-red/10">
+                  <span className="text-xs font-bold text-[#C41111] bg-[#C41111]/5 px-3 py-1.5 rounded-full border border-[#C41111]/15">
                     {activeCoupons.length} Available
                   </span>
                 )}
@@ -367,8 +410,8 @@ const ProfilePage: React.FC = () => {
                     <CouponCard coupon={coupon} className="h-full" />
                   </div>
                 ))}
-                <div className="min-w-[120px] snap-center flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 hover:border-brand-gold hover:text-brand-gold transition-all cursor-pointer md:h-full min-h-[200px] hover:bg-brand-bg/50 group">
-                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-brand-gold/10 group-hover:scale-110 transition-transform">
+                <div className="min-w-[120px] snap-center flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 hover:border-[#F7CD46] hover:text-[#F59E0B] transition-all cursor-pointer md:h-full min-h-[200px] hover:bg-[#F7CD46]/10 group">
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-[#F7CD46]/20 group-hover:scale-110 transition-transform">
                     <Icons.ChevronRight size={24} />
                   </div>
                   <span className="text-xs font-bold tracking-wide">VIEW ALL</span>

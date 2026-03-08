@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Camera, Hash, X, Plus } from 'lucide-react';
 import { useReviewContext } from '../contexts/ReviewContext';
 import { ReviewProvider } from '../contexts/ReviewContext';
 import { CombinedRatingComponent, ImageUploadGrid, AIAssistantButton, AISuggestionsList } from '../components';
 import { BusinessCategory } from '../types';
 import { PATHS } from '../../../../routes/paths';
+
+interface WriteReviewLocationState {
+  merchantId?: string;
+  merchantName?: string;
+  storeId?: string;
+  venueId?: string;
+  merchantCategory?: BusinessCategory;
+}
 
 // Internal component that uses the review context
 const WriteReviewForm: React.FC = () => {
@@ -419,13 +427,16 @@ const WriteReviewForm: React.FC = () => {
 };
 
 const WriteReviewPage: React.FC = () => {
-  // TODO: Get merchantId and venueId from route params or props
+  const location = useLocation();
+  const reviewContext = (location.state as WriteReviewLocationState | null) ?? null;
+
   return (
     <ReviewProvider
-      merchantId="1"
-      venueId="1"
-      merchantName="Sample Restaurant"
-      merchantCategory={BusinessCategory.RESTAURANT}
+      merchantId={reviewContext?.merchantId}
+      storeId={reviewContext?.storeId}
+      venueId={reviewContext?.venueId}
+      merchantName={reviewContext?.merchantName}
+      merchantCategory={reviewContext?.merchantCategory ?? BusinessCategory.RESTAURANT}
     >
       <WriteReviewForm />
     </ReviewProvider>

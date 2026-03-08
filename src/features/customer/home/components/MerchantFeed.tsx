@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ExtendedMerchant } from '../hooks/useMerchantFilter';
 import { getTrojanMetricColor, getTrojanMetricBadge } from '../utils/merchantUtils';
 import { PATHS } from '../../../../routes/paths';
+import activeHeatIcon from '../../../../assets/images/merchant/activeHeat.svg';
+import reviewIcon from '../../../../assets/images/merchant/review.svg';
 
 interface MerchantFeedProps {
     merchants: ExtendedMerchant[];
@@ -11,8 +13,10 @@ interface MerchantFeedProps {
 const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
     const navigate = useNavigate();
 
-    const handleMerchantClick = (merchantId: string) => {
-        navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId));
+    const handleMerchantClick = (merchantId: string, merchantName: string) => {
+        navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId), {
+            state: { merchantName },
+        });
     };
 
     if (merchants.length === 0) {
@@ -34,7 +38,7 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
             {merchants.map((merchant) => (
                 <div
                     key={merchant.id}
-                    onClick={() => handleMerchantClick(merchant.id)}
+                    onClick={() => handleMerchantClick(merchant.id, merchant.name)}
                     className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
                 >
                     <div className="relative aspect-[16/9] rounded-[22px] overflow-hidden mb-4 bg-gray-100">
@@ -103,15 +107,13 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
 
                         <div className="flex items-center space-x-4 pt-3 border-t border-gray-50">
                             <div className="flex items-center space-x-1.5">
-                                <div className={`w-1.5 h-1.5 rounded-full ${merchant.isOpen ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <img src={activeHeatIcon} alt="Active Heat"  />
                                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
                                     {merchant.isOpen ? 'Active Heat' : 'Closed'}
                                 </span>
                             </div>
                             <div className="flex items-center space-x-1.5">
-                                <svg className="w-3.5 h-3.5 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m16-10a4 4 0 11-8 0 4 4 0 018 0zm2 10V9m-3 3l3-3 3 3" />
-                                </svg>
+                                <img src={reviewIcon} alt="Reviews" />
                                 <span className="text-[11px] font-bold text-gray-500">{merchant.reviewCount} Reviews</span>
                             </div>
                         </div>

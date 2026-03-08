@@ -622,6 +622,7 @@ const ReviewContext = createContext<{
 interface ReviewProviderProps {
   children: ReactNode;
   merchantId?: string;
+  storeId?: string;
   venueId?: string;
   merchantName?: string;
   merchantCategory?: BusinessCategory;
@@ -630,6 +631,7 @@ interface ReviewProviderProps {
 export const ReviewProvider: React.FC<ReviewProviderProps> = ({
   children,
   merchantId,
+  storeId,
   venueId,
 }) => {
   const [state, dispatch] = useReducer(reviewReducer, {
@@ -637,6 +639,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
     reviewData: {
       ...initialState.reviewData,
       merchantId,
+      storeId,
       venueId,
     },
   });
@@ -955,7 +958,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
         const request: CreateReviewRequest = {
           merchantId: state.reviewData.merchantId || '',
-          venueId: state.reviewData.venueId || '',
+          storeId: state.reviewData.storeId || state.reviewData.venueId || undefined,
           overallRating: state.reviewData.overallRating || 0,
           detailedRatings: state.reviewData.detailedRatings,
           text: state.reviewData.reviewText,

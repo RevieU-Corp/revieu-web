@@ -14,8 +14,8 @@ const StatsBar: React.FC<StatsBarProps> = ({ stats }) => {
       value: stats.totalReviews,
       icon: MessageSquare,
       surfaceClass:
-        'from-[#990000] via-[#B20000] to-[#7A0000] text-white shadow-[0_14px_26px_-14px_rgba(153,0,0,0.85)]',
-      glowClass: 'bg-[#FFCC00]/35',
+        'from-[#C41111] via-[#B20808] to-[#930404] text-white shadow-[0_14px_26px_-14px_rgba(148,4,4,0.9)]',
+      glowClass: 'bg-[#F7CD46]/35',
     },
     {
       key: 'following',
@@ -23,8 +23,8 @@ const StatsBar: React.FC<StatsBarProps> = ({ stats }) => {
       value: stats.following,
       icon: Users,
       surfaceClass:
-        'from-[#1F2937] via-[#111827] to-[#0B1220] text-white shadow-[0_14px_28px_-14px_rgba(15,23,42,0.8)]',
-      glowClass: 'bg-[#7DD3FC]/30',
+        'from-[#F59E0B] via-[#F97316] to-[#EA580C] text-white shadow-[0_14px_28px_-14px_rgba(234,88,12,0.82)]',
+      glowClass: 'bg-[#FFF2BF]/45',
     },
   ];
 
