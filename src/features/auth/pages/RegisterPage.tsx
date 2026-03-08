@@ -1,259 +1,264 @@
-import React, { useState } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { PATHS } from '../../../routes/paths';
 import { authService } from '../api/authService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { userService } from '../../../api/userService';
+import AuthLayout from '../components/AuthLayout';
+import AuthSuccessPanel from '../components/AuthSuccessPanel';
+import PasswordField from '../components/PasswordField';
 
+interface RegistrationSuccessState {
+  target: string;
+  note: string;
+  heading: string;
+  description: string;
+  actionLabel: string;
+}
 
 const RegisterPage: React.FC = () => {
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
-    const { setUser } = useAuth();
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [successState, setSuccessState] = useState<RegistrationSuccessState | null>(null);
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        if (error) setError('');
-    };
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setFormData((current) => ({
+      ...current,
+      [event.target.name]: event.target.value,
+    }));
 
-    const validateForm = () => {
-        const { password, confirmPassword } = formData;
+    if (error) {
+      setError('');
+    }
+  };
 
-        // Password length check (min 12 chars)
-        if (password.length < 12) {
-            return "Password must be at least 12 characters long.";
+  const validateForm = () => {
+    const { password, confirmPassword } = formData;
+
+    if (password.length < 12) {
+      return 'Password must be at least 12 characters long.';
+    }
+
+    const specialCharRegex = /[!@#$%^&*(),.?":;{}|<>]/;
+    if (!specialCharRegex.test(password)) {
+      return 'Password must contain at least one special character (for example !@#$%).';
+    }
+
+    if (password !== confirmPassword) {
+      return 'Passwords do not match.';
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const payload = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const response = await authService.register(payload);
+
+      if (response.status === 201 || response.data.code === 0) {
+        const { token } = response.data;
+
+        if (!token) {
+          setSuccessState({
+            target: PATHS.AUTH.LOGIN,
+            note: 'Registered successfully.',
+            heading: 'Registered Successfully',
+            description: 'Your account is ready. Use your new credentials to sign in.',
+            actionLabel: 'Back to Login',
+          });
+          return;
         }
 
-        // Special character check
-        const specialCharRegex = /[!@#$%^&*(),.?":;{}|<>]/;
-        if (!specialCharRegex.test(password)) {
-            return "Password must contain at least one special character (e.g., !@#$%).";
-        }
+        localStorage.setItem('authToken', token);
 
-        // Confirm password match
-        if (password !== confirmPassword) {
-            return "Passwords do not match.";
-        }
+        const userResponse = await authService.getMe();
+        const userData = userResponse.data;
 
-        return null;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const validationError = validateForm();
-        if (validationError) {
-            setError(validationError);
-            return;
-        }
-
-        setIsLoading(true);
-        setError('');
-
+        let profileData = null;
         try {
-            setError('');
-
-            // Construct payload (exclude confirmPassword)
-            const payload = {
-                username: formData.username,
-                email: formData.email,
-                password: formData.password
-            };
-
-            const response = await authService.register(payload);
-
-            console.log('Registration response:', response.data);
-
-            if (response.status === 201 || response.data.code === 0) {
-                // Success - backend returns token
-                const { token } = response.data;
-
-                if (token) {
-                    // Store token
-                    localStorage.setItem('authToken', token);
-
-                    // Fetch user profile
-                    const userResponse = await authService.getMe();
-                    const userData = userResponse.data;
-
-                    // Try to get profile data for avatar and other info
-                    let profileData = null;
-                    try {
-                        const profileResponse = await userService.getProfile();
-                        profileData = profileResponse.data;
-                    } catch (profileError) {
-                        console.log('Profile data not available:', profileError);
-                    }
-
-                    // Transform backend user data to frontend User format
-                    const transformedUser = {
-                        id: userData.user_id.toString(),
-                        email: userData.email,
-                        name: profileData?.nickname || userData.email.split('@')[0],
-                        avatar: profileData?.avatar_url,
-                        role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
-                    };
-
-                    setUser(transformedUser);
-                    localStorage.setItem('user', JSON.stringify(transformedUser));
-
-                    // Navigate to appropriate page based on role
-                    if (transformedUser.role === 'merchant') {
-                        navigate(PATHS.MERCHANT.DASHBOARD);
-                    } else {
-                        navigate(PATHS.CUSTOMER.HOME);
-                    }
-                } else {
-                    // No token returned, navigate to login
-                    navigate(PATHS.AUTH.LOGIN);
-                }
-            } else {
-                setError(response.data.message || 'Registration failed.');
-            }
-        } catch (err: any) {
-            console.error('Registration error:', err);
-            const message = err.response?.data?.message || 'Registration failed. Please try again.';
-            setError(message);
-        } finally {
-            setIsLoading(false);
+          const profileResponse = await userService.getProfile();
+          profileData = profileResponse.data;
+        } catch (profileError) {
+          console.log('Profile data not available:', profileError);
         }
-    };
 
+        const transformedUser = {
+          id: userData.user_id.toString(),
+          email: userData.email,
+          name: profileData?.nickname || userData.email.split('@')[0],
+          avatar: profileData?.avatar_url,
+          role: (userData.role === 'merchant' ? 'merchant' : 'user') as 'user' | 'merchant',
+        };
+
+        setUser(transformedUser);
+        localStorage.setItem('user', JSON.stringify(transformedUser));
+
+        const isMerchant = transformedUser.role === 'merchant';
+        setSuccessState({
+          target: isMerchant ? PATHS.MERCHANT.DASHBOARD : PATHS.CUSTOMER.HOME,
+          note: 'Registered successfully.',
+          heading: 'Registered Successfully',
+          description: isMerchant
+            ? 'Your merchant account is ready. Continue to your dashboard.'
+            : 'You can now continue into the RevieU experience.',
+          actionLabel: isMerchant ? 'Enter Merchant Portal' : 'Enter RevieU',
+        });
+      } else {
+        setError(response.data.message || 'Registration failed.');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      const message = err.response?.data?.message || 'Registration failed. Please try again.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (successState) {
     return (
-        <div
-            className="flex flex-col items-center justify-center min-h-screen px-4 bg-cover bg-center bg-no-repeat py-10"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop')" }}
-        >
-            <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl max-w-md w-full space-y-6">
-                <div className="text-center">
-                    <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 drop-shadow-sm pb-1">
-                        Join RevieU
-                    </h1>
-                    <p className="text-gray-600 text-sm mt-2">Create your account to get started.</p>
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 border-l-4 border-red-500 p-3 flex items-start gap-2 rounded-md">
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                )}
-
-                <form className="space-y-5" onSubmit={handleSubmit}>
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input
-                            id="username"
-                            name="username"
-                            type="text"
-                            required
-                            value={formData.username}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
-                            placeholder="Create a username"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
-                            placeholder="you@usc.edu"
-                        />
-                    </div>
-
-                    <div className="relative">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <div className="relative">
-                            <input
-                                id="password"
-                                name="password"
-                                type={showPassword ? "text" : "password"}
-                                required
-                                value={formData.password}
-                                onChange={handleChange}
-                                disabled={isLoading}
-                                className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors pr-10"
-                                placeholder="12+ chars, 1 special symbol"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                            >
-                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1 ml-1">
-                            Must be at least 12 characters with 1 special symbol.
-                        </p>
-                    </div>
-
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                        <input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors"
-                            placeholder="Re-enter password"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5 mt-6 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    >
-                        {isLoading ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Creating Account...
-                            </span>
-                        ) : (
-                            'Create Account'
-                        )}
-                    </button>
-                </form>
-
-                <div className="text-center pt-2">
-                    <p className="text-sm text-gray-600">
-                        Already have an account?{' '}
-                        <Link to={PATHS.AUTH.LOGIN} className="font-bold text-red-600 hover:text-red-500 hover:underline">
-                            Sign in
-                        </Link>
-                    </p>
-                </div>
-            </div>
-        </div>
+      <AuthLayout
+        title="Success"
+        subtitle="Your account has been created successfully."
+        backTo={PATHS.AUTH.LOGIN}
+        hero={null}
+      >
+        <AuthSuccessPanel
+          note={successState.note}
+          heading={successState.heading}
+          description={successState.description}
+          primaryAction={
+            <button className="auth-ui-btn" type="button" onClick={() => navigate(successState.target)}>
+              {successState.actionLabel}
+            </button>
+          }
+          secondaryAction={
+            <Link className="auth-ui-outline-btn" to={PATHS.AUTH.LOGIN}>
+              Back to Login
+            </Link>
+          }
+        />
+      </AuthLayout>
     );
+  }
+
+  return (
+    <AuthLayout
+      title="Register"
+      subtitle="Create your account with the details below."
+      backTo={PATHS.AUTH.LOGIN}
+    >
+      {error ? <p className="auth-ui-error">{error}</p> : null}
+      <p className="auth-ui-helper">Passwords must be at least 12 characters and include one special character.</p>
+
+      <form className="auth-ui-form" onSubmit={handleSubmit} noValidate>
+        <div className="auth-ui-field">
+          <label className="auth-ui-label" htmlFor="register-username">
+            User name
+          </label>
+          <input
+            className="auth-ui-input"
+            id="register-username"
+            name="username"
+            type="text"
+            placeholder="Your user name"
+            required
+            value={formData.username}
+            disabled={isLoading}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="auth-ui-field">
+          <label className="auth-ui-label" htmlFor="register-email">
+            E-mail
+          </label>
+          <input
+            className="auth-ui-input"
+            id="register-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+            value={formData.email}
+            disabled={isLoading}
+            onChange={handleChange}
+          />
+        </div>
+
+        <PasswordField
+          id="register-password"
+          name="password"
+          label="Password"
+          placeholder="Create password"
+          autoComplete="new-password"
+          value={formData.password}
+          disabled={isLoading}
+          onChange={handleChange}
+        />
+
+        <PasswordField
+          id="register-confirm-password"
+          name="confirmPassword"
+          label="Confirm password"
+          placeholder="Repeat password"
+          autoComplete="new-password"
+          value={formData.confirmPassword}
+          disabled={isLoading}
+          onChange={handleChange}
+        />
+
+        <div className="auth-ui-spacer" />
+
+        <button className="auth-ui-btn" type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <svg className="auth-ui-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25" />
+                <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+              </svg>
+              Creating account...
+            </span>
+          ) : (
+            'Register'
+          )}
+        </button>
+      </form>
+
+      <p className="auth-ui-foot-center">
+        Already have an account?{' '}
+        <Link className="auth-ui-inline-link" to={PATHS.AUTH.LOGIN}>
+          Sign in
+        </Link>
+      </p>
+    </AuthLayout>
+  );
 };
 
 export default RegisterPage;
