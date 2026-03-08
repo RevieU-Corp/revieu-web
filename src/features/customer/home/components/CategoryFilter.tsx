@@ -49,13 +49,13 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onCat
         <div className="relative inline-block" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors"
+                className="flex w-[55px] h-[24px] items-center justify-between px-2 rounded-[20px] bg-[#FFF2F2] transition-colors"
             >
-                <span className="text-[11px] font-[800] text-gray-700 uppercase tracking-wide">
+                <span className="max-w-[30px] truncate text-[10px] leading-none font-[800] text-[#990000] uppercase tracking-wide">
                     {selectedCategory}
                 </span>
                 <svg 
-                    className={`w-4 h-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`w-3 h-3 flex-shrink-0 text-[#990000] transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
