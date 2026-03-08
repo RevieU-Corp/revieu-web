@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header, FeatureBar, FeaturedSection, MerchantFeed } from '../components';
 import CategoryFilter from '../components/CategoryFilter';
 import { Activity, HomeMerchant } from '../../shared/types';
 import { useMerchantFilter } from '../hooks/useMerchantFilter';
 import { enrichMerchantsData } from '../utils/merchantUtils';
+import { PATHS } from '../../../../routes/paths';
 
 const MOCK_ACTIVITIES: Activity[] = [
   {
@@ -151,6 +153,8 @@ const MOCK_MERCHANTS: HomeMerchant[] = Array.from({ length: 20 }).map((_, index)
 });
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Enrich merchant data with filtering properties
   const enrichedMerchants = useMemo(() => enrichMerchantsData(MOCK_MERCHANTS), []);
 
@@ -186,7 +190,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="bg-white min-h-screen pb-20 max-w-lg mx-auto overflow-x-hidden">
       {/* Compact Header */}
-      <Header />
+      <Header onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)} />
 
       <main className="px-8 space-y-6 mt-4">
         {/* Compact Feature Buttons with Distance Slider */}

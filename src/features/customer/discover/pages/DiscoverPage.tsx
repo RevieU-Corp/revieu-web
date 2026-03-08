@@ -85,14 +85,11 @@ const DiscoverPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // 开发中提示
-  const showDevelopmentAlert = () => {
-    alert('此功能正在开发中');
-  };
-
   // 处理商家点击
-  const handleMerchantClick = (merchantId: number) => {
-    navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId.toString()));
+  const handleMerchantClick = (merchant: Pick<RecommendedMerchant, 'id' | 'name'>) => {
+    navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchant.id.toString()), {
+      state: { merchantName: merchant.name },
+    });
   };
   // 从所有商家中提取所有可用的 tags
   const availableTags = useMemo(() => {
@@ -184,7 +181,11 @@ const DiscoverPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search restaurants, shops..."
-                onClick={showDevelopmentAlert}
+                readOnly
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  navigate(PATHS.CUSTOMER.EXPLORE);
+                }}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#990000]/20 transition-shadow text-gray-800 placeholder-gray-400"
               />
             </div>
@@ -243,7 +244,7 @@ const DiscoverPage: React.FC = () => {
             <div
               key={merchant.id}
               className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"
-              onClick={() => handleMerchantClick(merchant.id)}
+              onClick={() => handleMerchantClick({ id: merchant.id, name: merchant.name })}
             >
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
                 <img src={merchant.image} alt={merchant.name} className="w-full h-full object-cover" />

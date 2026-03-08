@@ -13,8 +13,10 @@ interface MerchantFeedProps {
 const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
     const navigate = useNavigate();
 
-    const handleMerchantClick = (merchantId: string) => {
-        navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId));
+    const handleMerchantClick = (merchantId: string, merchantName: string) => {
+        navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId), {
+            state: { merchantName },
+        });
     };
 
     if (merchants.length === 0) {
@@ -36,7 +38,7 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
             {merchants.map((merchant) => (
                 <div
                     key={merchant.id}
-                    onClick={() => handleMerchantClick(merchant.id)}
+                    onClick={() => handleMerchantClick(merchant.id, merchant.name)}
                     className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
                 >
                     <div className="relative aspect-[16/9] rounded-[22px] overflow-hidden mb-4 bg-gray-100">
