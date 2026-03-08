@@ -49,45 +49,36 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                         isFocused ? 'bg-white border-[#990000]/30 shadow-lg shadow-[#990000]/5' : 'border-transparent'
                     }`}>
                         <div className="pl-3 pr-2">
-                            <img src={searchIcon} className=''/>
+                            <img src={searchIcon} className="" />
                         </div>
 
-                    <input
-                        type="text"
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setIsFocused(false)}
-                        placeholder="Search USC..."
-                        readOnly={Boolean(onSearchTap)}
-                        onMouseDown={(e) => {
-                            if (!onSearchTap) {
-                                return;
-                            }
+                        <input
+                            type="text"
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            placeholder="Search"
+                            readOnly={Boolean(onSearchTap)}
+                            onMouseDown={(e) => {
+                                if (!onSearchTap) {
+                                    return;
+                                }
 
-                            e.preventDefault();
-                            onSearchTap();
-                        }}
-                        onKeyDown={(e) => {
-                            if (!onSearchTap) {
-                                return;
-                            }
-
-                            if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 onSearchTap();
-                            }
-                        }}
-                        onChange={(e) => onSearch(e.target.value)}
-                        className="flex-1 bg-transparent border-none py-2.5 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
-                    />
+                            }}
+                            onKeyDown={(e) => {
+                                if (!onSearchTap) {
+                                    return;
+                                }
 
-                    <div className="pr-2 flex items-center space-x-2">
-                        <div className="w-[1px] h-3 bg-gray-300" />
-                        <button className="text-[#990000] p-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg>
-                        </button>
-                    </div>
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSearchTap();
+                                }
+                            }}
+                            onChange={(e) => onSearch(e.target.value)}
+                            className="h-full flex-1 bg-transparent border-none py-0 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
+                        />
                     </div>
                     <button className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
                         <img src={micIcon} className="w-[25px] h-[25px]">
