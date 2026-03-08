@@ -1,4 +1,8 @@
 import React from 'react';
+import topRateIcon from '../../../../assets/images/customer/home/topRate.svg';
+import nearbyIcon from '../../../../assets/images/customer/home/nearby.svg';
+import openNowIcon from '../../../../assets/images/customer/home/openNow.svg';
+import streetFoodIcon from '../../../../assets/images/customer/home/streetFood.svg';
 
 export type FeatureType = 'Street Food' | 'Open Now' | 'Top Rated' | 'Nearby';
 
@@ -10,11 +14,11 @@ interface FeatureBarProps {
     onDistanceChange: (distance: number) => void;
 }
 
-const FEATURES: { label: FeatureType; icon: string }[] = [
-    { label: 'Top Rated', icon: '★' },
-    { label: 'Street Food', icon: '🌮' },
-    { label: 'Open Now', icon: '⚡' },
-    { label: 'Nearby', icon: '📍' },
+const FEATURES: { label: FeatureType; icon: string; size: string; top: string }[] = [
+    { label: 'Top Rated', icon: topRateIcon, size: 'w-9 h-9', top: 'top-6' },
+    { label: 'Nearby', icon: nearbyIcon, size: 'w-[60px] h-[60px]', top: 'top-2' },
+    { label: 'Open Now', icon: openNowIcon, size: 'w-[60px] h-[60px]', top: 'top-2' },
+    { label: 'Street Food', icon: streetFoodIcon, size: 'w-[60px] h-[60px]', top: 'top-2' },
 ];
 
 const DISTANCE_OPTIONS = [1, 3, 5, 10];
@@ -33,19 +37,27 @@ const FeatureBar: React.FC<FeatureBarProps> = ({
                     <button
                         key={feature.label}
                         onClick={() => onFeatureChange(feature.label)}
-                        className={`h-[70px] rounded-2xl transition-all duration-200 transform active:scale-95 flex flex-col items-center justify-center gap-1 ${
+                        className={`relative h-[100px] rounded-[40px] transition-all duration-200 transform active:scale-95 ${
                             activeFeature === feature.label
                                 ? 'bg-[#990000] shadow-lg shadow-[#990000]/30'
-                                : 'bg-gray-100/80 border border-gray-200'
+                                : 'bg-white shadow-[0px_20px_30px_0px_rgba(211,209,216,0.251)]'
                         }`}
                     >
-                        <div className={`text-[22px] transition-all ${
-                            activeFeature === feature.label ? '' : 'grayscale opacity-50'
-                        }`}>
-                            {feature.icon}
+                        <div className={`absolute ${feature.top} left-1/2 -translate-x-1/2 ${feature.size}`}>
+                            {activeFeature === feature.label && (
+                                <div className="absolute left-1/2 top-1/2 w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2 rounded-[35px] bg-white" />
+                            )}
+                            <img
+                                src={feature.icon}
+                                alt=""
+                                aria-hidden="true"
+                                className={`relative z-10 block w-full h-full max-w-none object-contain transition-transform ${
+                                    activeFeature === feature.label ? 'scale-100' : ''
+                                }`}
+                            />
                         </div>
-                        <span className={`text-[9px] font-[800] tracking-tight leading-none text-center ${
-                            activeFeature === feature.label ? 'text-white' : 'text-gray-600'
+                        <span className={`absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] tracking-tight leading-none text-center whitespace-nowrap ${
+                            activeFeature === feature.label ? 'text-white' : 'text-[#67666D]'
                         }`}>
                             {feature.label}
                         </span>
