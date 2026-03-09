@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageWithFallback as BaseImageWithFallback } from '../../../../../components/common';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -12,15 +13,13 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className 
 }) => {
   return (
-    <img
+    <BaseImageWithFallback
       src={src}
       alt={alt}
       className={className}
-      onError={(e) => {
-        // Fallback image on error
-        const target = e.target as HTMLImageElement;
-        target.src = '/api/placeholder/96/96';
-      }}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
     />
   );
 };

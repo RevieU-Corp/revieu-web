@@ -1,6 +1,7 @@
 import React from 'react';
 import { Review } from '../types';
 import { Icons } from './Icons';
+import { ImageWithFallback } from '../../../../components/common';
 
 interface ReviewCardProps {
   review: Review;
@@ -11,10 +12,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     <div className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-gray-100 transition-all hover:-translate-y-1 hover:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.06)] group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3.5">
-          <img 
+          <ImageWithFallback
             src={review.businessImage} 
             alt={review.businessName} 
             className="w-11 h-11 rounded-xl object-cover bg-gray-50 ring-1 ring-black/5"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
           />
           <div>
             <h3 className="font-bold text-gray-900 text-[15px] leading-tight group-hover:text-brand-red transition-colors">{review.businessName}</h3>
@@ -45,10 +49,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         <div className="flex gap-2.5 mb-5 overflow-hidden">
           {review.images.map((img, idx) => (
             <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                <img 
-                src={img} 
-                alt="Attachment" 
+                <ImageWithFallback
+                src={img}
+                alt="Attachment"
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
                 />
             </div>
           ))}

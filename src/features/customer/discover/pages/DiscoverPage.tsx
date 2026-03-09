@@ -7,6 +7,7 @@ import { generateRecommendations } from '../../shared/utils/recommendationUtils'
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../../shared/constants/categories';
 import { Merchant, RecommendedMerchant } from '../../shared/types';
 import { PATHS } from '../../../../routes/paths';
+import { ImageWithFallback } from '../../../../components/common';
 import '../../shared/styles/DiscoverPage.css';
 
 // Mock Data - 保持现有的商家数据
@@ -247,7 +248,14 @@ const DiscoverPage: React.FC = () => {
               onClick={() => handleMerchantClick({ id: merchant.id, name: merchant.name })}
             >
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                <img src={merchant.image} alt={merchant.name} className="w-full h-full object-cover" />
+                <ImageWithFallback
+                  src={merchant.image}
+                  alt={merchant.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
                 {merchant.relevanceScore > 0.5 && (
                   <div className="absolute top-1 left-1 bg-[#990000] text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                     Rec

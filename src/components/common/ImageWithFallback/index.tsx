@@ -1,27 +1,32 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { getContextualMockImage } from '../../../utils/mockImages'
 
 const ERROR_IMG_SRC =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg=='
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNGM0Y0RjYiLz48cGF0aCBkPSJNMTM2IDE3NkwxODAgMTMyTDIwNCAxNTZMMjQwIDEyMCIgc3Ryb2tlPSIjOUNBM0FGIiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSIyNjAiIGN5PSIxMDAiIHI9IjE2IiBmaWxsPSIjOUNBM0FGIi8+PHJlY3QgeD0iMTEyIiB5PSI4OCIgd2lkdGg9IjE3NiIgaGVpZ2h0PSIxMjQiIHJ4PSIxNiIgc3Ryb2tlPSIjOUNBM0FGIiBzdHJva2Utd2lkdGg9IjEyIi8+PC9zdmc+'
 
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
-  const [didError, setDidError] = useState(false)
+  const { src, onError, alt, ...rest } = props
+  const mockSrc = getContextualMockImage(`${src ?? ''}-${alt ?? ''}`, alt)
+  const [currentSrc, setCurrentSrc] = useState<string>(src || mockSrc)
+  const [usedMock, setUsedMock] = useState<boolean>(!src)
 
-  const handleError = () => {
-    setDidError(true)
+  useEffect(() => {
+    setCurrentSrc(src || mockSrc)
+    setUsedMock(!src)
+  }, [src, mockSrc])
+
+  const handleError: React.ReactEventHandler<HTMLImageElement> = (event) => {
+    if (!usedMock) {
+      setCurrentSrc(mockSrc)
+      setUsedMock(true)
+      onError?.(event)
+      return
+    }
+    if (currentSrc !== ERROR_IMG_SRC) {
+      setCurrentSrc(ERROR_IMG_SRC)
+    }
+    onError?.(event)
   }
 
-  const { src, alt, style, className, ...rest } = props
-
-  return didError ? (
-    <div
-      className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
-      style={style}
-    >
-      <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
-      </div>
-    </div>
-  ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={handleError} />
-  )
+  return <img {...rest} src={currentSrc} alt={alt} onError={handleError} />
 }
