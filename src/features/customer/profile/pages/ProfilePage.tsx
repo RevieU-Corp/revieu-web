@@ -19,6 +19,7 @@ import {
 } from '../services/profileService';
 import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
+import { getContextualMockImage } from '../../../../utils/mockImages';
 
 const REVIEW_PAGE_SIZE = 20;
 
@@ -43,15 +44,23 @@ function formatRelativeTime(dateString: string): string {
 
 // Transform API response to Review type
 function transformReviewResponse(response: ReviewResponse): Review {
+  const businessImage = response.businessImage?.trim()
+    ? response.businessImage
+    : getContextualMockImage(`business-${response.id}`, response.businessName);
+
+  const images = (response.images || []).map((image, index) =>
+    image?.trim() ? image : getContextualMockImage(`review-${response.id}-${index}`, response.businessName || response.text)
+  );
+
   return {
     id: response.id,
     businessName: response.businessName || 'Unknown Business',
-    businessImage: response.businessImage || 'https://via.placeholder.com/100',
+    businessImage,
     location: response.location || '',
     rating: response.overallRating,
     date: formatRelativeTime(response.createdAt),
     content: response.text || '',
-    images: response.images || [],
+    images,
     helpfulCount: response.likeCount || 0,
     createdAt: response.createdAt,
   };

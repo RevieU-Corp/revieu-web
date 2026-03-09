@@ -66,7 +66,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Healthy & Bowls',
     rating: 4.8,
     reviewCount: 215,
-    distance: '0.2 mi',
+    distance: '0.4 mi',
     status: 'Open',
     offer: '20% Student'
   },
@@ -77,7 +77,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Burgers & Pizza',
     rating: 4.6,
     reviewCount: 540,
-    distance: '0.4 mi',
+    distance: '1.2 mi',
     status: 'Open'
   },
   {
@@ -87,7 +87,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Healthy & Bowls',
     rating: 4.9,
     reviewCount: 1205,
-    distance: '0.1 mi',
+    distance: '2.1 mi',
     status: 'Open',
     offer: 'Free Side'
   },
@@ -98,7 +98,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Coffee & Boba',
     rating: 4.5,
     reviewCount: 892,
-    distance: '0.3 mi',
+    distance: '3.4 mi',
     status: 'Closed'
   },
   {
@@ -108,7 +108,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Mexican',
     rating: 4.7,
     reviewCount: 1543,
-    distance: '0.5 mi',
+    distance: '4.8 mi',
     status: 'Open',
     offer: 'BOGO Bowl'
   },
@@ -119,7 +119,7 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Asian / Chinese',
     rating: 4.3,
     reviewCount: 678,
-    distance: '0.6 mi',
+    distance: '6.3 mi',
     status: 'Open'
   },
   {
@@ -129,28 +129,17 @@ const baseMerchants: HomeMerchant[] = [
     category: 'Dessert',
     rating: 4.9,
     reviewCount: 432,
-    distance: '0.7 mi',
+    distance: '9.2 mi',
     status: 'Open',
     offer: 'Student Discount'
   }
 ];
 
-// Generate 20 items by cycling through baseMerchants with variations
-const MOCK_MERCHANTS: HomeMerchant[] = Array.from({ length: 20 }).map((_, index) => {
-  const base = baseMerchants[index % baseMerchants.length];
-  const isOpen = Math.random() > 0.3;
-  const hasOffer = Math.random() > 0.6;
-  
-  return {
-    ...base,
-    id: `m${index + 1}`,
-    distance: `${(0.1 + Math.random() * 2).toFixed(1)} mi`,
-    reviewCount: Math.floor(base.reviewCount + Math.random() * 200),
-    rating: Number((base.rating + (Math.random() * 0.4 - 0.2)).toFixed(1)),
-    status: isOpen ? 'Open' : 'Closed',
-    offer: hasOffer ? base.offer : undefined
-  };
-});
+// Keep one unique entry per merchant to avoid duplicated storefronts in Home feed
+const MOCK_MERCHANTS: HomeMerchant[] = baseMerchants.map((merchant, index) => ({
+  ...merchant,
+  id: `m${index + 1}`,
+}));
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();

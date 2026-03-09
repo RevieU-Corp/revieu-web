@@ -5,6 +5,7 @@ import { getTrojanMetricColor, getTrojanMetricBadge } from '../utils/merchantUti
 import { PATHS } from '../../../../routes/paths';
 import activeHeatIcon from '../../../../assets/images/merchant/activeHeat.svg';
 import reviewIcon from '../../../../assets/images/merchant/review.svg';
+import { ImageWithFallback } from '../../../../components/common';
 
 interface MerchantFeedProps {
     merchants: ExtendedMerchant[];
@@ -16,6 +17,16 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
     const handleMerchantClick = (merchantId: string, merchantName: string) => {
         navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchantId), {
             state: { merchantName },
+        });
+    };
+
+    const handleReviewsClick = (merchantId: string, merchantName: string, event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        navigate(PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON(merchantId), {
+            state: {
+                merchantName,
+                initialTab: 'review',
+            },
         });
     };
 
@@ -42,10 +53,13 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
                     className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
                 >
                     <div className="relative aspect-[16/9] rounded-[22px] overflow-hidden mb-4 bg-gray-100">
-                        <img
+                        <ImageWithFallback
                             src={merchant.image}
                             alt={merchant.name}
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
                         />
 
                         {/* Rating Badge */}
@@ -112,10 +126,14 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
                                     {merchant.isOpen ? 'Active Heat' : 'Closed'}
                                 </span>
                             </div>
-                            <div className="flex items-center space-x-1.5">
+                            <button
+                                type="button"
+                                onClick={(event) => handleReviewsClick(merchant.id, merchant.name, event)}
+                                className="flex items-center space-x-1.5 rounded-md px-1 py-0.5 hover:bg-gray-50"
+                            >
                                 <img src={reviewIcon} alt="Reviews" />
                                 <span className="text-[11px] font-bold text-gray-500">{merchant.reviewCount} Reviews</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
