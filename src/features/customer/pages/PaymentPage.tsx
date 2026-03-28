@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Smartphone, Building2, Check, Tag } from 'lucide-react';
 import { CouponPaymentData, DealInfo, MerchantInfo } from '../shared/types/coupons';
+import { orderService } from '../shared/services';
 
 interface PaymentMethod {
   id: string;
@@ -13,6 +14,7 @@ interface PaymentMethod {
 interface PaymentPageLocationState {
   dealInfo?: DealInfo;
   couponData?: CouponPaymentData;
+  couponPaymentData?: CouponPaymentData;
   merchantInfo?: MerchantInfo;
 }
 
@@ -28,10 +30,11 @@ const PaymentPage: React.FC = () => {
   const location = useLocation();
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Get payment data from navigation state
   const locationState = location.state as PaymentPageLocationState;
-  const couponData = locationState?.couponData;
+  const couponData = locationState?.couponData || locationState?.couponPaymentData;
   const merchantInfo = locationState?.merchantInfo;
   
   // Use coupon data if available, otherwise fallback to legacy deal info
@@ -80,37 +83,44 @@ const PaymentPage: React.FC = () => {
     if (!selectedMethod) return;
 
     setIsProcessing(true);
+    setPaymentError(null);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      const paymentResult = {
-        dealInfo,
-        paymentMethod: paymentMethods.find(m => m.id === selectedMethod)?.name,
-        orderNumber: `ORD${Date.now()}`,
-        voucherCode: `VCH${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
-        // Include coupon-specific data if this is a coupon payment
-        ...(isCouponPayment && {
-          couponData,
-          merchantInfo,
-          isCouponPayment: true
-        })
-      };
+    try {
+      if (isCouponPayment && couponData) {
+        const order = await orderService.createCouponOrder(couponData.couponId);
+        const paidResult = await orderService.payCouponOrder(order.id);
+        const paymentMethod = paymentMethods.find((method) => method.id === selectedMethod)?.name ?? 'UPay';
 
-      // Navigate to appropriate success page
-      if (isCouponPayment) {
-        // Navigate to coupon-specific success page
         navigate('/customer/payment/coupon-success', {
-          state: paymentResult
+          state: {
+            dealInfo,
+            paymentMethod,
+            orderNumber: paidResult.order.id,
+            voucherCode: paidResult.vouchers[0]?.code ?? '',
+            couponData,
+            merchantInfo,
+            isCouponPayment: true,
+            voucher: paidResult.vouchers[0] ?? null,
+          }
         });
       } else {
-        // Navigate to regular payment success page
+        const paymentResult = {
+          dealInfo,
+          paymentMethod: paymentMethods.find((method) => method.id === selectedMethod)?.name,
+          orderNumber: `ORD${Date.now()}`,
+          voucherCode: `VCH${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+        };
+
         navigate('/customer/payment/success', {
           state: paymentResult
         });
       }
-    }, 2000);
+    } catch (error) {
+      console.error('Payment failed:', error);
+      setPaymentError('Payment failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -187,6 +197,12 @@ const PaymentPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {paymentError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {paymentError}
+          </div>
+        )}
 
         {/* Payment Methods */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">

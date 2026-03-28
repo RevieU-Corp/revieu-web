@@ -1,32 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { apiClient } from '../../../../api/apiClient';
+import { reviewsApi } from '../../../../api/reviews';
+import { storeBrowserService } from '../../shared/services/storeBrowserService';
 import { PendingReviewMerchant, UserProfile } from '../types';
 
 // TODO: Move API key to environment variable for security
 const genAI = new GoogleGenerativeAI('AIzaSyDCInZ57xrv6hpYu-oGqPfm0wa8zEHYYBM');
 
-const MOCK_PENDING_REVIEW_MERCHANTS: PendingReviewMerchant[] = [
-  {
-    id: 'm1',
-    businessName: 'Sushirrito',
-    businessImage: 'https://picsum.photos/id/292/100/100',
-    lastVisitedAt: 'Yesterday',
-    lastOrderItems: ['Sumo Crunch', 'Lava Nachos'],
-  },
-  {
-    id: 'm2',
-    businessName: 'Philz Coffee',
-    businessImage: 'https://picsum.photos/id/431/100/100',
-    lastVisitedAt: 'Jan 22',
-    lastOrderItems: ['Mint Mojito', 'Avocado Toast'],
-  },
-  {
-    id: 'm3',
-    businessName: 'Urban Ritual',
-    businessImage: 'https://picsum.photos/id/63/100/100',
-    lastVisitedAt: 'Jan 19',
-    lastOrderItems: ['Dirty Horchata', 'Classic Milk Tea'],
-  },
-];
+type BackendOrder = {
+  id: number | string;
+  merchant_id?: number | string | null;
+  store_id?: number | string | null;
+  status?: string;
+  created_at?: string | null;
+  coupon?: {
+    title?: string | null;
+  };
+};
+
+const DEFAULT_BUSINESS_IMAGE =
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400';
 
 /**
  * Generates a creative bio for the user using Google's Gemini AI
@@ -75,18 +68,96 @@ Return ONLY the bio text.`;
 };
 
 async function fetchPendingReviewMerchantsFromApi(): Promise<PendingReviewMerchant[]> {
-  // API entry reserved for backend integration.
-  // TODO: replace with real endpoint call, e.g.
-  // const response = await apiClient.get<PendingReviewMerchant[]>('/user/merchants/pending-reviews');
-  // return response.data;
-  return [];
+  const [ordersResponse, reviewsResponse, stores] = await Promise.all([
+    apiClient.get<{ data: BackendOrder[] }>('/orders'),
+    reviewsApi.list({ limit: 100 }),
+    storeBrowserService.listStores(100),
+  ]);
+
+  const reviewedMerchantIds = new Set(
+    reviewsResponse.data.map((review) => review.merchantId)
+  );
+  const reviewedStoreIds = new Set(
+    reviewsResponse.data
+      .map((review) => review.storeId)
+      .filter((storeId): storeId is string => Boolean(storeId))
+  );
+  const storeById = new Map(stores.map((store) => [store.id, store]));
+  const latestPendingByStore = new Map<string, PendingReviewMerchant>();
+  const orders = (ordersResponse.data?.data ?? []).filter((order) => order.status === 'paid');
+
+  const sortedOrders = [...orders].sort((left, right) => {
+    const leftTime = new Date(left.created_at ?? '').getTime();
+    const rightTime = new Date(right.created_at ?? '').getTime();
+    return rightTime - leftTime;
+  });
+
+  sortedOrders.forEach((order) => {
+    const merchantId =
+      order.merchant_id !== null && order.merchant_id !== undefined
+        ? String(order.merchant_id)
+        : '';
+    const storeId =
+      order.store_id !== null && order.store_id !== undefined
+        ? String(order.store_id)
+        : merchantId;
+
+    if (!storeId || latestPendingByStore.has(storeId)) {
+      return;
+    }
+
+    if ((merchantId && reviewedMerchantIds.has(merchantId)) || reviewedStoreIds.has(storeId)) {
+      return;
+    }
+
+    const store = storeById.get(storeId);
+    latestPendingByStore.set(storeId, {
+      id: storeId,
+      businessName: store?.name || `Merchant ${merchantId || storeId}`,
+      businessImage: store?.image || DEFAULT_BUSINESS_IMAGE,
+      lastVisitedAt: formatLastVisitedAt(order.created_at),
+      lastOrderItems: [order.coupon?.title || 'Completed order'],
+    });
+  });
+
+  return Array.from(latestPendingByStore.values());
 }
 
 export const getLatestVisitedMerchantsWithoutReview = async (): Promise<PendingReviewMerchant[]> => {
-  const apiMerchants = await fetchPendingReviewMerchantsFromApi();
-  if (apiMerchants.length > 0) {
-    return apiMerchants;
+  return fetchPendingReviewMerchantsFromApi();
+};
+
+const formatLastVisitedAt = (dateString?: string | null): string => {
+  if (!dateString) {
+    return 'Recently';
   }
 
-  return MOCK_PENDING_REVIEW_MERCHANTS;
+  const visitedAt = new Date(dateString);
+  if (Number.isNaN(visitedAt.getTime())) {
+    return 'Recently';
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfVisitedDay = new Date(
+    visitedAt.getFullYear(),
+    visitedAt.getMonth(),
+    visitedAt.getDate()
+  );
+  const diffDays = Math.round(
+    (startOfToday.getTime() - startOfVisitedDay.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays <= 0) {
+    return 'Today';
+  }
+
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
+
+  return visitedAt.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
 };

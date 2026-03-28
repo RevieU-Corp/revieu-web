@@ -71,6 +71,26 @@ afterEach(() => {
 
 describe('Payment Integration for Coupons', () => {
   describe('PaymentPage with Coupon Data', () => {
+    it('should display coupon information when deal cards pass couponPaymentData in navigation state', () => {
+      render(
+        <MemoryRouter initialEntries={[{
+          pathname: '/customer/payment',
+          state: {
+            couponPaymentData: mockCouponPaymentData,
+            merchantInfo: mockMerchantInfo
+          }
+        }]}>
+          <PaymentPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Coupon Deal')).toBeInTheDocument();
+      const dealTitles = screen.getAllByText('Test Deal');
+      expect(dealTitles.length).toBeGreaterThan(0);
+      const prices = screen.getAllByText('$15.99');
+      expect(prices.length).toBeGreaterThan(0);
+    });
+
     it('should display coupon information when coupon data is provided', () => {
       // Render with MemoryRouter and inject location state
       render(

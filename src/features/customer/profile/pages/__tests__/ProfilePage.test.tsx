@@ -4,9 +4,10 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode, SVGProps } from 'react';
 
-const { reviewsListMock, pendingMerchantsMock, logoutMock } = vi.hoisted(() => ({
+const { reviewsListMock, pendingMerchantsMock, userVouchersMock, logoutMock } = vi.hoisted(() => ({
   reviewsListMock: vi.fn(),
   pendingMerchantsMock: vi.fn(),
+  userVouchersMock: vi.fn(),
   logoutMock: vi.fn(),
 }));
 
@@ -69,12 +70,25 @@ vi.mock('../../../../../api/reviews', () => ({
   },
 }));
 
+vi.mock('../../../shared/services/voucherService', () => ({
+  voucherService: {
+    getUserVouchers: userVouchersMock,
+  },
+}));
+
 describe('ProfilePage', () => {
   beforeEach(() => {
     reviewsListMock.mockReset();
     pendingMerchantsMock.mockReset();
+    userVouchersMock.mockReset();
     logoutMock.mockReset();
     pendingMerchantsMock.mockResolvedValue([]);
+    userVouchersMock.mockResolvedValue({
+      active: [],
+      used: [],
+      expired: [],
+      total: 0,
+    });
   });
 
   it('loads my reviews with cursor pagination and appends more results', async () => {
@@ -145,5 +159,48 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByText('Second page review')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /load more reviews/i })).not.toBeInTheDocument();
+  });
+
+  it('renders rewards from live vouchers instead of hard-coded coupons', async () => {
+    reviewsListMock.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
+    userVouchersMock.mockResolvedValue({
+      active: [
+        {
+          id: 'voucher-1',
+          code: 'REV-1',
+          couponId: '9',
+          userId: '1',
+          merchantId: '205',
+          status: 'active',
+          generatedAt: new Date('2026-03-28T08:36:27.219542Z'),
+          expiryDate: new Date('2026-09-24T08:35:25.232537Z'),
+          usageInstructions: '',
+          merchantName: 'Revieu Demo Cafe',
+          dealTitle: 'Paid Demo Bundle',
+          dealValue: '30 value for 9.99',
+        },
+      ],
+      used: [],
+      expired: [],
+      total: 1,
+    });
+
+    const { default: ProfilePage } = await import('../ProfilePage');
+
+    render(
+      <MemoryRouter>
+        <ProfilePage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(userVouchersMock).toHaveBeenCalledWith('1');
+    });
+
+    expect(screen.getByText('1 Available')).toBeInTheDocument();
+    expect(screen.getAllByText('coupon')).toHaveLength(1);
   });
 });

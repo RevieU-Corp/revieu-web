@@ -1,325 +1,259 @@
-import { useState } from 'react';
-import { Phone, MapPin, Star, ChevronRight, Flame, FileText } from 'lucide-react';
-import { ImageWithFallback } from './ImageWithFallback';
+import { useEffect, useState } from 'react';
+import { MapPin, Phone, Star, Ticket, MenuSquare, MessageCircle } from 'lucide-react';
+import { apiClient } from '../../../../../api/apiClient';
+import { couponService } from '../../../shared/services/couponService';
+import { Coupon, MerchantInfo } from '../../../shared/types/coupons';
 import { DealCard } from './DealCard';
-import { GlossyBottomNav } from './GlossyBottomNav';
-import { MealDealCard } from './MealDealCard';
-import { TimeDealCard } from './TimeDealCard';
-import { ReviewCard } from './ReviewCard';
-import { PopDishCard } from './PopDishCard';
-import { MenuUploadWidget } from './MenuUploadWidget';
+import { ImageWithFallback } from './ImageWithFallback';
 
 interface RestaurantDetailProps {
+  storeId?: string;
   onBack?: () => void;
-  onViewAllReviews?: () => void;
-  onWriteReview?: () => void;
 }
 
-export function RestaurantDetail({ onBack, onViewAllReviews, onWriteReview }: RestaurantDetailProps) {
+interface BackendStore {
+  id: number;
+  merchant_id: number;
+  name: string;
+  description?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  cover_image_url?: string | null;
+  avg_rating?: number | null;
+  review_count?: number | null;
+}
+
+interface StoreDetail {
+  id: string;
+  merchantId: string;
+  name: string;
+  description: string;
+  address: string;
+  phone: string;
+  coverImageUrl: string;
+  rating: number;
+  reviewCount: number;
+}
+
+const FALLBACK_HERO =
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80';
+const FALLBACK_LOGO =
+  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&q=80';
+
+const FALLBACK_STORE: StoreDetail = {
+  id: '',
+  merchantId: '',
+  name: 'Merchant Preview',
+  description: 'Live store data is not available for this route yet.',
+  address: 'Store details will appear here after the backend lookup succeeds.',
+  phone: '',
+  coverImageUrl: FALLBACK_HERO,
+  rating: 0,
+  reviewCount: 0,
+};
+
+const mapStore = (raw: BackendStore): StoreDetail => {
+  const addressParts = [raw.address, raw.city, raw.state, raw.country].filter(Boolean);
+
+  return {
+    id: String(raw.id),
+    merchantId: String(raw.merchant_id),
+    name: raw.name,
+    description: raw.description ?? 'No store description available yet.',
+    address: addressParts.join(', ') || 'Address unavailable',
+    phone: raw.phone ?? '',
+    coverImageUrl: raw.cover_image_url || FALLBACK_HERO,
+    rating: raw.avg_rating ?? 0,
+    reviewCount: raw.review_count ?? 0,
+  };
+};
+
+export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
   const [activeTab, setActiveTab] = useState<'deals' | 'menu' | 'reviews'>('deals');
+  const [store, setStore] = useState<StoreDetail>(FALLBACK_STORE);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStore = async () => {
+      if (!storeId) {
+        setIsLoading(false);
+        setError('Store id is missing');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const [storeResponse, couponList] = await Promise.all([
+          apiClient.get(`/stores/${storeId}`),
+          couponService.getAvailableCoupons(storeId, ''),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setStore(mapStore(storeResponse.data.data));
+        setCoupons(couponList);
+      } catch (loadError) {
+        if (!cancelled) {
+          console.error('Failed to load store detail:', loadError);
+          setError('Live store data is unavailable for this route.');
+          setCoupons([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadStore();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId]);
+
+  const merchantInfo: MerchantInfo = {
+    id: store.merchantId,
+    name: store.name,
+    logo: '',
+    address: store.address,
+    phone: store.phone,
+  };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20">
-      {/* Top Banner with Food Photography */}
-      <div className="relative w-full h-64">
+    <div className="min-h-screen bg-white pb-20">
+      <div className="relative h-64 w-full">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80"
-          alt="Delicious food"
-          className="w-full h-full object-cover"
+          src={store.coverImageUrl}
+          alt={store.name}
+          className="h-full w-full object-cover"
         />
-        {/* Circular Logo Overlay */}
-        <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1/2">
-          <div className="w-24 h-24 rounded-full bg-white shadow-xl border-4 border-white overflow-hidden">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&q=80"
-              alt="Northern Cafe Logo"
-              className="w-full h-full object-cover"
-            />
-          </div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="absolute left-4 top-4 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow"
+        >
+          Back
+        </button>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+        <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-1/2 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
+          <ImageWithFallback
+            src={store.coverImageUrl || FALLBACK_LOGO}
+            alt={`${store.name} logo`}
+            className="h-full w-full object-cover"
+          />
         </div>
       </div>
 
-      {/* Info Section */}
-      <div className="px-6 pt-16 pb-4">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">Northern Cafe</h1>
-        
-        {/* Rating */}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="flex items-center gap-1 bg-[#FFA500] px-3 py-1 rounded-full">
-            <Star className="w-5 h-5 fill-white text-white" />
-            <span className="text-white font-bold text-lg">4.8</span>
+      <div className="px-6 pb-8 pt-16">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">{store.description}</p>
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <div className="flex items-center gap-1 rounded-full bg-[#FFA500] px-3 py-1 text-white">
+            <Star className="h-4 w-4 fill-white text-white" />
+            <span className="font-semibold">{store.rating.toFixed(1)}</span>
+          </div>
+          <span className="text-sm text-gray-500">{store.reviewCount} reviews</span>
+        </div>
+
+        <div className="mt-6 space-y-3 rounded-3xl border border-gray-100 bg-gray-50 p-5">
+          <div className="flex items-start gap-3 text-sm text-gray-600">
+            <MapPin className="mt-0.5 h-5 w-5 text-[#FF6900]" />
+            <span>{store.address}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <Phone className="h-5 w-5 text-[#FF6900]" />
+            <span>{store.phone || 'Phone unavailable'}</span>
           </div>
         </div>
 
-        {/* Address and Phone */}
-        <div className="space-y-2">
-          <div className="flex items-start gap-3 text-gray-600">
-            <MapPin className="w-5 h-5 mt-0.5 text-[#FFA500] flex-shrink-0" />
-            <span className="text-sm">123 N Tryon St, Charlotte, NC 28202</span>
-          </div>
-          <div className="flex items-center gap-3 text-gray-600">
-            <Phone className="w-5 h-5 text-[#FFA500] flex-shrink-0" />
-            <span className="text-sm">(704) 555-0123</span>
-          </div>
+        <div className="mt-6 flex rounded-full border border-gray-200 bg-gray-50 p-1">
+          {[
+            { key: 'deals', label: 'Deals', icon: Ticket },
+            { key: 'menu', label: 'Menu', icon: MenuSquare },
+            { key: 'reviews', label: 'Reviews', icon: MessageCircle },
+          ].map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key as 'deals' | 'menu' | 'reviews')}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
+                  isActive ? 'bg-white text-[#FF6900] shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 px-6">
-        <button
-          onClick={() => setActiveTab('deals')}
-          className={`flex-1 py-3 text-center font-semibold transition-colors relative ${
-            activeTab === 'deals' ? 'text-red-600' : 'text-gray-500'
-          }`}
-        >
-          Deals
-          {activeTab === 'deals' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('menu')}
-          className={`flex-1 py-3 text-center font-semibold transition-colors relative ${
-            activeTab === 'menu' ? 'text-red-600' : 'text-gray-500'
-          }`}
-        >
-          Menu
-          {activeTab === 'menu' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('reviews')}
-          className={`flex-1 py-3 text-center font-semibold transition-colors relative ${
-            activeTab === 'reviews' ? 'text-red-600' : 'text-gray-500'
-          }`}
-        >
-          Reviews
-          {activeTab === 'reviews' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-          )}
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 pt-4 pb-6">
-        {activeTab === 'deals' ? (
-          <div className="space-y-6">
-            {/* Special Time Deals */}
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900">⚡ Flash Deals</h3>
-              <div className="space-y-3">
-                <TimeDealCard
-                  title="Happy Hour Special"
-                  discount="50% OFF"
-                  timeRange="2:00 PM - 5:00 PM"
-                  description="Get half off on all drinks and appetizers during happy hour!"
-                />
-                <TimeDealCard
-                  title="Breakfast Rush"
-                  discount="30% OFF"
-                  timeRange="7:00 AM - 10:00 AM"
-                  description="Early bird gets the deal! Breakfast combos at amazing prices."
-                />
-              </div>
+        {activeTab === 'deals' && (
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Live Coupons</h2>
+              {isLoading && <span className="text-sm text-gray-400">Loading...</span>}
             </div>
 
-            {/* Combo Deals */}
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900">Combo Deals</h3>
-              <div className="space-y-3">
-                <MealDealCard
-                  image="https://images.unsplash.com/photo-1763689389824-dd2cea2e5772?w=400&q=80"
-                  title="Lunch Combo A"
-                  price="12.99"
-                  oldPrice="18.99"
-                  description="Orange chicken, fried rice, and egg roll"
-                />
-                <MealDealCard
-                  image="https://images.unsplash.com/photo-1652937916838-09b9c2ff8b45?w=400&q=80"
-                  title="Noodle Special"
-                  price="10.99"
-                  oldPrice="15.99"
-                  description="Choice of noodles with vegetables and protein"
-                />
-                <MealDealCard
-                  image="https://images.unsplash.com/photo-1630914441934-a29bf360934c?w=400&q=80"
-                  title="Family Feast"
-                  price="35.99"
-                  oldPrice="49.99"
-                  description="3 entrees, 2 sides, 4 spring rolls"
-                />
+            {error && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {error}
               </div>
-            </div>
+            )}
 
-            {/* Coupons */}
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900">Coupons</h3>
-              <div className="space-y-3">
-                <DealCard
-                  id="deal-new-user-special"
-                  value="$100"
-                  title="New User Special"
-                  description="Valid for first-time customers on orders above $120"
-                  expiry="Valid until Jan 31, 2026"
-                  type="free"
-                  merchantId="merchant-123"
-                />
-                <DealCard
-                  id="deal-student-mega"
-                  value="$50"
-                  title="Student Mega Deal"
-                  description="USC students only - show your Trojan ID at checkout"
-                  expiry="Valid until Feb 28, 2026"
-                  type="free"
-                  merchantId="merchant-123"
-                />
-                <DealCard
-                  id="deal-family-bundle"
-                  value="$90"
-                  title="Family Bundle Savings"
-                  description="For orders over $200 - perfect for group dining"
-                  expiry="Valid until Feb 15, 2026"
-                  type="paid"
-                  price={15}
-                  merchantId="merchant-123"
-                />
-                <DealCard
-                  id="deal-lunch-special"
-                  value="$45"
-                  title="Lunch Hour Special"
-                  description="Available weekdays 11 AM - 2 PM on orders $80+"
-                  expiry="Valid until Jan 25, 2026"
-                  type="free"
-                  merchantId="merchant-123"
-                />
+            {!isLoading && coupons.length === 0 && (
+              <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+                No live coupons are available for this store yet.
               </div>
-            </div>
+            )}
+
+            {coupons.map((coupon) => (
+              <DealCard
+                key={coupon.id}
+                id={coupon.id}
+                title={coupon.title}
+                description={coupon.description}
+                expiry={`Valid until ${coupon.expiryDate.toLocaleDateString('en-US')}`}
+                expiryDate={coupon.expiryDate}
+                value={coupon.value || (coupon.price ? `$${coupon.price}` : 'FREE')}
+                type={coupon.type}
+                price={coupon.price}
+                merchantId={coupon.merchantId}
+                usageInstructions={coupon.usageInstructions}
+                merchantInfo={merchantInfo}
+              />
+            ))}
           </div>
-        ) : activeTab === 'menu' ? (
-          <div className="space-y-6">
-            {/* Pop Dishes Section */}
-            <div>
-              <h3 className="font-bold text-xl mb-4 text-gray-900 flex items-center gap-2">
-                <Flame className="w-6 h-6 text-[#FFA500]" />
-                Pop Dishes
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <PopDishCard
-                  image="https://images.unsplash.com/photo-1758275682464-ddd906bf34fe?w=400&q=80"
-                  name="Orange Chicken"
-                  price="13.99"
-                  rating={4.9}
-                  reviews={156}
-                  likes={243}
-                  description="Crispy chicken in tangy orange sauce"
-                />
-                <PopDishCard
-                  image="https://images.unsplash.com/photo-1767429013002-69b35cb45395?w=400&q=80"
-                  name="Kung Pao Shrimp"
-                  price="15.99"
-                  rating={4.8}
-                  reviews={124}
-                  likes={198}
-                  description="Spicy shrimp with peanuts and vegetables"
-                />
-                <PopDishCard
-                  image="https://images.unsplash.com/photo-1652937916838-09b9c2ff8b45?w=400&q=80"
-                  name="Beef Chow Mein"
-                  price="12.99"
-                  rating={4.7}
-                  reviews={98}
-                  likes={167}
-                  description="Stir-fried noodles with tender beef"
-                />
-                <PopDishCard
-                  image="https://images.unsplash.com/photo-1763689389824-dd2cea2e5772?w=400&q=80"
-                  name="Fried Rice Special"
-                  price="11.99"
-                  rating={4.8}
-                  reviews={142}
-                  likes={221}
-                  description="Classic fried rice with egg and vegetables"
-                />
-              </div>
-            </div>
+        )}
 
-            {/* Menu Upload Widget */}
-            <div>
-              <h3 className="font-bold text-xl mb-4 text-gray-900 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-[#FFA500]" />
-                Full Menu
-              </h3>
-              <MenuUploadWidget />
-            </div>
+        {activeTab === 'menu' && (
+          <div className="mt-8 rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+            Menu data is still mocked in the frontend. The store detail and coupon APIs are now live; menu integration can be done next.
           </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Overall Rating Summary */}
-            <div className="bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-2xl p-6 text-white text-center">
-              <div className="text-5xl font-bold mb-2">4.8</div>
-              <div className="flex items-center justify-center gap-1 mb-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="w-5 h-5 fill-white text-white" />
-                ))}
-              </div>
-              <p className="text-sm opacity-90">Based on 324 reviews</p>
-            </div>
+        )}
 
-            {/* View All Reviews Button */}
-            <button 
-              onClick={onViewAllReviews}
-              className="w-full bg-white border-2 border-[#FFA500] text-[#FFA500] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-50 transition-all"
-            >
-              View All Reviews
-              <ChevronRight className="w-5 h-5" />
-            </button>
-
-            {/* Reviews List */}
-            <div className="space-y-3">
-              <ReviewCard
-                username="Jessica Wang"
-                avatar="👩"
-                rating={5}
-                date="2 days ago"
-                comment="Amazing food! The orange chicken is perfectly crispy and the sauce is delicious. Service was fast and friendly. Definitely coming back!"
-                helpful={24}
-                images={[
-                  "https://images.unsplash.com/photo-1758275682464-ddd906bf34fe?w=200&q=80",
-                  "https://images.unsplash.com/photo-1767429013002-69b35cb45395?w=200&q=80"
-                ]}
-              />
-              <ReviewCard
-                username="David Chen"
-                avatar="👨"
-                rating={5}
-                date="5 days ago"
-                comment="Best Chinese food near campus! Portions are generous and prices are student-friendly. The lunch combo is a steal!"
-                helpful={18}
-              />
-              <ReviewCard
-                username="Emily Rose"
-                avatar="🙋‍♀️"
-                rating={4}
-                date="1 week ago"
-                comment="Great spot for quick lunch between classes. The noodles are always fresh and flavorful. Only minor complaint is it can get crowded during peak hours."
-                helpful={12}
-              />
-              <ReviewCard
-                username="Marcus Lee"
-                avatar="🧑"
-                rating={5}
-                date="2 weeks ago"
-                comment="The student discount makes this place unbeatable! Food quality is consistently good and staff remembers regulars."
-                helpful={31}
-              />
-            </div>
+        {activeTab === 'reviews' && (
+          <div className="mt-8 rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+            Reviews are not wired into this page yet. The next backend-aligned step is `/stores/:id/reviews`.
           </div>
         )}
       </div>
-
-      {/* Glossy Bottom Navigation */}
-      <GlossyBottomNav onBack={onBack} onWriteReview={onWriteReview} />
     </div>
   );
 }

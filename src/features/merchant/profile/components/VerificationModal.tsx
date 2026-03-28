@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../../routes/paths';
 import { Upload, CheckCircle, Loader2, FileText, User, Building } from 'lucide-react';
-import AccountSetupModal from './AccountSetupModal';
+import { verificationService } from '../../shared/services/verificationService';
 
 interface VerificationData {
   storefrontPhoto: File | null;
@@ -34,7 +34,6 @@ interface VerificationModalProps {
 const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'form' | 'pending' | 'success'>('form');
-  const [showAccountSetup, setShowAccountSetup] = useState(false);
   const [formData, setFormData] = useState<VerificationData>({
     storefrontPhoto: null,
     businessLicenseNumber: '',
@@ -47,60 +46,55 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [approvalTimer, setApprovalTimer] = useState(3);
 
   if (!isOpen) return null;
 
-  // Auto-approval simulation effect
   useEffect(() => {
-    if (currentView === 'pending') {
-      const timer = setInterval(() => {
-        setApprovalTimer((prev) => {
-          if (prev <= 1) {
-            setCurrentView('success');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    let isMounted = true;
 
-      return () => clearInterval(timer);
-    }
-  }, [currentView]);
+    const loadVerificationStatus = async () => {
+      try {
+        const status = await verificationService.getVerificationStatus();
+        if (!isMounted) {
+          return;
+        }
+        if (status.status === 'verified') {
+          setCurrentView('success');
+        } else if (status.status === 'pending') {
+          setCurrentView('pending');
+        } else {
+          setCurrentView('form');
+        }
+      } catch (error) {
+        console.error('Failed to load verification status:', error);
+        if (isMounted) {
+          setCurrentView('form');
+        }
+      }
+    };
+
+    loadVerificationStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
-
-    if (!formData.storefrontPhoto) {
-      newErrors.storefrontPhoto = 'Please upload a storefront photo';
-    }
+    const hasAnyDocument = Boolean(
+      formData.storefrontPhoto ||
+      formData.businessLicense ||
+      formData.healthPermit ||
+      formData.ownerIdUpload
+    );
 
     if (!formData.businessLicenseNumber.trim()) {
       newErrors.businessLicenseNumber = 'Please enter your business license number';
     }
 
-    if (!formData.ein.trim()) {
-      newErrors.ein = 'Please enter your EIN';
-    }
-
-    if (!formData.legalCompanyName.trim()) {
-      newErrors.legalCompanyName = 'Please enter your legal company name';
-    }
-
-    if (!formData.businessLicense) {
-      newErrors.businessLicense = 'Please upload your business license';
-    }
-
-    if (!formData.healthPermit) {
-      newErrors.healthPermit = 'Please upload your health permit';
-    }
-
-    if (!formData.ownerName.trim()) {
-      newErrors.ownerName = 'Please enter the owner name';
-    }
-
-    if (!formData.ownerIdUpload) {
-      newErrors.ownerIdUpload = 'Please upload owner ID';
+    if (!hasAnyDocument) {
+      newErrors.storefrontPhoto = 'Please upload at least one verification document';
     }
 
     setErrors(newErrors);
@@ -150,76 +144,35 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const documentUrl = [
+        formData.storefrontPhoto?.name,
+        formData.businessLicense?.name,
+        formData.healthPermit?.name,
+        formData.ownerIdUpload?.name,
+      ].filter(Boolean).join(', ');
 
-    setIsSubmitting(false);
-    setCurrentView('pending');
-    setApprovalTimer(3); // Reset timer
+      const result = await verificationService.submitVerification({
+        documentType: 'business_license',
+        documentUrl,
+        businessLicense: formData.businessLicenseNumber,
+      });
+
+      setCurrentView(result.status === 'verified' ? 'success' : 'pending');
+    } catch (error) {
+      console.error('Failed to submit verification:', error);
+      setErrors(prev => ({
+        ...prev,
+        businessLicenseNumber: 'Failed to submit verification. Please try again.',
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEnterDashboard = () => {
-    // Instead of navigating directly, show the account setup modal
-    setShowAccountSetup(true);
+    navigate(PATHS.MERCHANT.DASHBOARD);
   };
-
-  const handleAccountSetupClose = () => {
-    setShowAccountSetup(false);
-    // If they close account setup, they can still access it again
-  };
-
-  // Development helper - can be called from browser console
-  if (typeof window !== 'undefined') {
-    (window as any).resetMerchantVerification = (userId?: string) => {
-      if (userId) {
-        localStorage.removeItem(`merchantVerificationCompleted_${userId}`);
-        console.log(`Merchant verification status reset for user ${userId}. Refresh the page to see the modal again.`);
-      } else {
-        // Reset for current user
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          try {
-            const user = JSON.parse(userData);
-            localStorage.removeItem(`merchantVerificationCompleted_${user.id}`);
-            console.log(`Merchant verification status reset for current user ${user.id}. Refresh the page to see the modal again.`);
-          } catch (error) {
-            console.error('Error parsing user data:', error);
-          }
-        }
-        // Also reset the legacy key
-        localStorage.removeItem('merchantVerificationCompleted');
-        console.log('Merchant verification status reset. Refresh the page to see the modal again.');
-      }
-    };
-
-    // Helper to create demo merchant user
-    (window as any).createDemoMerchant = () => {
-      const demoUser = {
-        id: 'demo_merchant',
-        email: 'merchant@demo.com',
-        name: 'Demo Merchant',
-        avatar: 'DM',
-        role: 'merchant',
-        merchantProfile: {
-          businessId: 'demo_biz_123',
-          verificationStatus: 'pending',
-          subscriptionTier: 'basic',
-          joinDate: new Date()
-        }
-      };
-      
-      localStorage.setItem('authToken', 'demo-token');
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      console.log('Demo merchant user created. Refresh the page to see the changes.');
-      return demoUser;
-    };
-
-    // Helper to clear all data and start fresh
-    (window as any).clearAllData = () => {
-      localStorage.clear();
-      console.log('All localStorage data cleared. Refresh the page to start fresh.');
-    };
-  }
 
   // Helper component for file upload fields
   const FileUploadField: React.FC<{
@@ -507,7 +460,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
                 <Loader2 className="mx-auto h-16 w-16 text-blue-500 animate-spin" />
                 <p className="text-lg font-medium text-gray-900 mt-4">Pending Approval</p>
                 <p className="text-gray-600 mt-2">
-                  Your verification is being processed... ({approvalTimer}s)
+                  Your verification is being processed.
                 </p>
               </div>
 
@@ -589,12 +542,6 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
           </>
         )}
       </div>
-
-      {/* Account Setup Modal */}
-      <AccountSetupModal
-        isOpen={showAccountSetup}
-        onClose={handleAccountSetupClose}
-      />
     </div>
   );
 };

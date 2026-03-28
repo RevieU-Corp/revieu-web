@@ -17,6 +17,7 @@ interface CouponPaymentSuccessState {
   couponData?: CouponPaymentData;
   merchantInfo?: MerchantInfo;
   isCouponPayment: boolean;
+  voucher?: Voucher | null;
 }
 
 const CouponPaymentSuccessPage: React.FC = () => {
@@ -41,60 +42,50 @@ const CouponPaymentSuccessPage: React.FC = () => {
     isCouponPayment: false
   };
 
-  const { couponData, merchantInfo, isCouponPayment } = paymentData;
+  const { couponData, merchantInfo, isCouponPayment, voucher: initialVoucher } = paymentData;
 
-  // Generate voucher after successful payment
   useEffect(() => {
-    const generateVoucher = async () => {
-      if (!isCouponPayment || !couponData) {
+    let cancelled = false;
+
+    const loadVoucher = async () => {
+      if (!isCouponPayment) {
+        setIsGeneratingVoucher(false);
+        return;
+      }
+
+      if (!initialVoucher) {
         setIsGeneratingVoucher(false);
         return;
       }
 
       try {
         setIsGeneratingVoucher(true);
-        
-        // Create a coupon object from the payment data
-        const couponForVoucher = {
-          id: couponData.couponId,
-          merchantId: couponData.merchantInfo.id,
-          title: couponData.dealInfo.title,
-          description: couponData.dealInfo.description,
-          type: couponData.dealInfo.type,
-          value: couponData.dealInfo.value,
-          price: couponData.paymentAmount,
-          expiryDate: couponData.dealInfo.expiryDate,
-          maxRedemptions: undefined,
-          currentRedemptions: 0,
-          eligibilityRules: [],
-          usageInstructions: couponData.dealInfo.usageInstructions,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
+        if (!cancelled) {
+          setVoucher(initialVoucher);
+        }
 
-        // Generate voucher using the voucher service
-        const voucherResult = await voucherService.generateVoucher(
-          couponForVoucher, 
-          paymentData.orderNumber
-        );
-
-        if (voucherResult.success && voucherResult.voucher) {
-          setVoucher(voucherResult.voucher);
-          setQrCodeDataUrl(voucherResult.qrCodeDataUrl);
-        } else {
-          setVoucherError(voucherResult.message || 'Failed to generate voucher');
+        const qrCode = await voucherService.generateQRCode(initialVoucher.code);
+        if (!cancelled) {
+          setQrCodeDataUrl(qrCode);
         }
       } catch (error) {
         console.error('Error generating voucher:', error);
-        setVoucherError('Failed to generate voucher. Please contact support.');
+        if (!cancelled) {
+          setVoucherError('Failed to generate voucher QR code. Please contact support.');
+        }
       } finally {
-        setIsGeneratingVoucher(false);
+        if (!cancelled) {
+          setIsGeneratingVoucher(false);
+        }
       }
     };
 
-    generateVoucher();
-  }, [isCouponPayment, couponData, paymentData.orderNumber]);
+    void loadVoucher();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialVoucher, isCouponPayment]);
 
   const handleCopyCode = async () => {
     try {

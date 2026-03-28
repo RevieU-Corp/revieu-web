@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../../routes/paths';
 import { ArrowLeft, MoreVertical } from 'lucide-react';
-import { ChatItem, ChatMessage, CURRENT_USER } from '../../shared/types/chat';
-import { mockChats, getMessagesForChat } from '../../shared/utils/mockData';
-import { initializeMessagesForChat, addMessageToChat, clearMessagesForChat, syncMessageStorageWithChatMetadata } from '../../shared/utils/messageStorage';
-import { updateChatLastMessage } from '../../shared/utils/chatStorage';
-import { getChatSettings, toggleChatMute, toggleChatPin } from '../../shared/utils/chatSettings';
+import { ChatItem, ChatMessage } from '../../shared/types/chat';
+import { messagingService } from '../../shared/services/messagingService';
+import { useAuth } from '../../../../contexts/AuthContext';
 import MessageBubble from '../components/MessageBubble';
 import MessageInput from '../components/MessageInput';
 import ChatSettingsDrawer from '../components/ChatSettingsDrawer';
@@ -14,6 +12,7 @@ import ChatSettingsDrawer from '../components/ChatSettingsDrawer';
 const ChatDetail: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [chat, setChat] = useState<ChatItem | null>(null);
@@ -48,67 +47,43 @@ const ChatDetail: React.FC = () => {
       return;
     }
 
-    // Sync message storage with chat metadata before loading
-    syncMessageStorageWithChatMetadata();
+    let isMounted = true;
 
-    // Try to find the chat in mockChats first
-    let foundChat = mockChats.find(c => c.id === chatId);
-
-    // If not found in mockChats, check localStorage for all chats (including newly created groups)
-    if (!foundChat) {
+    const loadConversation = async () => {
       try {
-        const storedChats = localStorage.getItem('merchant_all_chats');
-        if (storedChats) {
-          const allChats = JSON.parse(storedChats);
-          foundChat = allChats.find((c: ChatItem) => c.id === chatId);
+        const [conversations, conversationMessages] = await Promise.all([
+          messagingService.listConversations(),
+          messagingService.getConversationMessages(chatId),
+        ]);
+        if (!isMounted) {
+          return;
         }
+        const foundChat = conversations.find((conversation) => conversation.id === chatId) || null;
+        if (!foundChat) {
+          navigate(PATHS.MERCHANT.MESSAGES);
+          return;
+        }
+        setChat(foundChat);
+        setMessages(conversationMessages);
+        setChatSettings({
+          isMuted: Boolean(foundChat.isMuted),
+          isPinned: Boolean(foundChat.isPinned),
+        });
       } catch (error) {
-        console.error('Error loading chat from storage:', error);
-      }
-    }
-
-    // If still not found, check sessionStorage for newly created groups (fallback)
-    if (!foundChat) {
-      const storedChat = sessionStorage.getItem(`chat_${chatId}`);
-      if (storedChat) {
-        try {
-          foundChat = JSON.parse(storedChat);
-        } catch (error) {
-          console.error('Error parsing stored chat data:', error);
+        console.error('Error loading conversation:', error);
+        navigate(PATHS.MERCHANT.MESSAGES);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
-    }
+    };
 
-    // If still not found and it's a group, create a fallback
-    if (!foundChat && chatId.startsWith('group_')) {
-      foundChat = {
-        id: chatId,
-        name: 'Unknown Group',
-        avatar: '',
-        lastMessage: 'Group chat',
-        timestamp: 'now',
-        unreadCount: 0,
-        isOnline: false
-      };
-    }
+    loadConversation();
 
-    if (foundChat) {
-      setChat(foundChat);
-      // Load messages for this chat with persistence and reconstruction
-      const mockMessages = getMessagesForChat(chatId);
-      const persistentMessages = initializeMessagesForChat(chatId, mockMessages);
-      setMessages(persistentMessages);
-
-      // Load chat settings
-      const settings = getChatSettings(chatId);
-      setChatSettings(settings);
-    } else {
-      // If chat still not found, redirect back to messages
-      navigate(PATHS.MERCHANT.MESSAGES);
-      return;
-    }
-
-    setIsLoading(false);
+    return () => {
+      isMounted = false;
+    };
   }, [chatId, navigate]);
 
   const handleBack = () => {
@@ -118,39 +93,17 @@ const ChatDetail: React.FC = () => {
   const handleSendMessage = (content: string, file?: File) => {
     if (!chat || (!content.trim() && !file)) return;
 
-    const messageContent = content.trim() || (file ? `📎 ${file.name}` : '');
+    const messageContent = content.trim() || (file ? `Attachment: ${file.name}` : '');
 
-    const newMessage: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      chatId: chat.id,
-      senderId: CURRENT_USER.id,
-      senderName: CURRENT_USER.name,
-      senderAvatar: CURRENT_USER.avatar,
-      content: messageContent,
-      timestamp: 'now',
-      type: file ? (file.type.startsWith('image/') ? 'image' : 'file') : 'text',
-      isRead: false,
-      ...(file && {
-        fileName: file.name,
-        fileSize: file.size,
-        fileUrl: URL.createObjectURL(file) // In real app, this would be uploaded to server
+    void messagingService.sendMessage(chat.id, messageContent)
+      .then((newMessage) => {
+        setMessages((prev) => [...prev, newMessage]);
+        setChat((prev) => prev ? { ...prev, lastMessage: newMessage.content, timestamp: 'now' } : prev);
+        window.dispatchEvent(new CustomEvent('conversationUpdated'));
       })
-    };
-
-    // Add to local state immediately for instant UI update
-    setMessages(prev => [...prev, newMessage]);
-
-    // Persist the message to localStorage
-    addMessageToChat(chat.id, newMessage);
-
-    // Update the chat's last message in the chat list
-    updateChatLastMessage(chat.id, messageContent, 'now');
-
-    // Notify Messages component to refresh
-    window.dispatchEvent(new CustomEvent('chatUpdated'));
-
-    // TODO: In a real app, you would upload the file and send message to your backend
-    console.log('Sending message:', newMessage);
+      .catch((error) => {
+        console.error('Failed to send message:', error);
+      });
   };
 
   const getInitials = (name: string) => {
@@ -168,18 +121,22 @@ const ChatDetail: React.FC = () => {
 
   const handleMuteNotifications = () => {
     if (!chat) return;
-    const newMuteStatus = toggleChatMute(chat.id);
-    setChatSettings(prev => ({ ...prev, isMuted: newMuteStatus }));
-    // Notify Messages component to refresh
-    window.dispatchEvent(new CustomEvent('chatUpdated'));
+    const newMuteStatus = !chatSettings.isMuted;
+    void messagingService.updateConversationSettings(chat.id, newMuteStatus)
+      .then((updatedConversation) => {
+        setChat(updatedConversation);
+        setChatSettings(prev => ({ ...prev, isMuted: newMuteStatus }));
+        window.dispatchEvent(new CustomEvent('conversationUpdated'));
+      })
+      .catch((error) => {
+        console.error('Failed to update conversation settings:', error);
+      });
   };
 
   const handlePinChat = () => {
     if (!chat) return;
-    const newPinStatus = toggleChatPin(chat.id);
+    const newPinStatus = !chatSettings.isPinned;
     setChatSettings(prev => ({ ...prev, isPinned: newPinStatus }));
-    // Notify Messages component to refresh
-    window.dispatchEvent(new CustomEvent('chatUpdated'));
   };
 
   const handleClearMessages = () => {
@@ -191,14 +148,7 @@ const ChatDetail: React.FC = () => {
     );
 
     if (confirmed) {
-      // Clear messages from local state
       setMessages([]);
-      // Clear from persistent storage
-      clearMessagesForChat(chat.id);
-      // Update chat's last message
-      updateChatLastMessage(chat.id, 'No messages', 'now');
-      // Notify Messages component to refresh
-      window.dispatchEvent(new CustomEvent('chatUpdated'));
       setIsSettingsDrawerOpen(false);
     }
   };
@@ -316,7 +266,7 @@ const ChatDetail: React.FC = () => {
           <div className="p-4">
             <div className="space-y-1">
               {messages.map((message, index) => {
-                const isOwnMessage = message.senderId === CURRENT_USER.id;
+                const isOwnMessage = message.senderId === String(user?.id ?? '');
                 const prevMessage = messages[index - 1];
                 const showAvatar = !prevMessage || prevMessage.senderId !== message.senderId;
 

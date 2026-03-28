@@ -10,24 +10,10 @@ const RestaurantDetailPage: React.FC = () => {
     navigate(PATHS.CUSTOMER.DISCOVER);
   };
 
-  const handleViewAllReviews = () => {
-    const merchantId = id ?? '1';
-    navigate(`/customer/merchant/${merchantId}/reviews`);
-  };
-
-  const handleWriteReview = () => {
-    navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
-      state: {
-        merchantId: id,
-      },
-    });
-  };
-
   return (
     <RestaurantDetail 
+      storeId={id}
       onBack={handleBack}
-      onViewAllReviews={handleViewAllReviews}
-      onWriteReview={handleWriteReview}
     />
   );
 };

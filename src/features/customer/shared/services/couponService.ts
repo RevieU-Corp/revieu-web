@@ -1,591 +1,236 @@
 import { apiClient } from '../../../../api/apiClient';
 import {
   Coupon,
+  PaymentFlowResult,
+  ValidationErrorCode,
   ValidationResult,
   VoucherResult,
-  PaymentFlowResult,
-  ValidationErrorCode
 } from '../types/coupons';
 import { CouponService } from '../types/services';
-import { errorHandlingService } from './errorHandlingService';
+import { voucherService } from './voucherService';
 
-/**
- * Implementation of the CouponService interface
- * Handles coupon validation, redemption, and payment flow initiation
- */
+type BackendCoupon = {
+  id: number | string;
+  merchant_id: number | string;
+  title: string;
+  description?: string | null;
+  coupon_type?: string | null;
+  value?: string | null;
+  price?: number | null;
+  total_quantity?: number | null;
+  claimed_count?: number | null;
+  terms?: string | null;
+  expiry_date?: string | null;
+  valid_until?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+const DEFAULT_USAGE_INSTRUCTIONS = 'Show this voucher to the merchant to redeem your deal.';
+
+const parseDate = (value?: string | null): Date | undefined => {
+  if (!value || value.startsWith('0001-01-01T00:00:00')) {
+    return undefined;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const toValidationError = (message: string, code: ValidationErrorCode): ValidationResult => ({
+  isValid: false,
+  errorCode: code,
+  errorMessage: message,
+});
+
 export class CouponServiceImpl implements CouponService {
-  
-  /**
-   * Validates a coupon for a specific user with retry logic
-   * Checks availability, expiry, stock, and user eligibility
-   */
-  async validateCoupon(couponId: string, userId: string): Promise<ValidationResult> {
-    return errorHandlingService.retryWithBackoff(async () => {
-      try {
-        // First, get the coupon data
-        const coupon = await this.getCouponById(couponId);
-        
-        // Check basic availability
-        const availabilityResult = await this.validateCouponAvailability(coupon);
-        if (!availabilityResult.isValid) {
-          // Add suggested alternatives for failed validation
-          const alternatives = await errorHandlingService.getSuggestedAlternatives(
-            coupon, 
-            availabilityResult.errorCode!, 
-            userId
-          );
-          return {
-            ...availabilityResult,
-            suggestedAlternatives: alternatives
-          };
-        }
-        
-        // Check user eligibility
-        const eligibilityResult = await this.validateUserEligibility(coupon, userId);
-        if (!eligibilityResult.isValid) {
-          const alternatives = await errorHandlingService.getSuggestedAlternatives(
-            coupon, 
-            eligibilityResult.errorCode!, 
-            userId
-          );
-          return {
-            ...eligibilityResult,
-            suggestedAlternatives: alternatives
-          };
-        }
-        
-        // Check if user has already redeemed this coupon (for single-use coupons)
-        const hasRedeemed = await this.hasUserRedeemedCoupon(couponId, userId);
-        if (hasRedeemed && this.isSingleUseCoupon(coupon)) {
-          const alternatives = await errorHandlingService.getSuggestedAlternatives(
-            coupon, 
-            'ALREADY_REDEEMED', 
-            userId
-          );
-          
-          return {
-            isValid: false,
-            errorCode: 'ALREADY_REDEEMED',
-            errorMessage: errorHandlingService.getValidationErrorMessage('ALREADY_REDEEMED'),
-            eligibilityInfo: {
-              isEligible: false,
-              failedRules: [{
-                type: 'single_use',
-                value: true,
-                description: 'This coupon can only be redeemed once per user'
-              }],
-              requirements: ['This coupon can only be used once per user']
-            },
-            suggestedAlternatives: alternatives
-          };
-        }
-        
-        // All validations passed
-        return {
-          isValid: true,
-          eligibilityInfo: {
-            isEligible: true,
-            failedRules: [],
-            requirements: []
-          }
-        };
-        
-      } catch (error) {
-        errorHandlingService.logError(error, 'validateCoupon');
-        return this.handleValidationError(error);
-      }
-    }, 3, 1000); // 3 retries with 1 second base delay
-  }
-  
-  /**
-   * Redeems a free coupon and generates a voucher with retry logic
-   * Using mock implementation for development until backend is ready
-   */
-  async redeemFreeCoupon(couponId: string, userId: string): Promise<VoucherResult> {
-    return errorHandlingService.retryWithBackoff(async () => {
-      try {
-        // Validate the coupon first
-        const validationResult = await this.validateCoupon(couponId, userId);
-        if (!validationResult.isValid) {
-          throw new Error(validationResult.errorMessage || 'Coupon validation failed');
-        }
-        
-        // Get coupon data
-        const coupon = await this.getCouponById(couponId);
-        
-        // Ensure it's a free coupon
-        if (coupon.type !== 'free') {
-          throw new Error('This coupon requires payment');
-        }
-        
-        // Mock voucher generation for development
-        const mockVoucher = {
-          id: `voucher-${Date.now()}`,
-          code: this.generateVoucherCode(),
-          couponId: couponId,
-          userId: userId,
-          merchantId: coupon.merchantId,
-          status: 'active' as const,
-          generatedAt: new Date(),
-          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          usedAt: undefined,
-          qrCode: '',
-          paymentId: undefined,
-          usageInstructions: coupon.usageInstructions,
-          merchantName: 'Sample Merchant',
-          dealTitle: coupon.title,
-          dealValue: coupon.value
-        };
-        
-        // Generate QR code data URL (mock)
-        const qrCodeDataUrl = this.generateMockQRCode(mockVoucher.code);
-        
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        return {
-          voucher: mockVoucher,
-          qrCodeDataUrl: qrCodeDataUrl,
-          success: true,
-          message: 'Coupon redeemed successfully'
-        };
-        
-        // TODO: Replace with real API call when backend is ready
-        // const response = await apiClient.post(`/coupons/${couponId}/redeem`, {
-        //   userId,
-        //   type: 'free'
-        // });
-        // return {
-        //   voucher: response.data.voucher,
-        //   qrCodeDataUrl: response.data.qrCodeDataUrl,
-        //   success: true,
-        //   message: 'Coupon redeemed successfully'
-        // };
-        
-      } catch (error) {
-        errorHandlingService.logError(error, 'redeemFreeCoupon');
-        return {
-          voucher: {} as any,
-          qrCodeDataUrl: '',
-          success: false,
-          message: errorHandlingService.getValidationErrorMessage(
-            this.extractErrorCode(error),
-            { originalMessage: this.getErrorMessage(error) }
-          )
-        };
-      }
-    }, 3, 1000);
-  }
-  
-  /**
-   * Initiates the payment flow for a paid coupon with retry logic
-   */
-  async initiatePaidCouponFlow(couponId: string, userId: string): Promise<PaymentFlowResult> {
-    return errorHandlingService.retryWithBackoff(async () => {
-      try {
-        // Validate the coupon first
-        const validationResult = await this.validateCoupon(couponId, userId);
-        if (!validationResult.isValid) {
-          throw new Error(validationResult.errorMessage || 'Coupon validation failed');
-        }
-        
-        // Get coupon data
-        const coupon = await this.getCouponById(couponId);
-        
-        // Ensure it's a paid coupon
-        if (coupon.type !== 'paid' || !coupon.price) {
-          throw new Error('This coupon does not require payment');
-        }
-        
-        // Call API to initiate payment flow
-        const response = await apiClient.post(`/coupons/${couponId}/payment/initiate`, {
-          userId
-        });
-        
-        return {
-          paymentUrl: response.data.paymentUrl,
-          paymentData: response.data.paymentData,
-          sessionId: response.data.sessionId
-        };
-        
-      } catch (error) {
-        errorHandlingService.logError(error, 'initiatePaidCouponFlow');
-        throw error;
-      }
-    }, 3, 1000);
-  }
-  
-  /**
-   * Retrieves coupon details by ID
-   * Using mock data for development until backend is ready
-   */
-  async getCouponById(couponId: string): Promise<Coupon> {
+  private couponCache = new Map<string, Coupon>();
+
+  async validateCoupon(couponId: string, _userId: string): Promise<ValidationResult> {
     try {
-      // Mock data for development - replace with real API call when backend is ready
-      const mockCoupon: Coupon = {
-        id: couponId,
-        merchantId: 'merchant-123',
-        title: 'Sample Deal',
-        description: 'This is a sample coupon for testing',
-        type: 'free',
-        value: '20% OFF',
-        price: undefined,
-        expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        maxRedemptions: 100,
-        currentRedemptions: 5,
-        eligibilityRules: [],
-        usageInstructions: 'Present this voucher to the merchant to redeem your discount.',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return mockCoupon;
-      
-      // TODO: Replace with real API call when backend is ready
-      // const response = await apiClient.get(`/coupons/${couponId}`);
-      // return response.data;
-    } catch (error) {
-      console.error('Error fetching coupon:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Gets available coupons for a merchant
-   */
-  async getAvailableCoupons(merchantId: string, userId: string): Promise<Coupon[]> {
-    try {
-      const response = await apiClient.get(`/merchants/${merchantId}/coupons`, {
-        params: { userId }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching available coupons:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Checks if a user has already redeemed a specific coupon
-   * Using mock implementation for development until backend is ready
-   */
-  async hasUserRedeemedCoupon(_couponId: string, _userId: string): Promise<boolean> {
-    try {
-      // Mock implementation - always return false for development
-      // This allows testing the redemption flow
-      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate network delay
-      return false;
-      
-      // TODO: Replace with real API call when backend is ready
-      // const response = await apiClient.get(`/coupons/${couponId}/redemptions/${userId}`);
-      // return response.data.hasRedeemed;
-    } catch (error: any) {
-      // If the endpoint returns 404, assume not redeemed
-      if (error.response?.status === 404) {
-        return false;
+      const response = await apiClient.post(`/coupons/${couponId}/validate`, { quantity: 1 });
+      const result = response.data?.data ?? response.data;
+
+      if (!result?.is_valid) {
+        return toValidationError('This coupon is not available', 'INACTIVE');
       }
-      console.error('Error checking coupon redemption:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Validates coupon availability (expiry, stock, active status)
-   */
-  private async validateCouponAvailability(coupon: Coupon): Promise<ValidationResult> {
-    // Check if coupon is active
-    if (!coupon.isActive) {
-      return {
-        isValid: false,
-        errorCode: 'INACTIVE',
-        errorMessage: errorHandlingService.getValidationErrorMessage('INACTIVE')
-      };
-    }
-    
-    // Check expiry
-    const now = new Date();
-    if (coupon.expiryDate <= now) {
-      return {
-        isValid: false,
-        errorCode: 'EXPIRED',
-        errorMessage: errorHandlingService.getValidationErrorMessage('EXPIRED', {
-          expiryDate: coupon.expiryDate
-        })
-      };
-    }
-    
-    // Check stock availability
-    if (coupon.maxRedemptions && coupon.currentRedemptions >= coupon.maxRedemptions) {
-      return {
-        isValid: false,
-        errorCode: 'OUT_OF_STOCK',
-        errorMessage: errorHandlingService.getValidationErrorMessage('OUT_OF_STOCK')
-      };
-    }
-    
-    return {
-      isValid: true
-    };
-  }
-  
-  /**
-   * Validates user eligibility based on coupon rules
-   */
-  private async validateUserEligibility(coupon: Coupon, userId: string): Promise<ValidationResult> {
-    try {
-      // Get user profile for eligibility checking
-      const userProfile = await this.getUserProfile(userId);
-      
-      const failedRules = [];
-      const requirements = [];
-      
-      for (const rule of coupon.eligibilityRules) {
-        const ruleResult = await this.validateEligibilityRule(rule, userProfile);
-        if (!ruleResult.isValid) {
-          failedRules.push(rule);
-          requirements.push(ruleResult.requirement);
-        }
-      }
-      
-      if (failedRules.length > 0) {
-        return {
-          isValid: false,
-          errorCode: 'NOT_ELIGIBLE',
-          errorMessage: errorHandlingService.getValidationErrorMessage('NOT_ELIGIBLE', {
-            requirements
-          }),
-          eligibilityInfo: {
-            isEligible: false,
-            failedRules,
-            requirements
-          }
-        };
-      }
-      
+
       return {
         isValid: true,
         eligibilityInfo: {
           isEligible: true,
           failedRules: [],
-          requirements: []
-        }
+          requirements: [],
+        },
       };
-      
     } catch (error) {
-      errorHandlingService.logError(error as Error, 'validateUserEligibility');
+      return this.handleValidationError(error);
+    }
+  }
+
+  async redeemFreeCoupon(couponId: string, userId: string): Promise<VoucherResult> {
+    const validationResult = await this.validateCoupon(couponId, userId);
+    if (!validationResult.isValid) {
       return {
-        isValid: false,
-        errorCode: 'SERVER_ERROR',
-        errorMessage: errorHandlingService.getValidationErrorMessage('SERVER_ERROR')
+        voucher: {} as VoucherResult['voucher'],
+        qrCodeDataUrl: '',
+        success: false,
+        message: validationResult.errorMessage,
       };
     }
-  }
-  
-  /**
-   * Validates a specific eligibility rule against user profile
-   */
-  private async validateEligibilityRule(rule: any, userProfile: any): Promise<{ isValid: boolean; requirement: string }> {
-    switch (rule.type) {
-      case 'new_user':
-        const isNewUser = userProfile.createdAt && 
-          (new Date().getTime() - new Date(userProfile.createdAt).getTime()) < (rule.value * 24 * 60 * 60 * 1000);
-        return {
-          isValid: isNewUser,
-          requirement: `Must be a new user (registered within ${rule.value} days)`
-        };
-        
-      case 'membership_level':
-        return {
-          isValid: userProfile.membershipLevel === rule.value,
-          requirement: `Must have ${rule.value} membership level`
-        };
-        
-      case 'previous_purchase':
-        const hasPreviousPurchase = userProfile.totalPurchases >= rule.value;
-        return {
-          isValid: hasPreviousPurchase,
-          requirement: `Must have made at least ${rule.value} previous purchases`
-        };
-        
-      case 'location':
-        // This would require location checking logic
-        return {
-          isValid: true, // Placeholder - implement based on requirements
-          requirement: `Must be in ${rule.value} location`
-        };
-        
-      case 'age_restriction':
-        const age = userProfile.age || 0;
-        return {
-          isValid: age >= rule.value,
-          requirement: `Must be at least ${rule.value} years old`
-        };
-        
-      case 'single_use':
-        // This is handled separately in the main validation
-        return {
-          isValid: true,
-          requirement: 'Can only be used once per user'
-        };
-        
-      default:
-        return {
-          isValid: true,
-          requirement: rule.description
-        };
-    }
-  }
-  
-  /**
-   * Gets user profile for eligibility checking
-   * Using mock implementation for development until backend is ready
-   */
-  private async getUserProfile(userId: string): Promise<any> {
-    try {
-      // Mock user profile for development
-      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate network delay
-      
+
+    const coupon = await this.getCouponById(couponId);
+    if (coupon.type !== 'free') {
       return {
-        id: userId,
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        membershipLevel: 'basic',
-        totalPurchases: 2,
-        age: 25
-      };
-      
-      // TODO: Replace with real API call when backend is ready
-      // const response = await apiClient.get(`/users/${userId}/profile`);
-      // return response.data;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      // Return minimal profile to avoid blocking validation
-      return {
-        id: userId,
-        createdAt: new Date(),
-        membershipLevel: 'basic',
-        totalPurchases: 0,
-        age: 18
+        voucher: {} as VoucherResult['voucher'],
+        qrCodeDataUrl: '',
+        success: false,
+        message: 'This coupon requires payment',
       };
     }
+
+    return voucherService.generateVoucher(coupon, userId);
   }
-  
-  /**
-   * Checks if a coupon is single-use
-   */
-  private isSingleUseCoupon(coupon: Coupon): boolean {
-    return coupon.eligibilityRules.some(rule => rule.type === 'single_use');
-  }
-  
-  /**
-   * Extracts error code from error object
-   */
-  private extractErrorCode(error: any): ValidationErrorCode {
-    if (error.response?.data?.errorCode) {
-      return error.response.data.errorCode;
+
+  async initiatePaidCouponFlow(couponId: string, userId: string): Promise<PaymentFlowResult> {
+    const validationResult = await this.validateCoupon(couponId, userId);
+    if (!validationResult.isValid) {
+      throw new Error(validationResult.errorMessage || 'Coupon validation failed');
     }
-    
-    if (error.code === 'NETWORK_ERROR' || !error.response) {
-      return 'NETWORK_ERROR';
+
+    const coupon = await this.getCouponById(couponId);
+    if (coupon.type !== 'paid' || coupon.price === undefined) {
+      throw new Error('This coupon does not require payment');
     }
-    
-    // Check for specific HTTP status codes
-    if (error.response?.status) {
-      switch (error.response.status) {
-        case 404:
-          return 'INACTIVE';
-        case 400:
-          return 'INVALID_REQUEST' as ValidationErrorCode;
-        case 429:
-          return 'SERVER_ERROR'; // Rate limiting
-        case 503:
-          return 'SERVER_ERROR'; // Service unavailable
-        default:
-          return 'SERVER_ERROR';
-      }
-    }
-    
-    return 'SERVER_ERROR';
-  }
-  
-  /**
-   * Handles validation errors and returns appropriate ValidationResult
-   */
-  private handleValidationError(error: any): ValidationResult {
-    const errorCode = this.extractErrorCode(error);
-    const redemptionError = errorHandlingService.createRedemptionError(
-      errorCode,
-      undefined,
-      { originalError: error }
-    );
-    
+
     return {
-      isValid: false,
-      errorCode: redemptionError.code,
-      errorMessage: redemptionError.message
+      paymentUrl: '',
+      sessionId: `coupon-${couponId}`,
+      paymentData: {
+        couponId,
+        userId,
+        currency: '$',
+        paymentAmount: coupon.price,
+        merchantInfo: {
+          id: coupon.merchantId,
+          name: '',
+          logo: '',
+          address: '',
+          phone: '',
+        },
+        dealInfo: {
+          id: coupon.id,
+          title: coupon.title,
+          description: coupon.description,
+          value: coupon.value,
+          type: coupon.type,
+          price: coupon.price,
+          expiryDate: coupon.expiryDate,
+          usageInstructions: coupon.usageInstructions,
+        },
+      },
     };
   }
-  
-  /**
-   * Gets user-friendly error message from error object
-   */
-  private getErrorMessage(error: any): string {
-    if (error.response?.data?.message) {
-      return error.response.data.message;
+
+  async getCouponById(couponId: string): Promise<Coupon> {
+    const coupon = this.couponCache.get(couponId);
+    if (!coupon) {
+      throw new Error('Coupon data is not loaded');
     }
-    if (error.message) {
+
+    return coupon;
+  }
+
+  async getAvailableCoupons(storeId: string, _userId: string): Promise<Coupon[]> {
+    const response = await apiClient.get(`/stores/${storeId}/coupons`);
+    const rawCoupons = Array.isArray(response.data) ? response.data : response.data?.data ?? [];
+    const coupons = (rawCoupons as BackendCoupon[]).map((coupon) => this.mapCoupon(coupon));
+
+    coupons.forEach((coupon) => {
+      this.couponCache.set(coupon.id, coupon);
+    });
+
+    return coupons;
+  }
+
+  async hasUserRedeemedCoupon(_couponId: string, _userId: string): Promise<boolean> {
+    return false;
+  }
+
+  private mapCoupon(raw: BackendCoupon): Coupon {
+    const price = raw.price ?? undefined;
+    const isPaid = (raw.coupon_type ?? '').toLowerCase() === 'paid' || (price ?? 0) > 0;
+    const expiryDate = parseDate(raw.valid_until) ?? parseDate(raw.expiry_date) ?? new Date();
+    const createdAt = parseDate(raw.created_at) ?? new Date();
+    const updatedAt = parseDate(raw.updated_at) ?? createdAt;
+
+    return {
+      id: String(raw.id),
+      merchantId: String(raw.merchant_id),
+      title: raw.title,
+      description: raw.description ?? '',
+      type: isPaid ? 'paid' : 'free',
+      value: raw.value ?? '',
+      price,
+      expiryDate,
+      maxRedemptions: raw.total_quantity ?? undefined,
+      currentRedemptions: raw.claimed_count ?? 0,
+      eligibilityRules: [],
+      usageInstructions: raw.terms?.trim() || DEFAULT_USAGE_INSTRUCTIONS,
+      isActive: raw.status === 'active',
+      createdAt,
+      updatedAt,
+    };
+  }
+
+  private handleValidationError(error: unknown): ValidationResult {
+    const message = this.getBackendErrorMessage(error).toLowerCase();
+
+    if (message.includes('expired')) {
+      return toValidationError('This coupon has expired', 'EXPIRED');
+    }
+    if (message.includes('sold out')) {
+      return toValidationError('This coupon is no longer available', 'OUT_OF_STOCK');
+    }
+    if (message.includes('inactive')) {
+      return toValidationError('This coupon is not active', 'INACTIVE');
+    }
+    if (message.includes('per-user') || message.includes('limit')) {
+      return toValidationError('You have already reached the limit for this coupon', 'ALREADY_REDEEMED');
+    }
+    if (message.includes('network')) {
+      return toValidationError('Network error. Please try again.', 'NETWORK_ERROR');
+    }
+
+    return toValidationError(
+      this.getBackendErrorMessage(error) || 'Unable to validate coupon',
+      'SERVER_ERROR'
+    );
+  }
+
+  private getBackendErrorMessage(error: unknown): string {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof error.response === 'object' &&
+      error.response !== null &&
+      'data' in error.response &&
+      typeof error.response.data === 'object' &&
+      error.response.data !== null &&
+      'error' in error.response.data &&
+      typeof error.response.data.error === 'string'
+    ) {
+      return error.response.data.error;
+    }
+
+    if (error instanceof Error) {
       return error.message;
     }
-    return 'An unexpected error occurred';
-  }
 
-  /**
-   * Generates a random voucher code for mock implementation
-   */
-  private generateVoucherCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
-
-  /**
-   * Generates a mock QR code data URL
-   */
-  private generateMockQRCode(code: string): string {
-    // Create a simple SVG QR code placeholder
-    const size = 200;
-    const svg = `
-      <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="${size}" height="${size}" fill="white"/>
-        <rect x="20" y="20" width="20" height="20" fill="black"/>
-        <rect x="60" y="20" width="20" height="20" fill="black"/>
-        <rect x="100" y="20" width="20" height="20" fill="black"/>
-        <rect x="140" y="20" width="20" height="20" fill="black"/>
-        <rect x="20" y="60" width="20" height="20" fill="black"/>
-        <rect x="100" y="60" width="20" height="20" fill="black"/>
-        <rect x="160" y="60" width="20" height="20" fill="black"/>
-        <rect x="20" y="100" width="20" height="20" fill="black"/>
-        <rect x="60" y="100" width="20" height="20" fill="black"/>
-        <rect x="140" y="100" width="20" height="20" fill="black"/>
-        <rect x="20" y="140" width="20" height="20" fill="black"/>
-        <rect x="80" y="140" width="20" height="20" fill="black"/>
-        <rect x="120" y="140" width="20" height="20" fill="black"/>
-        <rect x="160" y="140" width="20" height="20" fill="black"/>
-        <text x="${size/2}" y="${size/2 + 30}" text-anchor="middle" font-family="monospace" font-size="12" fill="black">${code}</text>
-      </svg>
-    `;
-    
-    // Convert SVG to data URL
-    const base64 = btoa(unescape(encodeURIComponent(svg)));
-    return `data:image/svg+xml;base64,${base64}`;
+    return 'Unknown error';
   }
 }
 
-// Export singleton instance
 export const couponService = new CouponServiceImpl();

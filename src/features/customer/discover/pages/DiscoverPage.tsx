@@ -1,90 +1,51 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
 import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget, FilterModal } from '../components';
 import { filterMerchantsByCategory } from '../../shared/utils/categoryUtils';
-import { generateRecommendations } from '../../shared/utils/recommendationUtils';
 import { FOOD_CATEGORIES, BEAUTY_CATEGORIES, SHOPPING_ENTERTAINMENT_CATEGORIES } from '../../shared/constants/categories';
 import { Merchant, RecommendedMerchant } from '../../shared/types';
 import { PATHS } from '../../../../routes/paths';
 import { ImageWithFallback } from '../../../../components/common';
 import '../../shared/styles/DiscoverPage.css';
-
-// Mock Data - 保持现有的商家数据
-const merchants: Merchant[] = [
-  {
-    id: 1,
-    name: "Dulce",
-    category: "Cafe & Bakery",
-    rating: 4.8,
-    reviews: 1240,
-    price: "$",
-    distance: "0.2 mi",
-    image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
-    tags: ["Study Spot", "Wifi"]
-  },
-  {
-    id: 2,
-    name: "Northern Cafe",
-    category: "Chinese",
-    rating: 4.5,
-    reviews: 856,
-    price: "$",
-    distance: "0.5 mi",
-    image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format&fit=crop&q=60",
-    tags: ["Dumplings", "Fast"]
-  },
-  {
-    id: 3,
-    name: "Trader Joe's",
-    category: "Grocery",
-    rating: 4.9,
-    reviews: 2300,
-    price: "$",
-    distance: "0.1 mi",
-    image: "https://images.unsplash.com/photo-1604719312566-b7ce1232a7e9?w=500&auto=format&fit=crop&q=60",
-    tags: ["Groceries", "Snacks"]
-  },
-  {
-    id: 4,
-    name: "Pot of Cha",
-    category: "Bubble Tea",
-    rating: 4.3,
-    reviews: 450,
-    price: "$",
-    distance: "0.3 mi",
-    image: "https://images.unsplash.com/photo-1558857563-b371033873b8?w=500&auto=format&fit=crop&q=60",
-    tags: ["Boba", "Dessert"]
-  },
-  {
-    id: 5,
-    name: "Target",
-    category: "Retail",
-    rating: 4.0,
-    reviews: 1500,
-    price: "$",
-    distance: "0.1 mi",
-    image: "https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?w=500&auto=format&fit=crop&q=60",
-    tags: ["Essentials", "Clothes"]
-  },
-  {
-    id: 6,
-    name: "Cava",
-    category: "Mediterranean",
-    rating: 4.7,
-    reviews: 980,
-    price: "$",
-    distance: "0.4 mi",
-    image: "https://images.unsplash.com/photo-1626202382368-3b6be6798969?w=500&auto=format&fit=crop&q=60",
-    tags: ["Healthy", "Bowls"]
-  }
-];
+import { storeBrowserService } from '../../shared/services/storeBrowserService';
 
 const DiscoverPage: React.FC = () => {
   const navigate = useNavigate();
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMerchants = async () => {
+      setIsLoading(true);
+      try {
+        const nextMerchants = await storeBrowserService.getDiscoverMerchants();
+        if (isMounted) {
+          setMerchants(nextMerchants);
+        }
+      } catch (error) {
+        console.error('Failed to load discover stores.', error);
+        if (isMounted) {
+          setMerchants([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadMerchants();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // 处理商家点击
   const handleMerchantClick = (merchant: Pick<RecommendedMerchant, 'id' | 'name'>) => {
@@ -99,7 +60,7 @@ const DiscoverPage: React.FC = () => {
       merchant.tags.forEach(tag => tagsSet.add(tag));
     });
     return Array.from(tagsSet).sort();
-  }, []);
+  }, [merchants]);
 
   // 获取分类显示名称
   const getCategoryDisplayName = (categoryId: string) => {
@@ -134,39 +95,30 @@ const DiscoverPage: React.FC = () => {
     }
 
     return filtered;
-  }, [selectedCategory, selectedTags]);
+  }, [merchants, selectedCategory, selectedTags]);
 
-  // 生成推荐列表 - 当选择的分类商家不够时，自动添加其他热门商家
   const recommendations = React.useMemo(() => {
-    const userLocation = { latitude: 34.0522, longitude: -118.2437 }; // USC 位置
-    const userFavorites = [
-      { merchantId: '2', category: 'Chinese', timestamp: new Date() },
-      { merchantId: '4', category: 'Bubble Tea', timestamp: new Date() }
-    ];
+    const sortedFiltered = [...filteredMerchants]
+      .sort((left, right) => right.rating - left.rating)
+      .map((merchant) => ({
+        ...merchant,
+        relevanceScore: 1,
+      }));
 
-    let recommendedMerchants = generateRecommendations(
-      filteredMerchants,
-      userLocation,
-      userFavorites,
-      10
-    );
-
-    // 如果筛选后的商家不够（少于3个），添加其他热门商家
-    if (recommendedMerchants.length < 3) {
-      const additionalMerchants = generateRecommendations(
-        merchants,
-        userLocation,
-        userFavorites,
-        10 - recommendedMerchants.length
-      ).filter((merchant: RecommendedMerchant) =>
-        !recommendedMerchants.some((existing: RecommendedMerchant) => existing.id === merchant.id)
-      );
-
-      recommendedMerchants = [...recommendedMerchants, ...additionalMerchants];
+    if (sortedFiltered.length >= 10) {
+      return sortedFiltered.slice(0, 10);
     }
 
-    return recommendedMerchants.slice(0, 10);
-  }, [filteredMerchants]);
+    const additionalMerchants = [...merchants]
+      .filter((merchant) => !sortedFiltered.some((existing) => existing.id === merchant.id))
+      .sort((left, right) => right.rating - left.rating)
+      .map((merchant) => ({
+        ...merchant,
+        relevanceScore: 0.8,
+      }));
+
+    return [...sortedFiltered, ...additionalMerchants].slice(0, 10) as RecommendedMerchant[];
+  }, [filteredMerchants, merchants]);
 
   return (
     <div className="bg-[#FAFAFA] pb-24 font-sans w-full">
@@ -241,7 +193,13 @@ const DiscoverPage: React.FC = () => {
         </div>
 
         <div className="grid gap-4">
-          {recommendations.map((merchant: RecommendedMerchant) => (
+          {isLoading && (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center text-gray-500">
+              Loading stores...
+            </div>
+          )}
+
+          {!isLoading && recommendations.map((merchant: RecommendedMerchant) => (
             <div
               key={merchant.id}
               className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"

@@ -68,10 +68,11 @@ export interface VoucherService {
   /**
    * Generates a unique voucher code
    * @param couponData - The coupon data for voucher generation
-   * @param paymentId - Optional payment ID for paid coupons
+   * @param userId - The ID of the user receiving the voucher
+   * @param paymentId - Optional payment/order ID for paid coupons
    * @returns Promise resolving to voucher result
    */
-  generateVoucher(couponData: Coupon, paymentId?: string): Promise<VoucherResult>;
+  generateVoucher(couponData: Coupon, userId: string, paymentId?: string): Promise<VoucherResult>;
 
   /**
    * Retrieves voucher by ID

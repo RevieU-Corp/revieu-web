@@ -1,7 +1,5 @@
-import { apiClient } from '../../../../api/apiClient';
 import {
   MOCK_EXPLORE_LANDING_DATA,
-  MOCK_EXPLORE_SUGGESTIONS,
 } from '../data/mockExploreSearchData';
 import {
   ExploreQuickFilterKey,
@@ -10,6 +8,7 @@ import {
   ExploreSearchRequest,
   ExploreSuggestion,
 } from '../types';
+import { storeBrowserService } from '../../shared/services/storeBrowserService';
 
 const SEARCH_STORAGE_KEY = 'explore.search.recent';
 
@@ -81,13 +80,17 @@ const saveRecentSearchesToStorage = (searches: string[]): void => {
 };
 
 const getLandingDataFromApi = async (): Promise<ExploreSearchLandingData> => {
-  const response = await apiClient.get<ExploreSearchLandingData>('/customer/search/landing');
-  return response.data;
+  return storeBrowserService.getExploreLandingData();
 };
 
 const getSuggestionsFromApi = async (request: ExploreSearchRequest): Promise<ExploreSuggestion[]> => {
-  const response = await apiClient.post<ExploreSuggestion[]>('/customer/search/suggestions', request);
-  return response.data;
+  const suggestions = await storeBrowserService.getExploreSuggestions();
+
+  return suggestions.filter(
+    (suggestion) =>
+      suggestionMatchesQuery(suggestion, request.query) &&
+      suggestionMatchesFilters(suggestion, request.activeFilters),
+  );
 };
 
 export const getInitialRecentSearches = (fallbackSearches: string[]): string[] => {
@@ -109,12 +112,17 @@ export const exploreSearchService: ExploreSearchApi = {
       }
     }
 
-    return {
-      quickFilters: [...MOCK_EXPLORE_LANDING_DATA.quickFilters],
-      trendingSearches: [...MOCK_EXPLORE_LANDING_DATA.trendingSearches],
-      browseCategories: [...MOCK_EXPLORE_LANDING_DATA.browseCategories],
-      recentSearches: [...MOCK_EXPLORE_LANDING_DATA.recentSearches],
-    };
+    try {
+      return await storeBrowserService.getExploreLandingData();
+    } catch (error) {
+      console.error('Failed to build explore landing data from stores. Using fallback data.', error);
+      return {
+        quickFilters: [...MOCK_EXPLORE_LANDING_DATA.quickFilters],
+        trendingSearches: [...MOCK_EXPLORE_LANDING_DATA.trendingSearches],
+        browseCategories: [...MOCK_EXPLORE_LANDING_DATA.browseCategories],
+        recentSearches: [...MOCK_EXPLORE_LANDING_DATA.recentSearches],
+      };
+    }
   },
 
   async searchSuggestions(request) {
@@ -126,10 +134,6 @@ export const exploreSearchService: ExploreSearchApi = {
       }
     }
 
-    return MOCK_EXPLORE_SUGGESTIONS.filter(
-      (suggestion) =>
-        suggestionMatchesQuery(suggestion, request.query) &&
-        suggestionMatchesFilters(suggestion, request.activeFilters),
-    );
+    return getSuggestionsFromApi(request);
   },
 };
