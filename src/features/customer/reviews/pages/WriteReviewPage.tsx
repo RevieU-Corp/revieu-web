@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Hash, X, Plus } from 'lucide-react';
+import { Camera, Hash, X, Plus, ChevronLeft } from 'lucide-react';
 import { useReviewContext } from '../contexts/ReviewContext';
 import { ReviewProvider } from '../contexts/ReviewContext';
-import { CombinedRatingComponent, ImageUploadGrid, AIAssistantButton, AISuggestionsList } from '../components';
+import { CombinedRatingComponent, ImageUploadGrid, AIAssistantButton, AISuggestionsList, MerchantSearchStep } from '../components';
 import { BusinessCategory } from '../types';
 import { PATHS } from '../../../../routes/paths';
 
@@ -16,7 +16,10 @@ interface WriteReviewLocationState {
 }
 
 // Internal component that uses the review context
-const WriteReviewForm: React.FC = () => {
+const WriteReviewForm: React.FC<{
+  showBackToSearch?: boolean;
+  onBackToSearch?: () => void;
+}> = ({ showBackToSearch, onBackToSearch }) => {
   const navigate = useNavigate();
   const { state, actions } = useReviewContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,7 +127,13 @@ const WriteReviewForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header - Center aligned title with symmetric padding */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 h-16 grid grid-cols-3 items-center z-20 shadow-sm">
-        <div /> {/* Spacer for floating back button */}
+        <div>
+          {showBackToSearch && onBackToSearch && (
+            <button onClick={onBackToSearch} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
+        </div>
         <h1 className="font-semibold text-gray-800 text-lg text-center truncate">Write Review</h1>
         <div className="flex justify-end">
           <button
@@ -428,17 +437,41 @@ const WriteReviewForm: React.FC = () => {
 
 const WriteReviewPage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const reviewContext = (location.state as WriteReviewLocationState | null) ?? null;
+
+  const [selectedMerchant, setSelectedMerchant] = useState<{
+    id: string;
+    name: string;
+    category: string;
+  } | null>(
+    reviewContext?.merchantId
+      ? { id: reviewContext.merchantId, name: reviewContext.merchantName ?? '', category: '' }
+      : null
+  );
+
+  // No merchantId from navigation state and none selected yet — show search
+  if (!selectedMerchant) {
+    return (
+      <MerchantSearchStep
+        onSelect={setSelectedMerchant}
+        onBack={() => navigate(-1)}
+      />
+    );
+  }
 
   return (
     <ReviewProvider
-      merchantId={reviewContext?.merchantId}
+      merchantId={selectedMerchant.id}
       storeId={reviewContext?.storeId}
       venueId={reviewContext?.venueId}
-      merchantName={reviewContext?.merchantName}
+      merchantName={selectedMerchant.name}
       merchantCategory={reviewContext?.merchantCategory ?? BusinessCategory.RESTAURANT}
     >
-      <WriteReviewForm />
+      <WriteReviewForm
+        showBackToSearch={!reviewContext?.merchantId}
+        onBackToSearch={() => setSelectedMerchant(null)}
+      />
     </ReviewProvider>
   );
 };
