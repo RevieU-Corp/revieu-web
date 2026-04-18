@@ -26,6 +26,7 @@ interface BackendStore {
   country?: string | null;
   phone?: string | null;
   cover_image_url?: string | null;
+  menu_images?: string[] | string | null;
   avg_rating?: number | null;
   review_count?: number | null;
 }
@@ -38,6 +39,7 @@ interface StoreDetail {
   address: string;
   phone: string;
   coverImageUrl: string;
+  menuImages: string[];
   rating: number;
   reviewCount: number;
 }
@@ -55,8 +57,35 @@ const FALLBACK_STORE: StoreDetail = {
   address: 'Store details will appear here after the backend lookup succeeds.',
   phone: '',
   coverImageUrl: FALLBACK_HERO,
+  menuImages: [],
   rating: 0,
   reviewCount: 0,
+};
+
+const parseStringArray = (value: string[] | string | null | undefined): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+  }
+
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+    }
+  } catch {
+    // Some responses may already contain a plain URL string.
+  }
+
+  return [trimmed];
 };
 
 const mapStore = (raw: BackendStore): StoreDetail => {
@@ -70,6 +99,7 @@ const mapStore = (raw: BackendStore): StoreDetail => {
     address: addressParts.join(', ') || 'Address unavailable',
     phone: raw.phone ?? '',
     coverImageUrl: raw.cover_image_url || FALLBACK_HERO,
+    menuImages: parseStringArray(raw.menu_images),
     rating: raw.avg_rating ?? 0,
     reviewCount: raw.review_count ?? 0,
   };
@@ -345,8 +375,32 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
         )}
 
         {activeTab === 'menu' && (
-          <div className="mt-8 rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
-            Menu data is still mocked in the frontend. The store detail and coupon APIs are now live; menu integration can be done next.
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Menu Photos</h2>
+              {isLoading && <span className="text-sm text-gray-400">Loading...</span>}
+            </div>
+
+            {store.menuImages.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+                No menu images uploaded yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {store.menuImages.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
+                  >
+                    <ImageWithFallback
+                      src={image}
+                      alt={`Menu image ${index + 1}`}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
