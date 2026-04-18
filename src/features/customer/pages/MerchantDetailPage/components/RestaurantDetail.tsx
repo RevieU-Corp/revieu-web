@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Phone, Star, Ticket, MenuSquare, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../../../../api/apiClient';
+import { reviewsApi, StoreReviewResponse } from '../../../../../api/reviews';
 import { couponService } from '../../../shared/services/couponService';
 import { Coupon, MerchantInfo } from '../../../shared/types/coupons';
 import { DealCard } from './DealCard';
 import { ImageWithFallback } from './ImageWithFallback';
+import { ReviewListCard } from './ReviewListCard';
 
 interface RestaurantDetailProps {
   storeId?: string;
@@ -71,12 +74,39 @@ const mapStore = (raw: BackendStore): StoreDetail => {
   };
 };
 
+function formatReviewDate(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Recently';
+  }
+
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function getAvatarLabel(username: string): string {
+  const trimmed = username.trim();
+  if (!trimmed) {
+    return 'R';
+  }
+
+  return trimmed.charAt(0).toUpperCase();
+}
+
 export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'deals' | 'menu' | 'reviews'>('deals');
   const [store, setStore] = useState<StoreDetail>(FALLBACK_STORE);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewPreview, setReviewPreview] = useState<StoreReviewResponse[]>([]);
+  const [reviewPreviewLoading, setReviewPreviewLoading] = useState(false);
+  const [reviewPreviewLoaded, setReviewPreviewLoaded] = useState(false);
+  const [reviewPreviewError, setReviewPreviewError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,6 +152,52 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
       cancelled = true;
     };
   }, [storeId]);
+
+  useEffect(() => {
+    setReviewPreview([]);
+    setReviewPreviewLoading(false);
+    setReviewPreviewLoaded(false);
+    setReviewPreviewError(null);
+  }, [storeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadReviewPreview = async () => {
+      if (!storeId || activeTab !== 'reviews' || reviewPreviewLoaded) {
+        return;
+      }
+
+      setReviewPreviewLoading(true);
+      setReviewPreviewError(null);
+
+      try {
+        const response = await reviewsApi.listStoreReviews(storeId, { limit: 3 });
+        if (cancelled) {
+          return;
+        }
+
+        setReviewPreview(response.data);
+      } catch (loadError) {
+        if (!cancelled) {
+          console.error('Failed to load review preview:', loadError);
+          setReviewPreview([]);
+          setReviewPreviewError('Failed to load reviews.');
+        }
+      } finally {
+        if (!cancelled) {
+          setReviewPreviewLoading(false);
+          setReviewPreviewLoaded(true);
+        }
+      }
+    };
+
+    void loadReviewPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, reviewPreviewLoaded, storeId]);
 
   const merchantInfo: MerchantInfo = {
     id: store.merchantId,
@@ -249,8 +325,56 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
         )}
 
         {activeTab === 'reviews' && (
-          <div className="mt-8 rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
-            Reviews are not wired into this page yet. The next backend-aligned step is `/stores/:id/reviews`.
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Community Reviews</h2>
+              <button
+                type="button"
+                onClick={() => navigate(`/customer/merchant/${store.id || storeId || '1'}/reviews`)}
+                className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#FF6900] hover:text-[#FF6900]"
+              >
+                View all reviews
+              </button>
+            </div>
+
+            {reviewPreviewLoading && (
+              <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+                Loading reviews...
+              </div>
+            )}
+
+            {!reviewPreviewLoading && reviewPreviewError && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {reviewPreviewError}
+              </div>
+            )}
+
+            {!reviewPreviewLoading && !reviewPreviewError && reviewPreview.length === 0 && (
+              <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-8 text-center text-sm text-gray-500">
+                No reviews for this store yet.
+              </div>
+            )}
+
+            {!reviewPreviewLoading && !reviewPreviewError && reviewPreview.length > 0 && (
+              <div className="space-y-3">
+                {reviewPreview.map((review) => (
+                  <ReviewListCard
+                    key={review.id}
+                    username={review.username}
+                    avatar={getAvatarLabel(review.username)}
+                    rating={Math.round(review.overallRating)}
+                    tasteScore={review.detailedRatings?.quality ?? review.overallRating}
+                    envScore={review.detailedRatings?.environment ?? review.overallRating}
+                    serviceScore={review.detailedRatings?.service ?? review.overallRating}
+                    date={formatReviewDate(review.createdAt)}
+                    comment={review.text ?? ''}
+                    tags={review.tags}
+                    images={review.images}
+                    helpful={review.likeCount}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
