@@ -20,7 +20,7 @@ export function BottomNav() {
 
   const handlePostClick = () => {
     if (isAuthenticated) {
-      navigate(PATHS.CUSTOMER.WRITE_REVIEW);
+      navigate(PATHS.CUSTOMER.WRITE_REVIEW_SELECT);
     } else {
       setShowLoginModal(true);
     }

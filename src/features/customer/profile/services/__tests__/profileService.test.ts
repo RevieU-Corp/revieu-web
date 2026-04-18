@@ -78,7 +78,8 @@ describe('profileService', () => {
     expect(listStoresMock).toHaveBeenCalledWith(100);
     expect(merchants).toEqual([
       expect.objectContaining({
-        id: '235',
+        merchantId: '205',
+        storeId: '235',
         businessName: 'Revieu Demo Cafe',
         businessImage: 'https://example.com/store.jpg',
         lastOrderItems: ['Paid Demo Bundle'],

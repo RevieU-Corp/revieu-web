@@ -22,7 +22,7 @@ export function GlossyBottomNav({ onBack, onWriteReview }: GlossyBottomNavProps)
     if (onWriteReview) {
       onWriteReview();
     } else {
-      navigate(PATHS.CUSTOMER.WRITE_REVIEW);
+      navigate(PATHS.CUSTOMER.WRITE_REVIEW_SELECT);
     }
   };
 

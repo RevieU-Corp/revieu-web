@@ -3,13 +3,23 @@ import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode, SVGProps } from 'react';
+import { PATHS } from '../../../../../routes/paths';
 
-const { reviewsListMock, pendingMerchantsMock, userVouchersMock, logoutMock } = vi.hoisted(() => ({
+const { reviewsListMock, pendingMerchantsMock, userVouchersMock, logoutMock, navigateMock } = vi.hoisted(() => ({
   reviewsListMock: vi.fn(),
   pendingMerchantsMock: vi.fn(),
   userVouchersMock: vi.fn(),
   logoutMock: vi.fn(),
+  navigateMock: vi.fn(),
 }));
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
 
 function DummyIcon(props: SVGProps<SVGSVGElement>) {
   return <svg data-testid="icon" {...props} />;
@@ -41,7 +51,31 @@ vi.mock('../../components', () => ({
     </div>
   ),
   AccountSection: () => <div>account</div>,
-  PendingReviewMerchants: () => <div>pending</div>,
+  PendingReviewMerchants: ({
+    merchants,
+    onWriteReview,
+  }: {
+    merchants: Array<{
+      merchantId: string;
+      storeId: string;
+      businessName: string;
+      businessImage: string;
+      lastVisitedAt: string;
+      lastOrderItems: string[];
+    }>;
+    onWriteReview: (merchant: {
+      merchantId: string;
+      storeId: string;
+      businessName: string;
+      businessImage: string;
+      lastVisitedAt: string;
+      lastOrderItems: string[];
+    }) => void;
+  }) => (
+    merchants.length > 0
+      ? <button onClick={() => onWriteReview(merchants[0])}>Write pending review</button>
+      : <div>pending</div>
+  ),
   MyHistorySection: ({ onViewAllReviews }: { onViewAllReviews: () => void }) => (
     <button onClick={onViewAllReviews}>View all reviews</button>
   ),
@@ -82,6 +116,7 @@ describe('ProfilePage', () => {
     pendingMerchantsMock.mockReset();
     userVouchersMock.mockReset();
     logoutMock.mockReset();
+    navigateMock.mockReset();
     pendingMerchantsMock.mockResolvedValue([]);
     userVouchersMock.mockResolvedValue({
       active: [],
@@ -202,5 +237,40 @@ describe('ProfilePage', () => {
 
     expect(screen.getByText('1 Available')).toBeInTheDocument();
     expect(screen.getAllByText('coupon')).toHaveLength(1);
+  });
+
+  it('navigates to write review with merchant and store context from pending reviews', async () => {
+    reviewsListMock.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
+    pendingMerchantsMock.mockResolvedValue([
+      {
+        merchantId: '205',
+        storeId: '235',
+        businessName: 'Revieu Demo Cafe',
+        businessImage: 'https://example.com/store.jpg',
+        lastVisitedAt: 'Today',
+        lastOrderItems: ['Paid Demo Bundle'],
+      },
+    ]);
+
+    const { default: ProfilePage } = await import('../ProfilePage');
+
+    render(
+      <MemoryRouter>
+        <ProfilePage />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /write pending review/i }));
+
+    expect(navigateMock).toHaveBeenCalledWith(PATHS.CUSTOMER.WRITE_REVIEW, {
+      state: {
+        merchantId: '205',
+        merchantName: 'Revieu Demo Cafe',
+        storeId: '235',
+      },
+    });
   });
 });
