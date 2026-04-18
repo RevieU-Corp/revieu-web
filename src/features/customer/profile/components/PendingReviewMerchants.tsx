@@ -37,7 +37,7 @@ export const PendingReviewMerchants: React.FC<PendingReviewMerchantsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {merchants.map((merchant) => (
             <article
-              key={merchant.id}
+              key={merchant.storeId}
               className="relative overflow-hidden rounded-[24px] border border-gray-100 bg-white p-5 shadow-[0_8px_28px_-14px_rgba(17,24,39,0.2)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-14px_rgba(17,24,39,0.35)]"
             >
               <div className="absolute -top-10 -right-6 h-24 w-24 rounded-full bg-brand-red/8 blur-2xl" />

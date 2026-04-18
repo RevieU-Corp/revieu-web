@@ -204,8 +204,9 @@ const ProfilePage: React.FC = () => {
   const handleWriteReviewFromMerchant = (merchant: PendingReviewMerchant) => {
     navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
       state: {
-        merchantId: merchant.id,
+        merchantId: merchant.merchantId,
         merchantName: merchant.businessName,
+        storeId: merchant.storeId,
       },
     });
   };

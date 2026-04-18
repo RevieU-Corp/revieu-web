@@ -951,14 +951,35 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'CLEAR_SUBMIT_ERROR' });
 
       try {
+        const merchantId = state.reviewData.merchantId?.trim();
+        const storeId = state.reviewData.storeId?.trim();
+
+        if (!merchantId) {
+          dispatch({ type: 'SET_SUBMITTING', payload: false });
+          dispatch({
+            type: 'SET_SUBMIT_ERROR',
+            payload: 'Merchant context is missing. Please start your review from a merchant page.',
+          });
+          return false;
+        }
+
+        if (!storeId) {
+          dispatch({ type: 'SET_SUBMITTING', payload: false });
+          dispatch({
+            type: 'SET_SUBMIT_ERROR',
+            payload: 'Store context is missing. Please start your review from a merchant page.',
+          });
+          return false;
+        }
+
         // Use provided URLs or get from state
         const imageUrls = uploadedImageUrls ?? state.reviewData.images
           ?.filter(img => img.uploadState.status === 'complete' && img.fileUrl)
           .map(img => img.fileUrl!) ?? [];
 
         const request: CreateReviewRequest = {
-          merchantId: state.reviewData.merchantId || '',
-          storeId: state.reviewData.storeId || state.reviewData.venueId || undefined,
+          merchantId,
+          storeId,
           overallRating: state.reviewData.overallRating || 0,
           detailedRatings: state.reviewData.detailedRatings,
           text: state.reviewData.reviewText,

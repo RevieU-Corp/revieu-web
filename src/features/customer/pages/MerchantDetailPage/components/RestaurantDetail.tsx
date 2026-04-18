@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Phone, Star, Ticket, MenuSquare, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../../../../api/apiClient';
 import { couponService } from '../../../shared/services/couponService';
 import { Coupon, MerchantInfo } from '../../../shared/types/coupons';
+import { PATHS } from '../../../../../routes/paths';
 import { DealCard } from './DealCard';
 import { ImageWithFallback } from './ImageWithFallback';
 
@@ -72,6 +74,7 @@ const mapStore = (raw: BackendStore): StoreDetail => {
 };
 
 export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'deals' | 'menu' | 'reviews'>('deals');
   const [store, setStore] = useState<StoreDetail>(FALLBACK_STORE);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -131,6 +134,20 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
     phone: store.phone,
   };
 
+  const handleWriteReview = () => {
+    if (!store.id || !store.merchantId) {
+      return;
+    }
+
+    navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
+      state: {
+        merchantId: store.merchantId,
+        merchantName: store.name,
+        storeId: store.id,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="relative h-64 w-full">
@@ -168,6 +185,17 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
             <span className="font-semibold">{store.rating.toFixed(1)}</span>
           </div>
           <span className="text-sm text-gray-500">{store.reviewCount} reviews</span>
+        </div>
+
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={handleWriteReview}
+            disabled={!store.id || !store.merchantId}
+            className="rounded-full bg-[#990000] px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-[#7a0000] disabled:cursor-not-allowed disabled:bg-gray-300"
+          >
+            Write Review
+          </button>
         </div>
 
         <div className="mt-6 space-y-3 rounded-3xl border border-gray-100 bg-gray-50 p-5">

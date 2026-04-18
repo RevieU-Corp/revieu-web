@@ -100,9 +100,9 @@ async function fetchPendingReviewMerchantsFromApi(): Promise<PendingReviewMercha
     const storeId =
       order.store_id !== null && order.store_id !== undefined
         ? String(order.store_id)
-        : merchantId;
+        : '';
 
-    if (!storeId || latestPendingByStore.has(storeId)) {
+    if (!merchantId || !storeId || latestPendingByStore.has(storeId)) {
       return;
     }
 
@@ -112,7 +112,8 @@ async function fetchPendingReviewMerchantsFromApi(): Promise<PendingReviewMercha
 
     const store = storeById.get(storeId);
     latestPendingByStore.set(storeId, {
-      id: storeId,
+      merchantId,
+      storeId,
       businessName: store?.name || `Merchant ${merchantId || storeId}`,
       businessImage: store?.image || DEFAULT_BUSINESS_IMAGE,
       lastVisitedAt: formatLastVisitedAt(order.created_at),

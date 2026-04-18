@@ -59,7 +59,8 @@ export interface Order {
 }
 
 export interface PendingReviewMerchant {
-  id: string;
+  merchantId: string;
+  storeId: string;
   businessName: string;
   businessImage: string;
   lastVisitedAt: string;

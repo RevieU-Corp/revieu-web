@@ -8,14 +8,16 @@ describe('PendingReviewMerchants', () => {
   it('renders Laet Merchant I Visit cards and handles write review action', () => {
     const merchants: PendingReviewMerchant[] = [
       {
-        id: 'm1',
+        merchantId: '205',
+        storeId: 'm1',
         businessName: 'Sushirrito',
         businessImage: 'https://picsum.photos/id/292/100/100',
         lastVisitedAt: 'Yesterday',
         lastOrderItems: ['Sumo Crunch', 'Lava Nachos'],
       },
       {
-        id: 'm2',
+        merchantId: '206',
+        storeId: 'm2',
         businessName: 'Philz Coffee',
         businessImage: 'https://picsum.photos/id/431/100/100',
         lastVisitedAt: 'Jan 22',
