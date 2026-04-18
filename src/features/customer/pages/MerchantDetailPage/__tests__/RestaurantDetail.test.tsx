@@ -50,6 +50,8 @@ describe('RestaurantDetail', () => {
           country: 'USA',
           phone: '(512) 555-0278',
           cover_image_url: 'https://img.example/cover.jpg',
+          menu_images:
+            '["https://cdn.revieu.com/menus/taco-board.jpg","https://cdn.revieu.com/menus/brunch-board.jpg"]',
           avg_rating: 4.5,
           review_count: 1,
         },
@@ -105,6 +107,32 @@ describe('RestaurantDetail', () => {
     expect(screen.queryByText(/Reviews are not wired into this page yet/i)).not.toBeInTheDocument();
   });
 
+  it('renders uploaded menu images when the menu tab is opened', async () => {
+    const { RestaurantDetail } = await import('../components/RestaurantDetail');
+
+    render(
+      <MemoryRouter>
+        <RestaurantDetail storeId="278" />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Lone Star Taco Bar')).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /menu/i })[0]);
+
+    expect(await screen.findByAltText('Menu image 1')).toHaveAttribute(
+      'src',
+      'https://cdn.revieu.com/menus/taco-board.jpg'
+    );
+    expect(screen.getByAltText('Menu image 2')).toHaveAttribute(
+      'src',
+      'https://cdn.revieu.com/menus/brunch-board.jpg'
+    );
+    expect(
+      screen.queryByText(/Menu data is still mocked in the frontend/i)
+    ).not.toBeInTheDocument();
+  });
+
   it('renders a real empty state in the reviews tab when the api returns no reviews', async () => {
     listStoreReviewsMock.mockResolvedValue({
       data: [],
@@ -123,5 +151,41 @@ describe('RestaurantDetail', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /reviews/i })[0]);
 
     expect(await screen.findByText('No reviews for this store yet.')).toBeInTheDocument();
+  });
+
+  it('renders an empty state when the store has not uploaded menu images yet', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 278,
+          merchant_id: 202,
+          name: 'Lone Star Taco Bar',
+          description: 'Austin-style tacos, aguas frescas, and weekend brunch.',
+          address: '501 Congress Ave',
+          city: 'Austin',
+          state: 'TX',
+          country: 'USA',
+          phone: '(512) 555-0278',
+          cover_image_url: 'https://img.example/cover.jpg',
+          menu_images: '[]',
+          avg_rating: 4.5,
+          review_count: 1,
+        },
+      },
+    });
+
+    const { RestaurantDetail } = await import('../components/RestaurantDetail');
+
+    render(
+      <MemoryRouter>
+        <RestaurantDetail storeId="278" />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Lone Star Taco Bar')).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /menu/i })[0]);
+
+    expect(await screen.findByText('No menu images uploaded yet.')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MapPin,
   Phone,
@@ -17,6 +17,12 @@ import InteractiveMap from '../../shared/components/InteractiveMap';
 import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
 import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
+import {
+  MerchantStoreRecord,
+  storeProfileService,
+  parseStringArray,
+  uploadMerchantImages,
+} from '../services/storeProfileService';
 
 // TypeScript interfaces
 interface MenuItem {
@@ -30,10 +36,14 @@ interface MenuItem {
 }
 
 interface StoreData {
+  id: string;
   name: string;
   phone: string;
   website: string;
-  address: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  country: string;
   coordinates: { lat: number; lng: number };
   coverPhoto: string;
   gallery: string[];
@@ -53,18 +63,18 @@ interface StoreData {
 
 // Mock data for McDonald's USC
 const mockStoreData: StoreData = {
+  id: '',
   name: "McDonald's - USC Figueroa",
   phone: "+1 (213) 749-1444",
   website: "https://www.mcdonalds.com/location/ca/los-angeles/3037-s-figueroa-st/",
-  address: "3037 S Figueroa St, Los Angeles, CA 90007",
+  streetAddress: "3037 S Figueroa St",
+  city: 'Los Angeles',
+  state: 'CA',
+  country: 'USA',
   coordinates: { lat: 34.0253, lng: -118.2831 },
   coverPhoto: DEFAULT_MERCHANT_ASSETS.COVER_PHOTO, // Use default cover photo
-  gallery: DEFAULT_MERCHANT_ASSETS.DEFAULT_GALLERY, // Use default gallery
-  menuImages: [
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop", // Menu board
-    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop", // Restaurant menu
-    "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop"  // Digital menu display
-  ],
+  gallery: [],
+  menuImages: [],
   bio: "Welcome to the heart of the Trojan community! Serving USC students and local residents 24/7. We offer high-speed Wi-Fi, ample indoor seating, and the classic taste you love. Perfect for late-night study sessions or pre-game meals.",
   operatingHours: {
     open: "06:00",
@@ -113,9 +123,53 @@ const categoryColors: Record<string, string> = {
   "Drinks": "bg-orange-100 text-orange-800"
 };
 
+const formatAddress = (store: Pick<StoreData, 'streetAddress' | 'city' | 'state' | 'country'>) =>
+  [store.streetAddress, store.city, store.state, store.country].filter(Boolean).join(', ');
+
+const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = mockStoreData): StoreData => ({
+  ...base,
+  id: String(raw.id),
+  name: raw.name ?? base.name,
+  phone: raw.phone ?? '',
+  website: raw.website ?? '',
+  streetAddress: raw.address ?? '',
+  city: raw.city ?? '',
+  state: raw.state ?? '',
+  country: raw.country ?? '',
+  coordinates: {
+    lat: raw.latitude ?? base.coordinates.lat,
+    lng: raw.longitude ?? base.coordinates.lng,
+  },
+  coverPhoto: raw.cover_image_url || DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
+  gallery: parseStringArray(raw.images),
+  menuImages: parseStringArray(raw.menu_images),
+  bio: raw.description ?? '',
+});
+
+const buildStoreUpdatePayload = (store: StoreData) => ({
+  name: store.name,
+  description: store.bio,
+  address: store.streetAddress,
+  city: store.city,
+  state: store.state,
+  country: store.country,
+  phone: store.phone,
+  website: store.website,
+  latitude: store.coordinates.lat,
+  longitude: store.coordinates.lng,
+  cover_image_url: store.coverPhoto,
+  images: store.gallery,
+  menu_images: store.menuImages,
+});
+
 const StoreProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [storeData, setStoreData] = useState(mockStoreData);
+  const [savedStoreData, setSavedStoreData] = useState(mockStoreData);
+  const [isLoadingStore, setIsLoadingStore] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -138,54 +192,156 @@ const StoreProfile: React.FC = () => {
     item: null
   });
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStore = async () => {
+      setIsLoadingStore(true);
+      setStatusMessage(null);
+
+      try {
+        const primaryStore = await storeProfileService.getPrimaryStore();
+        if (cancelled) {
+          return;
+        }
+
+        if (!primaryStore) {
+          setStatusMessage('No merchant store found yet.');
+          setStoreData(mockStoreData);
+          setSavedStoreData(mockStoreData);
+          return;
+        }
+
+        const normalizedStore = normalizeStoreData(primaryStore, mockStoreData);
+        setStoreData(normalizedStore);
+        setSavedStoreData(normalizedStore);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to load store profile:', error);
+          setStatusMessage('Failed to load your store profile.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingStore(false);
+        }
+      }
+    };
+
+    void loadStore();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSave = async () => {
+    if (!storeData.id) {
+      setStatusMessage('Store context is missing.');
+      return;
+    }
+
+    setIsSaving(true);
+    setStatusMessage(null);
+
+    try {
+      const updatedStore = await storeProfileService.updateStore(
+        storeData.id,
+        buildStoreUpdatePayload(storeData)
+      );
+      const normalizedStore = normalizeStoreData(updatedStore, storeData);
+      setStoreData(normalizedStore);
+      setSavedStoreData(normalizedStore);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to save store profile:', error);
+      setStatusMessage('Failed to save store profile.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setStoreData(mockStoreData); // Reset to original data
+    setStatusMessage(null);
+    setStoreData(savedStoreData);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'gallery' | 'menuImages') => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'cover' | 'gallery' | 'menuImages'
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+
+    if (files.length === 0) {
+      return;
+    }
+
+    setIsUploadingImages(true);
+    setStatusMessage(null);
+
+    try {
+      const uploadedUrls = await uploadMerchantImages(
+        type === 'cover' ? [files[0]] : files
+      );
+
+      setStoreData((prev) => {
         if (type === 'cover') {
-          setStoreData(prev => ({ ...prev, coverPhoto: result }));
-        } else if (type === 'gallery') {
-          // For gallery, add to existing images
-          setStoreData(prev => ({
+          return {
             ...prev,
-            gallery: [...prev.gallery, result]
-          }));
-        } else if (type === 'menuImages') {
-          // For menu images, add to existing images
-          setStoreData(prev => ({
-            ...prev,
-            menuImages: [...prev.menuImages, result]
-          }));
+            coverPhoto: uploadedUrls[0] ?? prev.coverPhoto,
+          };
         }
-      };
-      reader.readAsDataURL(file);
+
+        if (type === 'gallery') {
+          return {
+            ...prev,
+            gallery: [...prev.gallery, ...uploadedUrls],
+          };
+        }
+
+        return {
+          ...prev,
+          menuImages: [...prev.menuImages, ...uploadedUrls],
+        };
+      });
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+      setStatusMessage('Failed to upload images.');
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
-  const handleGalleryImageEdit = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryImageEdit = async (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setStoreData(prev => ({
-          ...prev,
-          gallery: prev.gallery.map((img, i) => i === index ? result : img)
-        }));
-      };
-      reader.readAsDataURL(file);
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingImages(true);
+    setStatusMessage(null);
+
+    try {
+      const [uploadedUrl] = await uploadMerchantImages([file]);
+      if (!uploadedUrl) {
+        return;
+      }
+
+      setStoreData((prev) => ({
+        ...prev,
+        gallery: prev.gallery.map((img, i) => (i === index ? uploadedUrl : img)),
+      }));
+    } catch (error) {
+      console.error('Failed to replace gallery image:', error);
+      setStatusMessage('Failed to upload images.');
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
@@ -199,22 +355,40 @@ const StoreProfile: React.FC = () => {
           ...prev,
           gallery: prev.gallery.filter((_, i) => i !== index)
         }));
+        closeConfirmDialog();
       }
     });
   };
 
-  const handleMenuImageEdit = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMenuImageEdit = async (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setStoreData(prev => ({
-          ...prev,
-          menuImages: prev.menuImages.map((img, i) => i === index ? result : img)
-        }));
-      };
-      reader.readAsDataURL(file);
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingImages(true);
+    setStatusMessage(null);
+
+    try {
+      const [uploadedUrl] = await uploadMerchantImages([file]);
+      if (!uploadedUrl) {
+        return;
+      }
+
+      setStoreData((prev) => ({
+        ...prev,
+        menuImages: prev.menuImages.map((img, i) => (i === index ? uploadedUrl : img)),
+      }));
+    } catch (error) {
+      console.error('Failed to replace menu image:', error);
+      setStatusMessage('Failed to upload images.');
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
@@ -228,6 +402,7 @@ const StoreProfile: React.FC = () => {
           ...prev,
           menuImages: prev.menuImages.filter((_, i) => i !== index)
         }));
+        closeConfirmDialog();
       }
     });
   };
@@ -243,6 +418,7 @@ const StoreProfile: React.FC = () => {
           ...prev,
           menu: prev.menu.filter(item => item.id !== itemId)
         }));
+        closeConfirmDialog();
       }
     });
   };
@@ -345,12 +521,14 @@ const StoreProfile: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{storeData.name}</h1>
+            {isLoadingStore && <p className="mt-1 text-sm text-gray-500">Loading store profile...</p>}
           </div>
           <div className="flex gap-2">
             {isEditing ? (
               <>
                 <button
                   onClick={handleCancel}
+                  disabled={isSaving || isUploadingImages}
                   className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <X size={16} />
@@ -358,16 +536,18 @@ const StoreProfile: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSave}
+                  disabled={isSaving || isUploadingImages}
                   className="flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
                   style={{ backgroundColor: '#FFBC0D' }}
                 >
                   <Save size={16} />
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
+                disabled={isLoadingStore}
                 className="flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
                 style={{ backgroundColor: '#FFBC0D' }}
               >
@@ -377,6 +557,12 @@ const StoreProfile: React.FC = () => {
             )}
           </div>
         </div>
+
+        {statusMessage && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {statusMessage}
+          </div>
+        )}
 
         {/* Cover Photo */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -676,13 +862,13 @@ const StoreProfile: React.FC = () => {
                 <MapPin size={16} className="text-gray-400 mt-1" />
                 {isEditing ? (
                   <textarea
-                    value={storeData.address}
-                    onChange={(e) => setStoreData({ ...storeData, address: e.target.value })}
+                    value={storeData.streetAddress}
+                    onChange={(e) => setStoreData({ ...storeData, streetAddress: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     rows={2}
                   />
                 ) : (
-                  <p className="text-gray-900">{storeData.address}</p>
+                  <p className="text-gray-900">{formatAddress(storeData)}</p>
                 )}
               </div>
             </div>
@@ -691,7 +877,7 @@ const StoreProfile: React.FC = () => {
             <InteractiveMap
               lat={storeData.coordinates.lat}
               lng={storeData.coordinates.lng}
-              address={storeData.address}
+              address={formatAddress(storeData)}
               isEditing={isEditing}
             />
           </div>
@@ -803,6 +989,7 @@ const StoreProfile: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={(e) => handleFileUpload(e, 'menuImages')}
                   className="hidden"
                 />
@@ -867,6 +1054,7 @@ const StoreProfile: React.FC = () => {
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={(e) => handleFileUpload(e, 'menuImages')}
                     className="hidden"
                   />
