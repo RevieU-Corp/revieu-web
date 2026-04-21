@@ -5,31 +5,31 @@ import BottomNavigation from './BottomNavigation';
 import VerificationModal from '../../profile/components/VerificationModal';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { PATHS } from '../../../../routes/paths';
+import { verificationService } from '../services/verificationService';
 
 const MerchantLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, isMerchant } = useAuth();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   useEffect(() => {
-    // Only check verification status if user is authenticated and is a merchant
     if (isAuthenticated && isMerchant && user) {
-      // Check if merchant verification is completed
-      const userId = user.id;
-
-      // Create user-specific verification key
-      const verificationKey = userId ? `merchantVerificationCompleted_${userId}` : 'merchantVerificationCompleted';
-      const isVerificationCompleted = localStorage.getItem(verificationKey) === 'true';
-
-      // Only show verification modal if not completed AND not coming from verification page
-      if (!isVerificationCompleted) {
-        // Check if we're on a route that should show verification modal
-        const currentPath = window.location.pathname;
-        const shouldShowVerification = !currentPath.includes('/verification');
-
-        if (shouldShowVerification) {
-          setShowVerificationModal(true);
-        }
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('/verification')) {
+        return;
       }
+
+      void verificationService.getVerificationStatus()
+        .then((status) => {
+          if (status.status !== 'verified') {
+            setShowVerificationModal(true);
+          } else {
+            setShowVerificationModal(false);
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to load merchant verification status:', error);
+          setShowVerificationModal(true);
+        });
     }
   }, [isAuthenticated, isMerchant, user]);
 

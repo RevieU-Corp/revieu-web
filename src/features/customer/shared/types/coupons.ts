@@ -32,6 +32,8 @@ export interface Voucher {
   usedAt?: Date;
   qrCode: string;
   paymentId?: string;
+  orderId?: string;
+  scanUrl?: string;
   usageInstructions: string;
   merchantName: string;
   dealTitle: string;

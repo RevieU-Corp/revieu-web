@@ -2,6 +2,7 @@ import React from 'react';
 import { PendingReviewMerchant } from '../types';
 import { Icons } from './Icons';
 import { SectionHeading } from './SectionHeading';
+import { ImageWithFallback } from '../../../../components/common';
 
 interface PendingReviewMerchantsProps {
   merchants: PendingReviewMerchant[];
@@ -36,16 +37,19 @@ export const PendingReviewMerchants: React.FC<PendingReviewMerchantsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {merchants.map((merchant) => (
             <article
-              key={merchant.id}
+              key={merchant.storeId}
               className="relative overflow-hidden rounded-[24px] border border-gray-100 bg-white p-5 shadow-[0_8px_28px_-14px_rgba(17,24,39,0.2)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-14px_rgba(17,24,39,0.35)]"
             >
               <div className="absolute -top-10 -right-6 h-24 w-24 rounded-full bg-brand-red/8 blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-start gap-3">
-                  <img
+                  <ImageWithFallback
                     src={merchant.businessImage}
                     alt={merchant.businessName}
                     className="h-14 w-14 rounded-2xl object-cover border border-gray-100"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
                   />
                   <div className="min-w-0">
                     <h3 className="text-[17px] font-bold text-gray-900 leading-tight truncate">

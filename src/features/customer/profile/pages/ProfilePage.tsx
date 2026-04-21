@@ -19,6 +19,9 @@ import {
 } from '../services/profileService';
 import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
+import { getContextualMockImage } from '../../../../utils/mockImages';
+import { voucherService } from '../../shared/services/voucherService';
+import { Voucher as CustomerVoucher } from '../../shared/types/coupons';
 
 const REVIEW_PAGE_SIZE = 20;
 
@@ -43,52 +46,43 @@ function formatRelativeTime(dateString: string): string {
 
 // Transform API response to Review type
 function transformReviewResponse(response: ReviewResponse): Review {
+  const businessImage = response.businessImage?.trim()
+    ? response.businessImage
+    : getContextualMockImage(`business-${response.id}`, response.businessName);
+
+  const images = (response.images || []).map((image, index) =>
+    image?.trim() ? image : getContextualMockImage(`review-${response.id}-${index}`, response.businessName || response.text)
+  );
+
   return {
     id: response.id,
     businessName: response.businessName || 'Unknown Business',
-    businessImage: response.businessImage || 'https://via.placeholder.com/100',
+    businessImage,
     location: response.location || '',
     rating: response.overallRating,
     date: formatRelativeTime(response.createdAt),
     content: response.text || '',
-    images: response.images || [],
+    images,
     helpfulCount: response.likeCount || 0,
     createdAt: response.createdAt,
   };
 }
 
-const MOCK_COUPONS: Coupon[] = [
-  {
-    id: 'c1',
-    businessName: 'Urban Ritual',
-    offerTitle: 'Buy 1 Get 1 Free',
-    expiryDate: 'Expires in 3 days',
-    code: 'BOGO-URBAN',
-    status: 'active',
-    logo: 'https://picsum.photos/id/63/100/100',
-    color: '#C41111'
-  },
-  {
-    id: 'c2',
-    businessName: 'Booksmith',
-    offerTitle: '15% Off Any Hardcover',
-    expiryDate: 'Oct 30',
-    code: 'READMORE15',
-    status: 'active',
-    logo: 'https://picsum.photos/id/24/100/100',
-    color: '#F97316'
-  },
-  {
-    id: 'c3',
-    businessName: 'Tony\'s Pizza',
-    offerTitle: '$5 Off Large Pizza',
-    expiryDate: 'Expired',
-    code: 'PIZZA5',
-    status: 'expired',
-    logo: 'https://picsum.photos/id/338/100/100',
-    color: '#F7CD46'
-  }
-];
+const REWARD_COLORS = ['#C41111', '#F97316', '#F7CD46', '#0F766E'];
+
+const mapVoucherToRewardCoupon = (voucher: CustomerVoucher, index: number): Coupon => ({
+  id: voucher.id,
+  businessName: voucher.merchantName || 'RevieU Merchant',
+  offerTitle: voucher.dealTitle || 'Reward Voucher',
+  expiryDate:
+    voucher.status === 'expired'
+      ? 'Expired'
+      : `Expires ${voucher.expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+  code: voucher.code,
+  status: voucher.status === 'expired' ? 'expired' : 'active',
+  logo: voucher.qrCode || `https://api.dicebear.com/7.x/shapes/svg?seed=${voucher.merchantId || voucher.id}`,
+  color: REWARD_COLORS[index % REWARD_COLORS.length],
+});
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -103,6 +97,7 @@ const ProfilePage: React.FC = () => {
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [pendingReviewMerchants, setPendingReviewMerchants] = useState<PendingReviewMerchant[]>([]);
   const [pendingMerchantsLoading, setPendingMerchantsLoading] = useState(false);
+  const [rewardCoupons, setRewardCoupons] = useState<Coupon[]>([]);
 
   const applyReviewPage = (responses: ReviewResponse[], total: number, cursor?: string, append = false) => {
     const transformedReviews = responses.map(transformReviewResponse);
@@ -149,6 +144,28 @@ const ProfilePage: React.FC = () => {
     fetchPendingReviewMerchants();
   }, []);
 
+  useEffect(() => {
+    const fetchRewardCoupons = async () => {
+      if (!authUser?.id) {
+        setRewardCoupons([]);
+        return;
+      }
+
+      try {
+        const vouchers = await voucherService.getUserVouchers(String(authUser.id));
+        const mappedCoupons = [...vouchers.active, ...vouchers.expired].map((voucher, index) =>
+          mapVoucherToRewardCoupon(voucher, index)
+        );
+        setRewardCoupons(mappedCoupons);
+      } catch (error) {
+        console.error('Error fetching vouchers:', error);
+        setRewardCoupons([]);
+      }
+    };
+
+    fetchRewardCoupons();
+  }, [authUser?.id]);
+
   // Create UserProfile from AuthContext user data
   const [user, setUser] = useState<UserProfile>({
     name: authUser?.name || 'User',
@@ -187,8 +204,9 @@ const ProfilePage: React.FC = () => {
   const handleWriteReviewFromMerchant = (merchant: PendingReviewMerchant) => {
     navigate(PATHS.CUSTOMER.WRITE_REVIEW, {
       state: {
-        merchantId: merchant.id,
+        merchantId: merchant.merchantId,
         merchantName: merchant.businessName,
+        storeId: merchant.storeId,
       },
     });
   };
@@ -215,7 +233,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const activeCoupons = MOCK_COUPONS.filter(c => c.status === 'active');
+  const activeCoupons = rewardCoupons.filter(c => c.status === 'active');
   const latestReview = useMemo(() => {
     if (reviews.length === 0) {
       return null;

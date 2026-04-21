@@ -5,8 +5,8 @@ import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import {
   HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
-  CustomerLayout, VouchersPage, VoucherDisplay, ReviewsPage, WriteReviewPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
-  MerchantProfileCouponPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage
+  CustomerLayout, VouchersPage, VoucherDisplay, ReviewsPage, WriteReviewPage, WriteReviewSelectPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
+  MerchantProfileCouponPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
 } from '../features/customer';
 
 // Merchant Portal Components
@@ -54,7 +54,9 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.CUSTOMER.POST_DETAIL} element={<PostPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_DETAIL} element={<MerchantDetailPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON_DETAIL} element={<MerchantProfileCouponPage />} />
+        <Route path={PATHS.CUSTOMER.MERCHANT_DEAL_QR_DETAIL} element={<DealQrPage />} />
         <Route path="/customer/merchant/:id/reviews" element={<MerchantReviewsPage />} />
+        <Route path={PATHS.CUSTOMER.WRITE_REVIEW_SELECT} element={<WriteReviewSelectPage />} />
         <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
         <Route path={PATHS.CUSTOMER.REVIEW_SUCCESS} element={<ReviewSuccessPage />} />
         <Route path="/customer/payment" element={<PaymentPage />} />

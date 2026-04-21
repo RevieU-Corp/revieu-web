@@ -8,12 +8,12 @@ import CreateGroupModal from '../components/CreateGroupModal';
 import DeleteModeHeader from '../../shared/components/DeleteModeHeader';
 import Toast from '../../shared/components/Toast';
 import { ChatItem } from '../../shared/types/chat';
-import { getStoredChats, addNewChat, searchStoredChats, deleteMultipleChats } from '../../shared/utils/chatStorage';
-import { syncMessageStorageWithChatMetadata } from '../../shared/utils/messageStorage';
+import { messagingService } from '../../shared/services/messagingService';
 
 const Messages: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [allChats, setAllChats] = useState<ChatItem[]>([]);
   const [filteredChats, setFilteredChats] = useState<ChatItem[]>([]);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -28,34 +28,52 @@ const Messages: React.FC = () => {
     isVisible: false
   });
 
-  // Load chats on component mount
   useEffect(() => {
-    // Sync message storage with chat metadata to ensure consistency
-    syncMessageStorageWithChatMetadata();
+    let isMounted = true;
 
-    const storedChats = getStoredChats();
-    setFilteredChats(storedChats);
-  }, []);
-
-  // Listen for chat updates from other components
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedChats = getStoredChats();
-      // Re-apply current search filter
-      if (searchQuery) {
-        const filtered = searchStoredChats(searchQuery);
-        setFilteredChats(filtered);
-      } else {
-        setFilteredChats(updatedChats);
+    const loadChats = async () => {
+      try {
+        const chats = await messagingService.listConversations();
+        if (!isMounted) {
+          return;
+        }
+        setAllChats(chats);
+        setFilteredChats(chats);
+      } catch (error) {
+        console.error('Failed to load merchant conversations:', error);
+        if (isMounted) {
+          setAllChats([]);
+          setFilteredChats([]);
+        }
       }
     };
 
-    // Listen for custom events from ChatDetail component
-    const handleChatUpdated = handleStorageChange;
-    window.addEventListener('chatUpdated', handleChatUpdated);
+    loadChats();
 
     return () => {
-      window.removeEventListener('chatUpdated', handleChatUpdated);
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleConversationUpdated = async () => {
+      try {
+        const chats = await messagingService.listConversations();
+        setAllChats(chats);
+        if (searchQuery) {
+          setFilteredChats(filterChats(chats, searchQuery));
+        } else {
+          setFilteredChats(chats);
+        }
+      } catch (error) {
+        console.error('Failed to refresh merchant conversations:', error);
+      }
+    };
+
+    window.addEventListener('conversationUpdated', handleConversationUpdated);
+
+    return () => {
+      window.removeEventListener('conversationUpdated', handleConversationUpdated);
     };
   }, [searchQuery]);
 
@@ -82,8 +100,7 @@ const Messages: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    const filtered = searchStoredChats(query);
-    setFilteredChats(filtered);
+    setFilteredChats(filterChats(allChats, query));
   };
 
   const handleNewChat = () => {
@@ -132,11 +149,9 @@ const Messages: React.FC = () => {
     );
 
     if (confirmed) {
-      deleteMultipleChats(Array.from(selectedChatIds));
-
-      // Re-apply search filter
-      const filtered = searchStoredChats(searchQuery);
-      setFilteredChats(filtered);
+      const remainingChats = allChats.filter((chat) => !selectedChatIds.has(chat.id));
+      setAllChats(remainingChats);
+      setFilteredChats(filterChats(remainingChats, searchQuery));
 
       // Exit delete mode
       setIsDeleteMode(false);
@@ -151,33 +166,25 @@ const Messages: React.FC = () => {
     }
   };
 
-  const handleCreateGroup = (groupName: string) => {
-    // Create new group
-    const newGroup: ChatItem = {
-      id: `group_${Date.now()}`,
-      name: groupName,
-      avatar: '', // Will show initials fallback
-      lastMessage: 'Group created',
-      timestamp: 'now',
-      unreadCount: 0
-    };
-
-    // Add to persistent storage
-    addNewChat(newGroup);
-
-    // Apply current search filter to the updated chats
-    const filtered = searchStoredChats(searchQuery);
-    setFilteredChats(filtered);
-
-    // Show success toast
-    setToast({
-      message: `Group "${groupName}" created successfully!`,
-      type: 'success',
-      isVisible: true
-    });
-
-    // Store the new group data in sessionStorage for the ChatDetail component
-    sessionStorage.setItem(`chat_${newGroup.id}`, JSON.stringify(newGroup));
+  const handleCreateGroup = async (groupName: string) => {
+    try {
+      const newConversation = await messagingService.createConversation(groupName);
+      const nextChats = [newConversation, ...allChats];
+      setAllChats(nextChats);
+      setFilteredChats(filterChats(nextChats, searchQuery));
+      setToast({
+        message: `Group "${groupName}" created successfully!`,
+        type: 'success',
+        isVisible: true
+      });
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      setToast({
+        message: 'Failed to create group',
+        type: 'error',
+        isVisible: true
+      });
+    }
   };
 
   const handleCloseCreateGroupModal = () => {
@@ -301,3 +308,16 @@ const Messages: React.FC = () => {
 };
 
 export default Messages;
+
+const filterChats = (chats: ChatItem[], query: string): ChatItem[] => {
+  if (!query.trim()) {
+    return chats;
+  }
+
+  const normalizedQuery = query.toLowerCase();
+  return chats.filter(
+    (chat) =>
+      chat.name.toLowerCase().includes(normalizedQuery) ||
+      chat.lastMessage.toLowerCase().includes(normalizedQuery)
+  );
+};

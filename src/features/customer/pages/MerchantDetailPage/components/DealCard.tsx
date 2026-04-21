@@ -2,22 +2,41 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { couponService } from '../../../shared/services/couponService';
+import { MerchantInfo } from '../../../shared/types/coupons';
+import { useAuth } from '../../../../../contexts/AuthContext';
 
 interface DealCardProps {
   id: string;
   title: string;
   description: string;
   expiry: string;
+  expiryDate: Date;
   value: string;
   type: 'free' | 'paid';
   price?: number;
   merchantId: string;
+  usageInstructions: string;
+  merchantInfo: MerchantInfo;
 }
 
-export function DealCard({ id, title, description, expiry, value, type, price, merchantId }: DealCardProps) {
+export function DealCard({
+  id,
+  title,
+  description,
+  expiry,
+  expiryDate,
+  value,
+  type,
+  price,
+  merchantId,
+  usageInstructions,
+  merchantInfo,
+}: DealCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const handleUseNow = async () => {
     if (isLoading) return;
     
@@ -25,8 +44,12 @@ export function DealCard({ id, title, description, expiry, value, type, price, m
     setError(null);
     
     try {
-      // Get current user ID - in a real app, this would come from auth context
-      const userId = 'current-user-id'; // TODO: Replace with actual user ID from auth context
+      if (!user?.id) {
+        setError('Please log in to redeem this coupon');
+        return;
+      }
+
+      const userId = user.id;
       
       // Validate the coupon first
       const validationResult = await couponService.validateCoupon(id, userId);
@@ -54,8 +77,12 @@ export function DealCard({ id, title, description, expiry, value, type, price, m
                 description,
                 value,
                 type,
-                merchantId
-              }
+                merchantId,
+                price,
+                expiryDate,
+                usageInstructions,
+              },
+              merchantInfo,
             }
           });
         } else {
@@ -69,7 +96,7 @@ export function DealCard({ id, title, description, expiry, value, type, price, m
         navigate('/customer/payment', {
           state: {
             couponPaymentData: paymentFlowResult.paymentData,
-            sessionId: paymentFlowResult.sessionId,
+            merchantInfo,
             dealInfo: {
               id,
               title,
@@ -77,7 +104,9 @@ export function DealCard({ id, title, description, expiry, value, type, price, m
               value,
               type,
               price,
-              merchantId
+              merchantId,
+              expiryDate,
+              usageInstructions,
             }
           }
         });

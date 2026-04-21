@@ -10,19 +10,21 @@ import {
   Clock,
   Wallet,
   Mail,
-  MessageSquare
+  MessageSquare,
+  QrCode
 } from 'lucide-react';
-import { VoucherResult, DealInfo, MerchantInfo } from '../../shared/types/coupons';
+import { Voucher, DealInfo, MerchantInfo } from '../../shared/types/coupons';
 import { voucherService } from '../../shared/services';
+import { PATHS } from '../../../../routes/paths';
 
 interface VoucherDisplayProps {
-  voucher?: VoucherResult;
+  voucher?: Voucher;
   dealInfo?: DealInfo;
   merchantInfo?: MerchantInfo;
 }
 
 interface LocationState {
-  voucher: any; // VoucherResult from couponService
+  voucher: Voucher;
   qrCodeDataUrl: string;
   dealInfo: DealInfo;
   merchantInfo?: MerchantInfo;
@@ -54,7 +56,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
   // Redirect if no voucher data
   useEffect(() => {
     if (!voucherResult || !dealInfo) {
-      navigate('/vouchers', { replace: true });
+      navigate(PATHS.CUSTOMER.VOUCHERS, { replace: true });
     }
   }, [voucherResult, dealInfo, navigate]);
 
@@ -200,14 +202,20 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
             </div>
           </div>
 
-          {/* QR Code Section */}
+            {/* QR Code Section */}
           <div className="p-6 text-center border-b border-gray-100">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
-              <img 
-                src={qrCodeDataUrl} 
-                alt="Voucher QR Code"
-                className="w-48 h-48 mx-auto"
-              />
+              {qrCodeDataUrl ? (
+                <img 
+                  src={qrCodeDataUrl} 
+                  alt="Voucher QR Code"
+                  className="w-48 h-48 mx-auto"
+                />
+              ) : (
+                <div className="flex h-48 w-48 items-center justify-center rounded-xl bg-gray-50">
+                  <QrCode className="h-20 w-20 text-gray-300" />
+                </div>
+              )}
             </div>
             <p className="text-sm text-gray-600 mb-4">Scan this QR code at the merchant</p>
             

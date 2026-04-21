@@ -3,14 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../../routes/paths';
 import { ArrowLeft, Search, MessageSquare } from 'lucide-react';
 import { ChatMessage } from '../../shared/types/chat';
-import { getMessagesForChatPersistent } from '../../shared/utils/messageStorage';
-import { getStoredChats } from '../../shared/utils/chatStorage';
+import { messagingService } from '../../shared/services/messagingService';
+import { useAuth } from '../../../../contexts/AuthContext';
 import MessageBubble from '../components/MessageBubble';
 import SearchBar from '../../shared/components/SearchBar';
 
 const SearchMessages: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [allMessages, setAllMessages] = useState<ChatMessage[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ChatMessage[]>([]);
@@ -23,18 +24,39 @@ const SearchMessages: React.FC = () => {
       return;
     }
 
-    // Load chat info
-    const chats = getStoredChats();
-    const chat = chats.find(c => c.id === chatId);
-    if (chat) {
-      setChatName(chat.name);
-    }
+    let isMounted = true;
 
-    // Load all messages for this chat
-    const messages = getMessagesForChatPersistent(chatId);
-    setAllMessages(messages);
-    setFilteredMessages(messages);
-    setIsLoading(false);
+    const loadConversationMessages = async () => {
+      try {
+        const [conversations, messages] = await Promise.all([
+          messagingService.listConversations(),
+          messagingService.getConversationMessages(chatId),
+        ]);
+        if (!isMounted) {
+          return;
+        }
+        const chat = conversations.find((conversation) => conversation.id === chatId);
+        setChatName(chat?.name || 'Conversation');
+        setAllMessages(messages);
+        setFilteredMessages(messages);
+      } catch (error) {
+        console.error('Failed to load searchable messages:', error);
+        if (isMounted) {
+          setAllMessages([]);
+          setFilteredMessages([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadConversationMessages();
+
+    return () => {
+      isMounted = false;
+    };
   }, [chatId, navigate]);
 
   const handleSearch = (query: string) => {
@@ -74,7 +96,7 @@ const SearchMessages: React.FC = () => {
   };
 
   const renderSearchResult = (message: ChatMessage, index: number) => {
-    const isOwnMessage = message.senderId === 'merchant_1';
+    const isOwnMessage = message.senderId === String(user?.id ?? '');
     const prevMessage = filteredMessages[index - 1];
     const showAvatar = !prevMessage || prevMessage.senderId !== message.senderId;
 

@@ -45,8 +45,17 @@ test('renders upload, submit, and draft banners', async () => {
   reviewProviderSpy.mockClear();
   const { default: WriteReviewPage } = await import('../WriteReviewPage');
   render(
-    <MemoryRouter>
-      <WriteReviewPage />
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: PATHS.CUSTOMER.WRITE_REVIEW,
+          state: { merchantId: '1', merchantName: 'Test' },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
+      </Routes>
     </MemoryRouter>
   );
   expect(screen.getByText(/upload failed/i)).toBeInTheDocument();

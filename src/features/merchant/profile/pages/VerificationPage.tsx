@@ -1,45 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import VerificationModal from '../components/VerificationModal';
 import { PATHS } from '../../../../routes/paths';
 import { useAuth } from '../../../../contexts/AuthContext';
 
 const VerificationPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { isAuthenticated, isLoading, isMerchant } = useAuth();
   const [showModal, setShowModal] = useState(true);
-
-  useEffect(() => {
-    // Create a new merchant user for verification if none exists
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      const newMerchantUser = {
-        id: 'new_merchant_' + Date.now(),
-        email: 'newmerchant@demo.com',
-        name: 'New Merchant',
-        avatar: 'NM',
-        role: 'merchant' as const,
-        merchantProfile: {
-          businessId: 'new_biz_' + Date.now(),
-          verificationStatus: 'pending' as const,
-          subscriptionTier: 'basic' as const,
-          joinDate: new Date()
-        }
-      };
-      
-      localStorage.setItem('authToken', 'new-merchant-token');
-      localStorage.setItem('user', JSON.stringify(newMerchantUser));
-      
-      // Update auth context
-      setUser(newMerchantUser);
-    }
-  }, [setUser]);
 
   const handleCloseModal = () => {
     setShowModal(false);
-    // Navigate back to merchant login if they close the modal
     navigate(PATHS.MERCHANT.LOGIN);
   };
+
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !isMerchant)) {
+      setShowModal(false);
+    }
+  }, [isAuthenticated, isLoading, isMerchant]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading verification...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isMerchant) {
+    return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

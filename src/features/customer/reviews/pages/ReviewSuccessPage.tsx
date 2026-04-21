@@ -46,7 +46,7 @@ const ReviewSuccessPage: React.FC = () => {
             Back to Home
           </button>
           <button
-            onClick={() => navigate(PATHS.CUSTOMER.WRITE_REVIEW)}
+            onClick={() => navigate(PATHS.CUSTOMER.WRITE_REVIEW_SELECT)}
             className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all"
           >
             <PenLine className="w-5 h-5" />
