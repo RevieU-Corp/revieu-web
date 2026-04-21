@@ -207,6 +207,7 @@ const ProfilePage: React.FC = () => {
         merchantId: merchant.merchantId,
         merchantName: merchant.businessName,
         storeId: merchant.storeId,
+        storeName: merchant.businessName,
       },
     });
   };

@@ -11,6 +11,7 @@ interface WriteReviewLocationState {
   merchantId?: string;
   merchantName?: string;
   storeId?: string;
+  storeName?: string;
   venueId?: string;
   merchantCategory?: BusinessCategory;
 }
@@ -246,10 +247,7 @@ const WriteReviewForm: React.FC<{
             </div>
 
             {/* AI Assistant Button */}
-            <AIAssistantButton
-              merchantCategory={BusinessCategory.RESTAURANT}
-              merchantName="this business"
-            />
+            <AIAssistantButton />
           </div>
 
           {/* AI Suggestions List Modal */}
@@ -372,10 +370,10 @@ const WriteReviewForm: React.FC<{
 
           <CombinedRatingComponent
             overallRating={state.reviewData.overallRating || 0}
-            detailedRatings={state.reviewData.detailedRatings || { quality: 0, environment: 0, service: 0 }}
+            detailedRatings={state.reviewData.detailedRatings || { quality: 0, environment: 0, service: 0, value: 0 }}
             onOverallRatingChange={actions.updateRating}
             onDetailedRatingChange={actions.updateDetailedRating}
-            businessCategory={BusinessCategory.RESTAURANT}
+            businessCategory={state.reviewData.merchantCategory || BusinessCategory.RESTAURANT}
           />
         </div>
 
@@ -464,6 +462,7 @@ const WriteReviewPage: React.FC = () => {
     <ReviewProvider
       merchantId={selectedMerchant.id}
       storeId={reviewContext?.storeId}
+      storeName={reviewContext?.storeName}
       venueId={reviewContext?.venueId}
       merchantName={selectedMerchant.name}
       merchantCategory={reviewContext?.merchantCategory ?? BusinessCategory.RESTAURANT}

@@ -180,4 +180,38 @@ describe('reviewsApi', () => {
     });
     expect(response.cursor).toBe('11');
   });
+
+  test('generateAiReviewCandidates posts multipart form data and returns polished candidates', async () => {
+    const formData = new FormData();
+    formData.append('text', 'The noodles were great but service was slow.');
+
+    mockPost.mockResolvedValue({
+      data: {
+        candidates: [
+          'The noodles were flavorful and comforting, though the service felt a bit slow during my visit.',
+          'I really liked the noodles here, but the wait for service was longer than expected.',
+          'Great noodles with rich flavor, but the slower service kept the meal from feeling seamless.',
+        ],
+      },
+    });
+
+    const response = await reviewsApi.generateAiReviewCandidates(formData);
+
+    expect(mockPost).toHaveBeenCalledWith(
+      '/ai/reviews/suggestions',
+      expect.any(FormData),
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    expect(response).toEqual({
+      candidates: [
+        'The noodles were flavorful and comforting, though the service felt a bit slow during my visit.',
+        'I really liked the noodles here, but the wait for service was longer than expected.',
+        'Great noodles with rich flavor, but the slower service kept the meal from feeling seamless.',
+      ],
+    });
+  });
 });

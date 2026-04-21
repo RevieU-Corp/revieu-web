@@ -33,6 +33,15 @@ export enum BusinessCategory {
   ENTERTAINMENT = 'entertainment'
 }
 
+export interface DetailedRatings {
+  quality: number;
+  environment: number;
+  service: number;
+  value: number;
+}
+
+export type DetailedRatingKey = keyof DetailedRatings;
+
 export interface StarRatingProps {
   value: number;
   onChange: (rating: number) => void;
@@ -47,28 +56,20 @@ export interface StarRatingProps {
 
 export interface DetailedRatingsProps {
   overallRating: number;
-  detailedRatings: {
-    quality: number;
-    environment: number;
-    service: number;
-  };
+  detailedRatings: DetailedRatings;
   businessCategory: BusinessCategory;
   onOverallRatingChange: (rating: number) => void;
-  onDetailedRatingChange: (type: 'quality' | 'environment' | 'service', rating: number) => void;
+  onDetailedRatingChange: (type: DetailedRatingKey, rating: number) => void;
   readonly?: boolean;
   className?: string;
 }
 
 export interface CombinedRatingProps {
   overallRating: number;
-  detailedRatings: {
-    quality: number;
-    environment: number;
-    service: number;
-  };
+  detailedRatings: DetailedRatings;
   businessCategory?: BusinessCategory;
   onOverallRatingChange: (rating: number) => void;
-  onDetailedRatingChange: (type: 'quality' | 'environment' | 'service', rating: number) => void;
+  onDetailedRatingChange: (type: DetailedRatingKey, rating: number) => void;
   readonly?: boolean;
   className?: string;
 }
@@ -76,15 +77,15 @@ export interface CombinedRatingProps {
 export interface ReviewData {
   id: string;
   merchantId: string;
+  merchantName?: string;
   storeId?: string;
+  storeName?: string;
   venueId: string;
   userId: string;
+  merchantCategory?: BusinessCategory;
+  preferredLanguage?: 'en' | 'zh';
   overallRating: number;
-  detailedRatings: {
-    quality: number;
-    environment: number;
-    service: number;
-  };
+  detailedRatings: DetailedRatings;
   reviewText: string;
   images: UploadedImage[];
   priceInfo: {
@@ -218,7 +219,7 @@ export interface AIStreamingState {
   progress: number; // 0-100
 }
 
-// AI Assistant State (New for Gemini Integration)
+// AI Assistant State
 export interface AIAssistantState {
   isGenerating: boolean;
   suggestions: string[];
@@ -317,7 +318,7 @@ export interface DraftState {
 
 export interface ReviewContextActions {
   updateRating: (rating: number) => void;
-  updateDetailedRating: (type: 'quality' | 'environment' | 'service', rating: number) => void;
+  updateDetailedRating: (type: DetailedRatingKey, rating: number) => void;
   updateText: (text: string) => void;
   addImage: (image: File) => void;
   removeImage: (imageId: string) => void;
@@ -333,7 +334,7 @@ export interface ReviewContextActions {
   removeTag: (tag: string) => void;
   reset: () => void;
   // New AI Assistant Actions
-  generateAISuggestions: (request: import('../services/gemini').AIAssistRequest) => Promise<void>;
+  generateAISuggestions: () => Promise<void>;
   selectAISuggestion: (suggestion: string) => void;
   toggleAIAssistant: () => void;
   clearAISuggestions: () => void;

@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { vi, test, expect } from 'vitest';
+import { afterEach, vi, test, expect } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { PATHS } from '../../../../../routes/paths';
 
@@ -40,6 +40,10 @@ vi.mock('../../contexts/ReviewContext', () => ({
   }),
   ReviewProvider: reviewProviderSpy,
 }));
+
+afterEach(() => {
+  cleanup();
+});
 
 test('renders upload, submit, and draft banners', async () => {
   reviewProviderSpy.mockClear();
@@ -94,4 +98,30 @@ test('passes merchant context from router state into ReviewProvider', async () =
     }),
     expect.anything()
   );
+});
+
+test('renders a fourth detailed rating for price', async () => {
+  reviewProviderSpy.mockImplementation(({ children }: { children: React.ReactNode }) => <div>{children}</div>);
+  const { default: WriteReviewPage } = await import('../WriteReviewPage');
+
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: PATHS.CUSTOMER.WRITE_REVIEW,
+          state: {
+            merchantId: '42',
+            merchantName: 'Golden Spoon',
+            storeId: '108',
+          },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path={PATHS.CUSTOMER.WRITE_REVIEW} element={<WriteReviewPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  expect(screen.getByText(/price/i)).toBeInTheDocument();
 });

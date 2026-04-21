@@ -37,6 +37,7 @@ export const AISuggestionsList: React.FC = () => {
           <button
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close suggestions"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -62,14 +63,20 @@ export const AISuggestionsList: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-gray-600 text-sm mb-4">
-                Choose a suggestion to use as your review, or use it as inspiration:
-              </p>
+              <div className="space-y-2 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                <p className="text-sm font-medium text-amber-900">
+                  Select one candidate to replace your current draft.
+                </p>
+                <p className="text-sm text-amber-800">
+                  Close this panel to keep your original text and publish it as-is.
+                </p>
+              </div>
               
               {aiAssistantState.suggestions.map((suggestion, index) => (
-                <div
+                <button
                   key={index}
-                  className="group border border-gray-200 rounded-lg p-4 hover:border-[#990000] hover:shadow-md transition-all duration-200 cursor-pointer"
+                  type="button"
+                  className="group w-full border border-gray-200 rounded-lg p-4 text-left hover:border-[#990000] hover:shadow-md transition-all duration-200"
                   onClick={() => handleSelectSuggestion(suggestion)}
                 >
                   <div className="flex items-start justify-between">
@@ -88,7 +95,7 @@ export const AISuggestionsList: React.FC = () => {
                       <span>Click to use</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -97,20 +104,20 @@ export const AISuggestionsList: React.FC = () => {
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-gray-100 bg-gray-50">
           <p className="text-xs text-gray-500">
-            AI suggestions are generated based on your ratings and business type
+            AI candidates are generated from your ratings, merchant context, and attached images.
           </p>
           <div className="flex space-x-2">
             <button
               onClick={handleClearSuggestions}
               className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors"
             >
-              Clear
+              Clear Candidates
             </button>
             <button
               onClick={handleClose}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors"
             >
-              Close
+              Keep Original
             </button>
           </div>
         </div>

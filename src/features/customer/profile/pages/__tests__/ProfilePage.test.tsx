@@ -270,6 +270,7 @@ describe('ProfilePage', () => {
         merchantId: '205',
         merchantName: 'Revieu Demo Cafe',
         storeId: '235',
+        storeName: 'Revieu Demo Cafe',
       },
     });
   });

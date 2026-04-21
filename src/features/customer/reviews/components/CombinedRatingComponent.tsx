@@ -21,36 +21,42 @@ const CombinedRatingComponent: React.FC<CombinedRatingProps> = ({
           quality: 'Taste',
           environment: 'Environment',
           service: 'Service',
+          value: 'Price',
         };
       case BusinessCategory.HOTEL:
         return {
           quality: 'Room',
           environment: 'Facilities',
           service: 'Service',
+          value: 'Value',
         };
       case BusinessCategory.RETAIL:
         return {
           quality: 'Product',
           environment: 'Store',
           service: 'Service',
+          value: 'Value',
         };
       case BusinessCategory.SERVICE:
         return {
           quality: 'Quality',
           environment: 'Environment',
           service: 'Care',
+          value: 'Value',
         };
       case BusinessCategory.ENTERTAINMENT:
         return {
           quality: 'Experience',
           environment: 'Venue',
           service: 'Staff',
+          value: 'Value',
         };
       default:
         return {
           quality: 'Quality',
           environment: 'Environment',
           service: 'Service',
+          value: 'Value',
         };
     }
   };
@@ -75,19 +81,26 @@ const CombinedRatingComponent: React.FC<CombinedRatingProps> = ({
     }
 
     // Auto-suggest similar values for detailed ratings if they're not set
-    if (detailedRatings.quality === 0 && detailedRatings.environment === 0 && detailedRatings.service === 0) {
+    if (
+      detailedRatings.quality === 0 &&
+      detailedRatings.environment === 0 &&
+      detailedRatings.service === 0 &&
+      detailedRatings.value === 0
+    ) {
       const variation = 0.5;
       const qualityRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
       const environmentRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
       const serviceRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
+      const valueRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
 
       onDetailedRatingChange('quality', Math.round(qualityRating * 2) / 2);
       onDetailedRatingChange('environment', Math.round(environmentRating * 2) / 2);
       onDetailedRatingChange('service', Math.round(serviceRating * 2) / 2);
+      onDetailedRatingChange('value', Math.round(valueRating * 2) / 2);
     }
   };
 
-  const handleDetailedRatingChange = (type: 'quality' | 'environment' | 'service', rating: number) => {
+  const handleDetailedRatingChange = (type: 'quality' | 'environment' | 'service' | 'value', rating: number) => {
     onDetailedRatingChange(type, rating);
 
     // Trigger star effect for 5-star rating
@@ -225,6 +238,38 @@ const CombinedRatingComponent: React.FC<CombinedRatingProps> = ({
 
               {/* Star effect overlay */}
               {starEffect.service && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] opacity-30 rounded-lg animate-ping"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm text-[#FF6B35] font-bold animate-bounce">✨</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Value Rating */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                {labels.value}
+              </span>
+              <span className="text-xs text-gray-400">
+                {detailedRatings.value > 0 ? `${detailedRatings.value}/5` : ''}
+              </span>
+            </div>
+            <div className={`relative ${starEffect.value ? 'animate-pulse' : ''}`}>
+              <StarRatingComponent
+                value={detailedRatings.value}
+                onChange={(rating) => handleDetailedRatingChange('value', rating)}
+                size="medium"
+                readonly={readonly}
+                showText={false}
+                allowHalfStars={true}
+                xiaomiStyle={true}
+              />
+
+              {starEffect.value && (
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] opacity-30 rounded-lg animate-ping"></div>
                   <div className="absolute inset-0 flex items-center justify-center">

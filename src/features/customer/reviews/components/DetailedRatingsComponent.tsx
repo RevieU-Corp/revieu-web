@@ -19,36 +19,42 @@ const DetailedRatingsComponent: React.FC<DetailedRatingsProps> = ({
           quality: 'Taste/Quality',
           environment: 'Environment',
           service: 'Service',
+          value: 'Price',
         };
       case BusinessCategory.HOTEL:
         return {
           quality: 'Room Quality',
           environment: 'Facilities',
           service: 'Service',
+          value: 'Value',
         };
       case BusinessCategory.RETAIL:
         return {
           quality: 'Product Quality',
           environment: 'Store Environment',
           service: 'Customer Service',
+          value: 'Value',
         };
       case BusinessCategory.SERVICE:
         return {
           quality: 'Service Quality',
           environment: 'Environment',
           service: 'Customer Care',
+          value: 'Value',
         };
       case BusinessCategory.ENTERTAINMENT:
         return {
           quality: 'Experience Quality',
           environment: 'Venue/Atmosphere',
           service: 'Staff Service',
+          value: 'Value',
         };
       default:
         return {
           quality: 'Quality',
           environment: 'Environment',
           service: 'Service',
+          value: 'Value',
         };
     }
   };
@@ -60,16 +66,23 @@ const DetailedRatingsComponent: React.FC<DetailedRatingsProps> = ({
     onOverallRatingChange(rating);
 
     // Auto-suggest similar values for detailed ratings if they're not set
-    if (detailedRatings.quality === 0 && detailedRatings.environment === 0 && detailedRatings.service === 0) {
+    if (
+      detailedRatings.quality === 0 &&
+      detailedRatings.environment === 0 &&
+      detailedRatings.service === 0 &&
+      detailedRatings.value === 0
+    ) {
       // Add slight variation to make it feel more natural
       const variation = 0.5;
       const qualityRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
       const environmentRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
       const serviceRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
+      const valueRating = Math.max(0.5, Math.min(5, rating + (Math.random() - 0.5) * variation));
 
       onDetailedRatingChange('quality', Math.round(qualityRating * 2) / 2); // Round to nearest 0.5
       onDetailedRatingChange('environment', Math.round(environmentRating * 2) / 2);
       onDetailedRatingChange('service', Math.round(serviceRating * 2) / 2);
+      onDetailedRatingChange('value', Math.round(valueRating * 2) / 2);
     }
   };
 
@@ -147,10 +160,27 @@ const DetailedRatingsComponent: React.FC<DetailedRatingsProps> = ({
               />
             </div>
           </div>
+
+          {/* Value Rating */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-600 min-w-[120px]">
+              {labels.value}
+            </span>
+            <div className="flex-1 ml-4">
+              <StarRatingComponent
+                value={detailedRatings.value}
+                onChange={(rating) => onDetailedRatingChange('value', rating)}
+                size="medium"
+                readonly={readonly}
+                showText={false}
+                allowHalfStars={true}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Average calculation info */}
-        {(detailedRatings.quality > 0 || detailedRatings.environment > 0 || detailedRatings.service > 0) && (
+        {(detailedRatings.quality > 0 || detailedRatings.environment > 0 || detailedRatings.service > 0 || detailedRatings.value > 0) && (
           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-500">
               Detailed ratings help provide more specific feedback. Your overall rating can be different from the average of detailed ratings.
