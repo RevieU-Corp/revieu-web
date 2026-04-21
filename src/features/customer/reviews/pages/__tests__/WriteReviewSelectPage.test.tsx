@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { PATHS } from '../../../../../routes/paths';
+import { BusinessCategory } from '../../types';
 
 const { navigateMock, getSelectionDataMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -135,6 +136,8 @@ describe('WriteReviewSelectPage', () => {
         merchantId: '205',
         merchantName: 'Revieu Demo Cafe',
         storeId: '235',
+        storeName: 'Revieu Demo Cafe - Main',
+        merchantCategory: BusinessCategory.RESTAURANT,
       },
     });
   });

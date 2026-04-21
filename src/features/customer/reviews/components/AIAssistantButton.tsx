@@ -1,34 +1,17 @@
 import React from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useReviewContext } from '../contexts/ReviewContext';
-import { BusinessCategory } from '../types';
 
-interface AIAssistantButtonProps {
-  merchantCategory?: BusinessCategory;
-  merchantName?: string;
-}
-
-export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({
-  merchantCategory = BusinessCategory.RESTAURANT,
-  merchantName = 'this business'
-}) => {
+export const AIAssistantButton: React.FC = () => {
   const { state, actions } = useReviewContext();
   const { aiAssistantState, reviewData } = state;
 
   const handleGenerateSuggestions = async () => {
-    // 构建 AI 请求
-    const request = {
-      overallRating: reviewData.overallRating || 0,
-      detailedRatings: reviewData.detailedRatings,
-      businessCategory: merchantCategory,
-      currentText: reviewData.reviewText || '',
-      merchantName: merchantName
-    };
-
-    await actions.generateAISuggestions(request);
+    await actions.generateAISuggestions();
   };
 
-  const isDisabled = aiAssistantState.isGenerating || reviewData.overallRating === 0;
+  const hasEnoughText = (reviewData.reviewText || '').trim().length >= 10;
+  const isDisabled = aiAssistantState.isGenerating || reviewData.overallRating === 0 || !hasEnoughText;
 
   return (
     <button

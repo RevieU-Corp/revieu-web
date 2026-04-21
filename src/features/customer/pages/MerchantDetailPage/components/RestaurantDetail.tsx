@@ -248,6 +248,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
         merchantId: store.merchantId,
         merchantName: store.name,
         storeId: store.id,
+        storeName: store.name,
       },
     });
   };

@@ -81,6 +81,10 @@ export interface StoreReviewListResponse {
     cursor?: string;
 }
 
+export interface AiReviewCandidatesResponse {
+    candidates: string[];
+}
+
 interface BackendReviewResponse {
     id: string;
     merchantId: string;
@@ -157,6 +161,10 @@ interface BackendContentReviewListResponse {
 interface BackendStoreReviewListResponse {
     data: BackendStoreReviewItem[];
     cursor?: number;
+}
+
+interface BackendAiReviewCandidatesResponse {
+    candidates?: string[];
 }
 
 export interface ReviewListRequest {
@@ -306,6 +314,22 @@ export const reviewsApi = {
         return {
             data: response.data.data.map(mapStoreReviewResponse),
             cursor: response.data.cursor !== undefined ? String(response.data.cursor) : undefined,
+        };
+    },
+
+    generateAiReviewCandidates: async (formData: FormData): Promise<AiReviewCandidatesResponse> => {
+        const response = await apiClient.post<BackendAiReviewCandidatesResponse>(
+            '/ai/reviews/suggestions',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+
+        return {
+            candidates: response.data.candidates ?? [],
         };
     },
 

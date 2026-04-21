@@ -11,7 +11,7 @@ import {
   BusinessCategory,
   UploadedImage
 } from '../types';
-import { AIAssistRequest, generateReviewSuggestions } from '../services/gemini';
+import { generateReviewSuggestions } from '../services/aiAssist';
 import { mediaApi, uploadToR2 } from '../../../../api/media';
 import { reviewsApi, CreateReviewRequest } from '../../../../api/reviews';
 import { loadDraft as loadDraftFromStorage, saveDraft as saveDraftToStorage } from '../utils/draftStorage';
@@ -23,6 +23,7 @@ const initialReviewData: Partial<ReviewData> = {
     quality: 0,
     environment: 0,
     service: 0,
+    value: 0,
   },
   reviewText: '',
   images: [],
@@ -130,7 +131,7 @@ const buildDraftImages = (imageUrls: string[]): UploadedImage[] => {
 // Action types
 type ReviewAction =
   | { type: 'UPDATE_RATING'; payload: number }
-  | { type: 'UPDATE_DETAILED_RATING'; payload: { type: 'quality' | 'environment' | 'service'; rating: number } }
+  | { type: 'UPDATE_DETAILED_RATING'; payload: { type: 'quality' | 'environment' | 'service' | 'value'; rating: number } }
   | { type: 'UPDATE_TEXT'; payload: string }
   | { type: 'ADD_TAG'; payload: string }
   | { type: 'REMOVE_TAG'; payload: string }
@@ -623,6 +624,7 @@ interface ReviewProviderProps {
   children: ReactNode;
   merchantId?: string;
   storeId?: string;
+  storeName?: string;
   venueId?: string;
   merchantName?: string;
   merchantCategory?: BusinessCategory;
@@ -632,15 +634,21 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
   children,
   merchantId,
   storeId,
+  storeName,
   venueId,
+  merchantName,
+  merchantCategory,
 }) => {
   const [state, dispatch] = useReducer(reviewReducer, {
     ...initialState,
     reviewData: {
       ...initialState.reviewData,
       merchantId,
+      merchantName,
       storeId,
+      storeName,
       venueId,
+      merchantCategory,
     },
   });
 
@@ -734,7 +742,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'UPDATE_RATING', payload: rating });
     }, []),
 
-    updateDetailedRating: useCallback((type: 'quality' | 'environment' | 'service', rating: number) => {
+    updateDetailedRating: useCallback((type: 'quality' | 'environment' | 'service' | 'value', rating: number) => {
       dispatch({ type: 'UPDATE_DETAILED_RATING', payload: { type, rating } });
     }, []),
 
@@ -808,20 +816,33 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
       dispatch({ type: 'START_AI_STREAMING', payload: prompt });
     }, []),
 
-    generateAISuggestions: useCallback(async (request: AIAssistRequest) => {
+    generateAISuggestions: useCallback(async () => {
       dispatch({ type: 'GENERATE_AI_SUGGESTIONS_START' });
       try {
-        const response = await generateReviewSuggestions(request);
-
+        const response = await generateReviewSuggestions({
+          reviewText: state.reviewData.reviewText || '',
+          overallRating: state.reviewData.overallRating || 0,
+          detailedRatings: state.reviewData.detailedRatings || {
+            quality: 0,
+            environment: 0,
+            service: 0,
+            value: 0,
+          },
+          merchantName: state.reviewData.merchantName,
+          storeName: state.reviewData.storeName,
+          businessCategory: state.reviewData.merchantCategory || BusinessCategory.RESTAURANT,
+          images: state.reviewData.images || [],
+          language: state.reviewData.preferredLanguage,
+        });
         if (response.error) {
           dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: response.error });
         } else {
-          dispatch({ type: 'GENERATE_AI_SUGGESTIONS_SUCCESS', payload: response.suggestions });
+          dispatch({ type: 'GENERATE_AI_SUGGESTIONS_SUCCESS', payload: response.candidates });
         }
       } catch (error) {
         dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: 'Failed to generate suggestions' });
       }
-    }, []),
+    }, [state.reviewData]),
 
     selectAISuggestion: useCallback((suggestion: string) => {
       dispatch({ type: 'SELECT_AI_SUGGESTION', payload: suggestion });

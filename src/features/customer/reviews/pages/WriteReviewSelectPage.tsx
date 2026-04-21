@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronRight, MapPin, Search, Store } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from '../../../../components/common';
 import { PATHS } from '../../../../routes/paths';
+import { BusinessCategory } from '../types';
 import {
   getWriteReviewTargetSelectionData,
   ReviewMerchantTargetOption,
@@ -13,6 +14,54 @@ import {
 const matchesMerchantSearch = (merchant: ReviewMerchantTargetOption, search: string): boolean => {
   const haystack = `${merchant.name} ${merchant.category}`.toLowerCase();
   return haystack.includes(search);
+};
+
+const inferBusinessCategory = (...values: Array<string | undefined>): BusinessCategory => {
+  const haystack = values
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+    .toLowerCase();
+
+  if (
+    haystack.includes('hotel') ||
+    haystack.includes('inn') ||
+    haystack.includes('resort') ||
+    haystack.includes('lodging')
+  ) {
+    return BusinessCategory.HOTEL;
+  }
+
+  if (
+    haystack.includes('retail') ||
+    haystack.includes('shop') ||
+    haystack.includes('store') ||
+    haystack.includes('grocery') ||
+    haystack.includes('market')
+  ) {
+    return BusinessCategory.RETAIL;
+  }
+
+  if (
+    haystack.includes('salon') ||
+    haystack.includes('spa') ||
+    haystack.includes('repair') ||
+    haystack.includes('cleaning') ||
+    haystack.includes('service')
+  ) {
+    return BusinessCategory.SERVICE;
+  }
+
+  if (
+    haystack.includes('cinema') ||
+    haystack.includes('movie') ||
+    haystack.includes('karaoke') ||
+    haystack.includes('arcade') ||
+    haystack.includes('entertainment')
+  ) {
+    return BusinessCategory.ENTERTAINMENT;
+  }
+
+  return BusinessCategory.RESTAURANT;
 };
 
 const MerchantListSection = ({
@@ -173,6 +222,8 @@ const WriteReviewSelectPage: React.FC = () => {
         merchantId: selectedMerchant.merchantId,
         merchantName: selectedMerchant.name,
         storeId: store.storeId,
+        storeName: store.name,
+        merchantCategory: inferBusinessCategory(selectedMerchant.category, store.category),
       },
     });
   };
