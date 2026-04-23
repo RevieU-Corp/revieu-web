@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronDown, Heart, MapPin, Phone, Star, ThumbsUp } from 'lucide-react';
 import { ImageWithFallback } from './components/ImageWithFallback';
-import { getContextualMockImage } from '../../../../utils/mockImages';
 import { PATHS } from '../../../../routes/paths';
 
 type CouponTab = 'deal' | 'menu' | 'review';
@@ -235,10 +234,7 @@ function buildMerchantCouponContent(merchantName: string): MerchantCouponContent
       score,
       likes: 12 + ((seed + index * 9) % 40),
       body: `Tried ${firstDish} and ${secondDish} at ${safeName}. Flavor was balanced, portion size was solid, and the combo value made it worth coming back.`,
-      images: [
-        getContextualMockImage(`${safeName}-review-${index}-a`, `${safeName} ${firstDish}`),
-        getContextualMockImage(`${safeName}-review-${index}-b`, `${safeName} ${secondDish}`),
-      ],
+      images: [],
     };
   });
 
@@ -251,13 +247,13 @@ function buildMerchantCouponContent(merchantName: string): MerchantCouponContent
     heroImages: {
       deal: isSunLifeOrganics
         ? 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80'
-        : getContextualMockImage(`${safeName}-hero-deal`, `${safeName} deal`),
+        : '',
       menu: isSunLifeOrganics
         ? 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80'
-        : getContextualMockImage(`${safeName}-hero-menu`, `${safeName} menu`),
+        : '',
       review: isSunLifeOrganics
         ? 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80'
-        : getContextualMockImage(`${safeName}-hero-review`, `${safeName} review`),
+        : '',
     },
     flashDeals,
     comboDeals,

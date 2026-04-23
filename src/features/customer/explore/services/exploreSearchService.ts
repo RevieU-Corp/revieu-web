@@ -1,7 +1,4 @@
 import {
-  MOCK_EXPLORE_LANDING_DATA,
-} from '../data/mockExploreSearchData';
-import {
   ExploreQuickFilterKey,
   ExploreSearchApi,
   ExploreSearchLandingData,
@@ -117,10 +114,10 @@ export const exploreSearchService: ExploreSearchApi = {
     } catch (error) {
       console.error('Failed to build explore landing data from stores. Using fallback data.', error);
       return {
-        quickFilters: [...MOCK_EXPLORE_LANDING_DATA.quickFilters],
-        trendingSearches: [...MOCK_EXPLORE_LANDING_DATA.trendingSearches],
-        browseCategories: [...MOCK_EXPLORE_LANDING_DATA.browseCategories],
-        recentSearches: [...MOCK_EXPLORE_LANDING_DATA.recentSearches],
+        quickFilters: [],
+        trendingSearches: [],
+        browseCategories: [],
+        recentSearches: [],
       };
     }
   },

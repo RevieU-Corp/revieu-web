@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { X, Loader2 } from 'lucide-react';
 import { Coupon } from '../types';
 import { Icons } from './Icons';
 
 interface CouponCardProps {
   coupon: Coupon;
-  className?: string; // Allow custom classes for layout flexibility
-  compact?: boolean; // New compact mode for list view if needed
+  className?: string;
+  compact?: boolean;
+  onDelete?: (couponId: string) => Promise<void>;
 }
 
-const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact = false }) => {
+const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact = false, onDelete }) => {
   const isExpired = coupon.status === 'expired';
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onDelete || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(coupon.id);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   return (
     <div className={`group relative flex flex-col w-full bg-white rounded-2xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-transform active:scale-[0.98] ${isExpired ? 'opacity-60 grayscale' : ''} ${className}`}>
@@ -23,11 +37,27 @@ const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact
           <div className="bg-white/20 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
              <img src={coupon.logo} alt="Logo" className="w-8 h-8 rounded-lg bg-white object-cover shadow-sm" />
           </div>
-          {coupon.status === 'active' && !compact && (
-            <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 tracking-wide">
-              ACTIVE
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {coupon.status === 'active' && !compact && (
+              <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 tracking-wide">
+                ACTIVE
+              </span>
+            )}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="bg-black/30 backdrop-blur-md p-1.5 rounded-full border border-white/20 text-white hover:bg-black/50 transition-colors disabled:opacity-50"
+                aria-label="Delete coupon"
+              >
+                {isDeleting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <X size={14} />
+                )}
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="text-white z-10 mt-2">

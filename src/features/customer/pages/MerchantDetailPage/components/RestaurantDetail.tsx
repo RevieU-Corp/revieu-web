@@ -253,6 +253,39 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white pb-20 animate-pulse">
+        <div className="relative h-64 w-full bg-gray-200">
+          <button
+            type="button"
+            onClick={onBack}
+            className="absolute left-4 top-4 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow"
+          >
+            Back
+          </button>
+          <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-1/2 rounded-full border-4 border-white bg-gray-300 shadow-xl" />
+        </div>
+        <div className="px-6 pb-8 pt-16">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-48 rounded-lg bg-gray-200" />
+            <div className="h-4 w-72 rounded bg-gray-200" />
+            <div className="h-4 w-56 rounded bg-gray-200" />
+          </div>
+          <div className="mt-6 space-y-3 rounded-3xl border border-gray-100 bg-gray-50 p-5">
+            <div className="h-4 w-full rounded bg-gray-200" />
+            <div className="h-4 w-40 rounded bg-gray-200" />
+          </div>
+          <div className="mt-6 h-12 rounded-full bg-gray-100" />
+          <div className="mt-8 space-y-4">
+            <div className="h-28 rounded-2xl bg-gray-100" />
+            <div className="h-28 rounded-2xl bg-gray-100" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="relative h-64 w-full">
@@ -268,7 +301,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
         >
           Back
         </button>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-1/2 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
           <ImageWithFallback
             src={store.coverImageUrl || FALLBACK_LOGO}

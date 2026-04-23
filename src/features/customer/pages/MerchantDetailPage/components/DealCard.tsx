@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { couponService } from '../../../shared/services/couponService';
 import { MerchantInfo } from '../../../shared/types/coupons';
 import { useAuth } from '../../../../../contexts/AuthContext';
@@ -62,32 +62,24 @@ export function DealCard({
       
       // Handle different coupon types
       if (type === 'free') {
-        // For free coupons, attempt direct redemption
-        const redemptionResult = await couponService.redeemFreeCoupon(id, userId);
-        
-        if (redemptionResult.success) {
-          // Navigate to voucher display page with the result
-          navigate('/customer/voucher/display', {
-            state: {
-              voucher: redemptionResult.voucher,
-              qrCodeDataUrl: redemptionResult.qrCodeDataUrl,
-              dealInfo: {
-                id,
-                title,
-                description,
-                value,
-                type,
-                merchantId,
-                price,
-                expiryDate,
-                usageInstructions,
-              },
-              merchantInfo,
-            }
-          });
-        } else {
-          setError(redemptionResult.message || 'Failed to redeem coupon');
-        }
+        navigate('/customer/voucher/display', {
+          state: {
+            couponId: id,
+            userId,
+            dealInfo: {
+              id,
+              title,
+              description,
+              value,
+              type,
+              merchantId,
+              price,
+              expiryDate,
+              usageInstructions,
+            },
+            merchantInfo,
+          }
+        });
       } else if (type === 'paid') {
         // For paid coupons, initiate payment flow
         const paymentFlowResult = await couponService.initiatePaidCouponFlow(id, userId);
@@ -120,10 +112,22 @@ export function DealCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 relative">
+    <button
+      type="button"
+      onClick={handleUseNow}
+      disabled={isLoading}
+      className="w-full text-left bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md active:scale-[0.98] transition-all border border-gray-100 relative disabled:cursor-not-allowed"
+    >
       {/* Left Accent Strip */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6900]" />
-      
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-2xl z-10">
+          <Loader2 className="w-6 h-6 animate-spin text-[#FF6900]" />
+        </div>
+      )}
+
       <div className="p-4 pl-5">
         <div className="flex items-start gap-4">
           {/* Value Section */}
@@ -137,9 +141,7 @@ export function DealCard({
           {/* Divider with notches */}
           <div className="relative flex flex-col items-center justify-center px-2">
             <div className="w-px h-full bg-gray-200 relative">
-              {/* Top notch */}
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FAFAFA] rounded-full border border-gray-200" />
-              {/* Bottom notch */}
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FAFAFA] rounded-full border border-gray-200" />
             </div>
           </div>
@@ -150,31 +152,12 @@ export function DealCard({
             <p className="text-gray-500 text-sm mb-3 line-clamp-2">{description}</p>
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">{expiry}</span>
-              <div className="flex flex-col items-end gap-1">
-                {error && (
-                  <div className="flex items-center gap-1 text-red-500 text-xs">
-                    <AlertCircle className="w-3 h-3" />
-                    <span className="max-w-32 truncate">{error}</span>
-                  </div>
-                )}
-                <button 
-                  onClick={handleUseNow}
-                  disabled={isLoading}
-                  className="text-[#FF6900] text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      Use Now
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
+              {error && (
+                <div className="flex items-center gap-1 text-red-500 text-xs">
+                  <AlertCircle className="w-3 h-3" />
+                  <span className="max-w-40 truncate">{error}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -186,6 +169,6 @@ export function DealCard({
           <div key={i} className="w-1 h-2 bg-[#FAFAFA]" />
         ))}
       </div>
-    </div>
+    </button>
   );
 }

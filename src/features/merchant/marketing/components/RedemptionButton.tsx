@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QrCode, Keyboard, CheckCircle, AlertCircle, X } from 'lucide-react';
 import RedemptionScanner from './RedemptionScanner';
+import { voucherService } from '../../../customer/shared/services/voucherService';
 
 // Device detection hook
 const useDeviceDetection = () => {
@@ -37,45 +38,28 @@ const RedemptionButton: React.FC = () => {
   const [redemptionResult, setRedemptionResult] = useState<RedemptionResult | null>(null);
   const isMobile = useDeviceDetection();
 
-  // Mock coupon database
-  const mockCoupons = {
-    'STUDENT20': { name: 'Student Special', discount: '20% Off', isActive: true },
-    'SAVE15': { name: 'Save $15', discount: '$15 Off', isActive: true },
-    'FINALS2024': { name: 'Finals Week Deal', discount: '$5 Off', isActive: true },
-    'LATENIGHT': { name: 'Late Night Special', discount: 'Buy 1 Get 1', isActive: true },
-    'EXPIRED123': { name: 'Old Coupon', discount: '10% Off', isActive: false },
-  };
-
-  const handleRedeem = (code: string) => {
-    // Simulate coupon validation
-    const normalizedCode = code.toUpperCase().trim();
-    const coupon = mockCoupons[normalizedCode as keyof typeof mockCoupons];
-
-    if (!coupon) {
-      setRedemptionResult({
-        success: false,
-        message: 'Invalid coupon code. Please check and try again.'
-      });
-    } else if (!coupon.isActive) {
-      setRedemptionResult({
-        success: false,
-        message: 'This coupon has expired or is no longer valid.'
-      });
-    } else {
-      setRedemptionResult({
-        success: true,
-        message: 'Coupon redeemed successfully!',
-        couponName: coupon.name,
-        discount: coupon.discount
-      });
+  const handleRedeem = async (code: string) => {
+    setShowScanner(false);
+    try {
+      const voucher = await voucherService.getVoucherByCode(code.trim());
+      if (voucher.status === 'used') {
+        setRedemptionResult({ success: false, message: 'This voucher has already been used.' });
+      } else if (voucher.status === 'expired') {
+        setRedemptionResult({ success: false, message: 'This voucher has expired.' });
+      } else {
+        await voucherService.markVoucherAsUsed(voucher.id, '');
+        setRedemptionResult({
+          success: true,
+          message: 'Voucher redeemed successfully!',
+          couponName: voucher.dealTitle,
+          discount: voucher.dealValue,
+        });
+      }
+    } catch {
+      setRedemptionResult({ success: false, message: 'Invalid voucher code. Please check and try again.' });
     }
 
-    setShowScanner(false);
-
-    // Auto-hide result after 5 seconds
-    setTimeout(() => {
-      setRedemptionResult(null);
-    }, 5000);
+    setTimeout(() => setRedemptionResult(null), 5000);
   };
 
   const handleCloseScanner = () => {
