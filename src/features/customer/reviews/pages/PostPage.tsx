@@ -43,8 +43,7 @@ const PostPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading post...</p>
+          <p className="text-gray-500">Post not found.</p>
         </div>
       </div>
     );
@@ -103,25 +102,9 @@ const PostPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Comments Section Mock */}
+        {/* Comments Section */}
         <div className="p-4 space-y-4">
           <h3 className="font-bold text-gray-900">Comments</h3>
-
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">👤</div>
-            <div className="flex-1 bg-gray-50 p-3 rounded-r-xl rounded-bl-xl">
-              <p className="text-sm font-bold text-gray-900 mb-1">Jamie Smith</p>
-              <p className="text-sm text-gray-700">I totally agree! The broth is amazing.</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">🎓</div>
-            <div className="flex-1 bg-gray-50 p-3 rounded-r-xl rounded-bl-xl">
-              <p className="text-sm font-bold text-gray-900 mb-1">Chris P.</p>
-              <p className="text-sm text-gray-700">Do they have vegetarian options?</p>
-            </div>
-          </div>
         </div>
       </div>
 

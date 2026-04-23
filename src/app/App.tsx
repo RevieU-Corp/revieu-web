@@ -5,7 +5,7 @@ import { PATHS } from '../routes/paths';
 import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleCallbackPage } from '../features/auth';
 import {
   HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
-  CustomerLayout, VouchersPage, VoucherDisplay, ReviewsPage, WriteReviewPage, WriteReviewSelectPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
+  CustomerLayout, VoucherDisplay, ReviewsPage, WriteReviewPage, WriteReviewSelectPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
   MerchantProfileCouponPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
 } from '../features/customer';
 
@@ -62,7 +62,6 @@ const AppRouter: React.FC = () => {
         <Route path="/customer/payment" element={<PaymentPage />} />
         <Route path="/customer/payment/success" element={<PaymentSuccessPage />} />
         <Route path="/customer/payment/coupon-success" element={<CouponPaymentSuccessPage />} />
-        <Route path={PATHS.CUSTOMER.VOUCHERS} element={<VouchersPage />} />
         <Route path="/customer/voucher/display" element={<VoucherDisplay />} />
       </Route>
       <Route path={PATHS.MERCHANT.ROOT} element={<MerchantLayout />}>

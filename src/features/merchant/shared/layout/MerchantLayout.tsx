@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
-import { BackButton } from '../../../../components/common';
 import BottomNavigation from './BottomNavigation';
 import VerificationModal from '../../profile/components/VerificationModal';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -71,9 +70,6 @@ const MerchantLayout: React.FC = () => {
 
   return (
     <div className="h-screen w-full overflow-hidden bg-gray-50 flex flex-col relative">
-      {/* Floating Elements */}
-      <BackButton />
-
       <main className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Outlet />

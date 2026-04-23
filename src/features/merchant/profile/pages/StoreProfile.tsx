@@ -61,59 +61,30 @@ interface StoreData {
   parking: 'free' | 'paid' | 'valet' | 'street';
 }
 
-// Mock data for McDonald's USC
-const mockStoreData: StoreData = {
+const defaultStoreData: StoreData = {
   id: '',
-  name: "McDonald's - USC Figueroa",
-  phone: "+1 (213) 749-1444",
-  website: "https://www.mcdonalds.com/location/ca/los-angeles/3037-s-figueroa-st/",
-  streetAddress: "3037 S Figueroa St",
-  city: 'Los Angeles',
-  state: 'CA',
-  country: 'USA',
-  coordinates: { lat: 34.0253, lng: -118.2831 },
-  coverPhoto: DEFAULT_MERCHANT_ASSETS.COVER_PHOTO, // Use default cover photo
+  name: '',
+  phone: '',
+  website: '',
+  streetAddress: '',
+  city: '',
+  state: '',
+  country: '',
+  coordinates: { lat: 0, lng: 0 },
+  coverPhoto: DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
   gallery: [],
   menuImages: [],
-  bio: "Welcome to the heart of the Trojan community! Serving USC students and local residents 24/7. We offer high-speed Wi-Fi, ample indoor seating, and the classic taste you love. Perfect for late-night study sessions or pre-game meals.",
+  bio: '',
   operatingHours: {
-    open: "06:00",
-    close: "23:00"
+    open: '09:00',
+    close: '21:00',
   },
-  outdoorSeating: true,
-  accessibility: true,
+  outdoorSeating: false,
+  accessibility: false,
   petFriendly: false,
-  wifiOutlets: 'both',
+  wifiOutlets: 'none',
   parking: 'street',
-  menu: [
-    {
-      id: 1,
-      name: "Big Mac",
-      price: 5.99,
-      description: "Double beef patties with special sauce, lettuce, cheese, pickles, onions on a sesame seed bun.",
-      category: "Burgers",
-      isAvailable: true,
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop"
-    },
-    {
-      id: 2,
-      name: "World Famous Fries",
-      price: 3.49,
-      description: "Golden, crispy potatoes fried to perfection.",
-      category: "Sides",
-      isAvailable: true,
-      image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&h=200&fit=crop"
-    },
-    {
-      id: 3,
-      name: "McFlurry with OREO",
-      price: 4.29,
-      description: "Creamy vanilla soft serve mixed with crunchy OREO pieces.",
-      category: "Desserts",
-      isAvailable: true,
-      image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=200&fit=crop"
-    }
-  ]
+  menu: [],
 };
 
 const categoryColors: Record<string, string> = {
@@ -126,7 +97,7 @@ const categoryColors: Record<string, string> = {
 const formatAddress = (store: Pick<StoreData, 'streetAddress' | 'city' | 'state' | 'country'>) =>
   [store.streetAddress, store.city, store.state, store.country].filter(Boolean).join(', ');
 
-const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = mockStoreData): StoreData => ({
+const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultStoreData): StoreData => ({
   ...base,
   id: String(raw.id),
   name: raw.name ?? base.name,
@@ -164,8 +135,8 @@ const buildStoreUpdatePayload = (store: StoreData) => ({
 
 const StoreProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [storeData, setStoreData] = useState(mockStoreData);
-  const [savedStoreData, setSavedStoreData] = useState(mockStoreData);
+  const [storeData, setStoreData] = useState(defaultStoreData);
+  const [savedStoreData, setSavedStoreData] = useState(defaultStoreData);
   const [isLoadingStore, setIsLoadingStore] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -207,12 +178,12 @@ const StoreProfile: React.FC = () => {
 
         if (!primaryStore) {
           setStatusMessage('No merchant store found yet.');
-          setStoreData(mockStoreData);
-          setSavedStoreData(mockStoreData);
+          setStoreData(defaultStoreData);
+          setSavedStoreData(defaultStoreData);
           return;
         }
 
-        const normalizedStore = normalizeStoreData(primaryStore, mockStoreData);
+        const normalizedStore = normalizeStoreData(primaryStore, defaultStoreData);
         setStoreData(normalizedStore);
         setSavedStoreData(normalizedStore);
       } catch (error) {

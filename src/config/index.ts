@@ -11,6 +11,6 @@ const rawApiBase = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
 
 export const config = {
   // Prefer build-time override for local dev (e.g. .env.local).
-  // In deployed environments, default to same-origin so dev/prod can share the same build.
+  // In deployed environments, default to same-origin so dev/prod can share the same bui/ld.
   apiBaseUrl: rawApiBase ? joinUrl(rawApiBase, API_PREFIX) : API_PREFIX,
 };
