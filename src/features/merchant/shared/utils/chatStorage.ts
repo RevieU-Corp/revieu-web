@@ -1,5 +1,4 @@
 import { ChatItem } from '../types/chat';
-import { mockChats } from './mockData';
 import { getAllChatSettings, deleteSettingsForChats } from './chatSettings';
 import { deleteMessagesForChats, getMessagesForChatPersistent, saveMessagesForChat } from './messageStorage';
 
@@ -26,9 +25,7 @@ export const getStoredChats = (): ChatItem[] => {
     if (stored) {
       chats = JSON.parse(stored);
     } else {
-      // If no stored chats, initialize with mock data
-      localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(mockChats));
-      chats = mockChats;
+      chats = [];
     }
 
     // Merge with settings
@@ -53,7 +50,7 @@ export const getStoredChats = (): ChatItem[] => {
     });
   } catch (error) {
     console.error('Error loading stored chats:', error);
-    return mockChats;
+    return [];
   }
 };
 

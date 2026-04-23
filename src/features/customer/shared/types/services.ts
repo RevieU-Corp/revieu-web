@@ -134,6 +134,13 @@ export interface VoucherService {
    * @returns Promise resolving to updated voucher
    */
   updateVoucherStatus(voucherId: string, status: Voucher['status']): Promise<Voucher>;
+
+  /**
+   * Deletes a voucher by ID
+   * @param voucherId - The ID of the voucher to delete
+   * @returns Promise resolving when deletion is complete
+   */
+  deleteVoucher(voucherId: string): Promise<void>;
 }
 
 // Redemption State Management Interface

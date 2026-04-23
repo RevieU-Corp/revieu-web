@@ -19,7 +19,6 @@ import {
 } from '../services/profileService';
 import { UserProfile, Review, Coupon, PendingReviewMerchant } from '../types';
 import { reviewsApi, ReviewResponse } from '../../../../api/reviews';
-import { getContextualMockImage } from '../../../../utils/mockImages';
 import { voucherService } from '../../shared/services/voucherService';
 import { Voucher as CustomerVoucher } from '../../shared/types/coupons';
 
@@ -46,13 +45,9 @@ function formatRelativeTime(dateString: string): string {
 
 // Transform API response to Review type
 function transformReviewResponse(response: ReviewResponse): Review {
-  const businessImage = response.businessImage?.trim()
-    ? response.businessImage
-    : getContextualMockImage(`business-${response.id}`, response.businessName);
+  const businessImage = response.businessImage?.trim() ? response.businessImage : '';
 
-  const images = (response.images || []).map((image, index) =>
-    image?.trim() ? image : getContextualMockImage(`review-${response.id}-${index}`, response.businessName || response.text)
-  );
+  const images = (response.images || []).filter((image): image is string => !!(image?.trim()));
 
   return {
     id: response.id,
@@ -426,7 +421,14 @@ const ProfilePage: React.FC = () => {
               <div className="flex overflow-x-auto gap-5 pb-6 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory md:grid md:grid-cols-2 xl:grid-cols-3 md:overflow-visible md:pb-0 md:mx-0 md:px-0">
                 {activeCoupons.map((coupon) => (
                   <div key={coupon.id} className="min-w-[85%] sm:min-w-[320px] md:min-w-0 snap-center h-full">
-                    <CouponCard coupon={coupon} className="h-full" />
+                    <CouponCard
+                      coupon={coupon}
+                      className="h-full"
+                      onDelete={async (id) => {
+                        await voucherService.deleteVoucher(id);
+                        setRewardCoupons(prev => prev.filter(c => c.id !== id));
+                      }}
+                    />
                   </div>
                 ))}
                 <div className="min-w-[120px] snap-center flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 hover:border-[#F7CD46] hover:text-[#F59E0B] transition-all cursor-pointer md:h-full min-h-[200px] hover:bg-[#F7CD46]/10 group">

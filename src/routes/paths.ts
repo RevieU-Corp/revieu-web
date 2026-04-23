@@ -33,7 +33,6 @@
         MERCHANT_PROFILE_COUPON_DETAIL: '/customer/merchant/:id/coupon',
         MERCHANT_DEAL_QR: (id: string) => `/customer/merchant/${id}/deal-qr`,
         MERCHANT_DEAL_QR_DETAIL: '/customer/merchant/:id/deal-qr',
-        VOUCHERS: '/customer/vouchers',
     },
     MERCHANT: {
         ROOT: '/merchant',

@@ -35,237 +35,16 @@ const MerchantDashboard: React.FC = () => {
     onConfirm: () => { }
   });
 
-  // Store information
-  const storeName = "McDonald's - USC Figueroa";
-
-  // Mock data for McDonald's USC
   const businessMetrics = {
-    currentRating: 4.2,
-    totalReviews: 1247,
-    monthlyViews: 8934,
-    viewsTrend: 'up' as const,
-    trendPercentage: 12.5
+    currentRating: 0,
+    totalReviews: 0,
+    monthlyViews: 0,
+    trendPercentage: 0,
   };
 
-  const [reviews, setReviews] = useState([
-    // Today's reviews
-    {
-      id: 1,
-      customerName: "Sarah Chen",
-      rating: 5,
-      text: "Perfect spot for late night study sessions! Fast service and the Wi-Fi is reliable. The staff is super friendly and they keep the place clean even during busy hours.",
-      date: new Date().toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 2,
-      customerName: "Mike Rodriguez",
-      rating: 4,
-      text: "Great location near campus. The staff is friendly and the food is consistent. Only complaint is that it gets really crowded during lunch rush.",
-      date: new Date().toISOString(),
-      hasReply: true,
-      replyText: "Thank you for your feedback! We appreciate your business and are working on managing rush hour crowds better."
-    },
-    {
-      id: 3,
-      customerName: "Alex Thompson",
-      rating: 2,
-      text: "Food was cold when I got it and the service was really slow. Had to wait 15 minutes for a simple order. Not impressed.",
-      date: new Date().toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    // Yesterday's reviews
-    {
-      id: 4,
-      customerName: "Jessica Park",
-      rating: 3,
-      text: "Food was good but the wait time was longer than expected during lunch rush. The fries were a bit soggy too.",
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 5,
-      customerName: "David Kim",
-      rating: 5,
-      text: "Amazing service! The manager went above and beyond to make sure my order was perfect. This is why I keep coming back to this location.",
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "Thank you so much David! We really appreciate customers like you. See you soon!"
-    },
-    // Older reviews
-    {
-      id: 6,
-      customerName: "Emily Johnson",
-      rating: 1,
-      text: "Worst experience ever. The burger was completely wrong, fries were cold, and the staff was rude when I tried to get it fixed. Will not be coming back.",
-      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 7,
-      customerName: "Carlos Martinez",
-      rating: 4,
-      text: "Good food and quick service. The mobile app ordering works great here. Just wish they had more healthy options on the menu.",
-      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "Thanks for the feedback Carlos! We're always looking at ways to expand our menu options."
-    },
-    {
-      id: 8,
-      customerName: "Lisa Wong",
-      rating: 5,
-      text: "Love this place! Open 24/7 which is perfect for us college students. The staff recognizes me now and they're always so nice. Great coffee too!",
-      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "Hi Lisa! Thanks for being such a loyal customer. We love seeing familiar faces!"
-    },
-    {
-      id: 9,
-      customerName: "Robert Taylor",
-      rating: 2,
-      text: "The place is always dirty and the bathrooms are disgusting. Food quality has gone downhill recently. Management needs to step up.",
-      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 10,
-      customerName: "Amanda Foster",
-      rating: 5,
-      text: "Excellent customer service! I accidentally left my wallet here and the staff kept it safe for me. The food is always fresh and hot. Highly recommend!",
-      date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "So glad we could help Amanda! Thank you for the kind words."
-    },
-    {
-      id: 11,
-      customerName: "James Wilson",
-      rating: 3,
-      text: "Average McDonald's experience. Nothing special but nothing terrible either. Gets the job done when you need a quick bite.",
-      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 12,
-      customerName: "Maria Garcia",
-      rating: 1,
-      text: "Ordered through the app and waited 30 minutes only to be told they ran out of what I ordered. No apology, no compensation. Terrible management.",
-      date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    },
-    {
-      id: 13,
-      customerName: "Kevin Lee",
-      rating: 4,
-      text: "Good location with plenty of parking. Food is consistent with other McDonald's locations. The drive-thru is usually pretty fast.",
-      date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "Thank you Kevin! We work hard to keep our drive-thru moving efficiently."
-    },
-    {
-      id: 14,
-      customerName: "Rachel Brown",
-      rating: 5,
-      text: "Best McDonald's in the area! The staff here actually cares about customer service. My order is always right and the food is fresh. Keep up the great work!",
-      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: true,
-      replyText: "Thank you so much Rachel! Reviews like yours make our day. We appreciate you!"
-    },
-    {
-      id: 15,
-      customerName: "Tom Anderson",
-      rating: 2,
-      text: "The ice cream machine is always broken. It's become a running joke at this point. Also, the prices keep going up but the quality stays the same.",
-      date: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(),
-      hasReply: false,
-      replyText: ""
-    }
-  ]);
-
-  const [coupons, setCoupons] = useState([
-    {
-      id: 1,
-      name: "Student Special",
-      type: "20% Off",
-      quantity: 45,
-      used: 23,
-      isActive: true,
-      expiryDate: "2024-02-15",
-      description: "Exclusive discount for USC students. Valid on all menu items except combo meals. Must present valid student ID at time of purchase."
-    },
-    {
-      id: 2,
-      name: "Late Night Deal",
-      type: "Buy 1 Get 1",
-      quantity: 30,
-      used: 18,
-      isActive: true,
-      expiryDate: "2024-01-31",
-      description: "Perfect for late-night study sessions! Buy any burger and get a second one free. Valid after 9 PM only."
-    },
-    {
-      id: 3,
-      name: "Finals Week",
-      type: "$5 Off",
-      quantity: 100,
-      used: 67,
-      isActive: true,
-      expiryDate: "2024-01-20",
-      description: "Help students power through finals week with $5 off any order over $15. No restrictions, valid all day during finals period."
-    }
-  ]);
-
-  const [packages, setPackages] = useState([
-    {
-      id: 1,
-      name: "Student Value Combo",
-      description: "Perfect for hungry students! Includes a Big Mac, medium fries, medium drink, and apple pie. Great value for a complete meal.",
-      bundleItems: [
-        { id: 1, name: "Big Mac", price: 5.99 },
-        { id: 2, name: "Medium Fries", price: 2.49 },
-        { id: 3, name: "Medium Drink", price: 1.99 },
-        { id: 4, name: "Apple Pie", price: 1.29 }
-      ],
-      originalPrice: 11.76,
-      bundlePrice: 8.99,
-      isActive: true,
-      productImage: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=200&fit=crop"
-    },
-    {
-      id: 2,
-      name: "Late Night Study Pack",
-      description: "Fuel your late-night study sessions with this energy-packed combo. Includes coffee, muffin, and a hearty sandwich.",
-      bundleItems: [
-        { id: 1, name: "Large Coffee", price: 2.99 },
-        { id: 2, name: "Blueberry Muffin", price: 2.49 },
-        { id: 3, name: "Chicken Club Sandwich", price: 6.99 }
-      ],
-      originalPrice: 12.47,
-      bundlePrice: 9.99,
-      isActive: true,
-      productImage: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=200&fit=crop"
-    },
-    {
-      id: 3,
-      name: "Game Day Special",
-      description: "Share with friends during game day! Includes 20 nuggets, 2 large fries, 2 large drinks, and dipping sauces.",
-      bundleItems: [
-        { id: 1, name: "20pc Chicken Nuggets", price: 8.99 },
-        { id: 2, name: "Large Fries (2x)", price: 5.98 },
-        { id: 3, name: "Large Drinks (2x)", price: 4.98 },
-        { id: 4, name: "Dipping Sauces", price: 1.00 }
-      ],
-      originalPrice: 20.95,
-      bundlePrice: 15.99,
-      isActive: true
-    }
-  ]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
 
   // Helper function to check if a review is from today
   const isToday = (dateString: string) => {
@@ -369,7 +148,6 @@ const MerchantDashboard: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Your Store</h1>
-        <p className="text-gray-600">{storeName}</p>
       </div>
       <div className="flex gap-2">
         <button
@@ -606,7 +384,7 @@ const MerchantDashboard: React.FC = () => {
                         <h4 className="text-sm font-medium text-gray-900 mb-2">What's Included</h4>
                         <div className="bg-white p-3 rounded-lg border">
                           <div className="space-y-2">
-                            {pkg.bundleItems.map((item) => (
+                            {pkg.bundleItems.map((item: any) => (
                               <div key={item.id} className="flex justify-between items-center text-sm">
                                 <span className="text-gray-700">{item.name}</span>
                                 <span className="text-gray-500">${item.price.toFixed(2)}</span>

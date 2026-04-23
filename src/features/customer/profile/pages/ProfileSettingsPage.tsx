@@ -1,10 +1,14 @@
 import React from 'react';
 import { Camera, ChevronRight } from 'lucide-react';
-import { userData } from '../../shared/constants/index';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const ProfileSettingsPage: React.FC = () => {
+    const { user } = useAuth();
+    const displayName = user?.name || '';
+    const displayEmail = user?.email || '';
+
     const settingsItems = [
-        { label: 'Nickname', value: userData.name, type: 'text' },
+        { label: 'Nickname', value: displayName, type: 'text' },
         { label: 'Gender', value: 'Male', type: 'select' },
         { label: 'Birthday', value: '1995-03-12', type: 'date' },
         { label: 'Location', value: 'Los Angeles, CA', type: 'text' },
@@ -22,11 +26,9 @@ const ProfileSettingsPage: React.FC = () => {
             <div className="flex flex-col items-center py-8 bg-gray-50/30">
                 <div className="relative group">
                     <div className="w-24 h-24 rounded-full p-1 bg-white shadow-xl ring-4 ring-gray-50">
-                        <img
-                            src={userData.avatar}
-                            alt={userData.name}
-                            className="w-full h-full rounded-full object-cover"
-                        />
+                        <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-500">
+                            {displayName.charAt(0).toUpperCase() || '?'}
+                        </div>
                     </div>
                     <button className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full shadow-lg ring-2 ring-white hover:bg-blue-700 transition-all scale-90 group-hover:scale-100">
                         <Camera className="w-4 h-4" />
@@ -68,7 +70,7 @@ const ProfileSettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between p-4">
                         <span className="text-sm font-medium text-gray-500">Email</span>
-                        <span className="text-sm font-semibold text-gray-900">{userData.name.toLowerCase()}@example.com</span>
+                        <span className="text-sm font-semibold text-gray-900">{displayEmail}</span>
                     </div>
                 </div>
             </div>

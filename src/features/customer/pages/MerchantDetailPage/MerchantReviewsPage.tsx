@@ -151,7 +151,7 @@ const MerchantReviewsPage: React.FC = () => {
   }, [id]);
 
   const handleBack = () => {
-    navigate(`/customer/merchant/${id || '1'}`);
+    navigate(-1);
   };
 
   const summary = useMemo(() => buildSummary(store, reviews), [reviews, store]);

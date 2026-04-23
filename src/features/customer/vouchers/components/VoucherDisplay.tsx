@@ -24,8 +24,12 @@ interface VoucherDisplayProps {
 }
 
 interface LocationState {
-  voucher: Voucher;
-  qrCodeDataUrl: string;
+  // Pre-redemption (set by DealCard)
+  couponId?: string;
+  userId?: string;
+  // Post-redemption (set after Add to Wallet)
+  voucher?: Voucher;
+  qrCodeDataUrl?: string;
   dealInfo: DealInfo;
   merchantInfo?: MerchantInfo;
 }
@@ -39,28 +43,28 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
   const location = useLocation();
   const state = location.state as LocationState;
   
-  // Use props or state from navigation
-  const voucherResult = propVoucher || state?.voucher;
-  const qrCodeDataUrl = state?.qrCodeDataUrl || '';
   const dealInfo = propDealInfo || state?.dealInfo;
   const merchantInfo = propMerchantInfo || state?.merchantInfo || {
     name: 'Sample Merchant',
     address: '123 Main St, City, State'
   };
-  
+
+  const [voucher, setVoucher] = useState<Voucher | undefined>(propVoucher || state?.voucher);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(state?.qrCodeDataUrl || '');
   const [copied, setCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
-  const [isSavingToWallet, setIsSavingToWallet] = useState(false);
+  const [isAddingToWallet, setIsAddingToWallet] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
-  // Redirect if no voucher data
+  // Redirect only if there's no deal info at all
   useEffect(() => {
-    if (!voucherResult || !dealInfo) {
-      navigate(PATHS.CUSTOMER.VOUCHERS, { replace: true });
+    if (!dealInfo) {
+      navigate(PATHS.CUSTOMER.ME.ROOT, { replace: true });
     }
-  }, [voucherResult, dealInfo, navigate]);
+  }, [dealInfo, navigate]);
 
-  if (!voucherResult || !dealInfo) {
+  if (!dealInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -74,9 +78,35 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
     navigate(-1);
   };
 
+  const handleAddToWallet = async () => {
+    if (voucher || isAddingToWallet) return;
+    const couponId = state?.couponId;
+    const userId = state?.userId;
+    if (!couponId || !userId) {
+      setWalletError('Missing coupon info. Please try again.');
+      return;
+    }
+    setIsAddingToWallet(true);
+    setWalletError(null);
+    try {
+      const { couponService } = await import('../../shared/services/couponService');
+      const result = await couponService.redeemFreeCoupon(couponId, userId);
+      if (result.success) {
+        setVoucher(result.voucher);
+        setQrCodeDataUrl(result.qrCodeDataUrl || '');
+      } else {
+        setWalletError(result.message || 'Failed to redeem coupon.');
+      }
+    } catch (err: any) {
+      setWalletError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsAddingToWallet(false);
+    }
+  };
+
   const handleCopyCode = async () => {
     try {
-      await navigator.clipboard.writeText(voucherResult.code);
+      await navigator.clipboard.writeText(voucher?.code ?? '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -84,26 +114,11 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
     }
   };
 
-  const handleSaveToWallet = async () => {
-    setIsSavingToWallet(true);
-    try {
-      // This would integrate with Apple Wallet/Google Pay
-      // For now, we'll just simulate the action
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In a real implementation, this would generate a wallet pass
-      alert('Wallet integration would be implemented here');
-    } catch (error) {
-      console.error('Failed to save to wallet:', error);
-    } finally {
-      setIsSavingToWallet(false);
-    }
-  };
 
   const handleShare = async (method: 'email' | 'sms' | 'social' | 'copy') => {
     setIsSharing(true);
     try {
-      const success = await voucherService.shareVoucher(voucherResult.id, {
+      const success = await voucherService.shareVoucher(voucher?.id ?? '', {
         method,
         message: `Check out this great deal: ${dealInfo.title} at ${merchantInfo.name}!`
       });
@@ -136,7 +151,8 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
   };
 
   const isExpiringSoon = () => {
-    const expiryDate = new Date(voucherResult.expiryDate);
+    if (!voucher) return false;
+    const expiryDate = new Date(voucher.expiryDate);
     const now = new Date();
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= 7;
@@ -162,18 +178,31 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
       </div>
 
       <div className="pt-24 px-6 pb-10">
-        {/* Success Message */}
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <Check className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-green-800">Voucher Generated Successfully!</h3>
-              <p className="text-sm text-green-600">Present this code to the merchant to redeem your offer.</p>
+        {voucher ? (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <Check className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-green-800">Added to My Rewards!</h3>
+                <p className="text-sm text-green-600">Present this QR code to the merchant to redeem.</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-800">Coupon Available</h3>
+                <p className="text-sm text-blue-600">Tap "Add to My Wallet" to save and get your QR code.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Voucher Card */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
@@ -191,7 +220,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
                 )}
               </div>
             </div>
-            
+
             {/* Merchant Info */}
             <div className="flex items-center gap-3 pt-4 border-t border-white/20">
               <MapPin className="w-4 h-4" />
@@ -202,29 +231,29 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
             </div>
           </div>
 
-            {/* QR Code Section */}
+          {/* QR Code Section */}
           <div className="p-6 text-center border-b border-gray-100">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
               {qrCodeDataUrl ? (
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="Voucher QR Code"
-                  className="w-48 h-48 mx-auto"
-                />
+                <img src={qrCodeDataUrl} alt="Voucher QR Code" className="w-48 h-48 mx-auto" />
               ) : (
                 <div className="flex h-48 w-48 items-center justify-center rounded-xl bg-gray-50">
                   <QrCode className="h-20 w-20 text-gray-300" />
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-600 mb-4">Scan this QR code at the merchant</p>
-            
-            {/* Voucher Code */}
+            {voucher ? (
+              <p className="text-sm text-gray-600 mb-4">Scan this QR code at the merchant</p>
+            ) : (
+              <p className="text-sm text-gray-400 mb-4">QR code will appear after adding to wallet</p>
+            )}
+
+            {voucher && (
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Voucher Code</p>
               <div className="flex items-center justify-center gap-2">
                 <code className="text-xl font-mono font-bold text-gray-900 tracking-wider">
-                  {voucherResult.code}
+                  {voucher.code}
                 </code>
                 <button
                   onClick={handleCopyCode}
@@ -239,32 +268,26 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
                 </button>
               </div>
             </div>
+            )}
           </div>
 
           {/* Voucher Details */}
+          {voucher && (
           <div className="p-6">
             <div className="space-y-4">
-              {/* Expiry Date */}
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  isExpiringSoon() ? 'bg-red-100' : 'bg-gray-100'
-                }`}>
-                  <Calendar className={`w-4 h-4 ${
-                    isExpiringSoon() ? 'text-red-600' : 'text-gray-600'
-                  }`} />
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isExpiringSoon() ? 'bg-red-100' : 'bg-gray-100'}`}>
+                  <Calendar className={`w-4 h-4 ${isExpiringSoon() ? 'text-red-600' : 'text-gray-600'}`} />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Expires</p>
-                  <p className={`text-sm ${
-                    isExpiringSoon() ? 'text-red-600 font-medium' : 'text-gray-600'
-                  }`}>
-                    {formatExpiryDate(voucherResult.expiryDate)}
+                  <p className={`text-sm ${isExpiringSoon() ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                    {formatExpiryDate(voucher.expiryDate)}
                     {isExpiringSoon() && ' (Expires Soon!)'}
                   </p>
                 </div>
               </div>
 
-              {/* Generated Date */}
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                   <Clock className="w-4 h-4 text-gray-600" />
@@ -272,41 +295,47 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
                 <div>
                   <p className="font-medium text-gray-900">Generated</p>
                   <p className="text-sm text-gray-600">
-                    {new Date(voucherResult.generatedAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit'
+                    {new Date(voucher.generatedAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                      hour: 'numeric', minute: '2-digit'
                     })}
                   </p>
                 </div>
               </div>
 
-              {/* Usage Instructions */}
-              {voucherResult.usageInstructions && (
+              {voucher.usageInstructions && (
                 <div className="bg-blue-50 rounded-xl p-4">
                   <h4 className="font-semibold text-blue-900 mb-2">How to Use</h4>
-                  <p className="text-sm text-blue-800">{voucherResult.usageInstructions}</p>
+                  <p className="text-sm text-blue-800">{voucher.usageInstructions}</p>
                 </div>
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-3">
+          {walletError && (
+            <p className="text-sm text-red-500 text-center">{walletError}</p>
+          )}
+          {voucher ? (
+            <div className="w-full bg-green-50 border border-green-200 text-green-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2">
+              <Check className="w-5 h-5" />
+              Added to My Wallet
+            </div>
+          ) : (
+            <button
+              onClick={handleAddToWallet}
+              disabled={isAddingToWallet}
+              className="w-full bg-black text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 active:scale-[0.98] transition-all disabled:opacity-50"
+            >
+              <Wallet className="w-5 h-5" />
+              {isAddingToWallet ? 'Adding...' : 'Add to My Wallet'}
+            </button>
+          )}
           <button
-            onClick={handleSaveToWallet}
-            disabled={isSavingToWallet}
-            className="w-full bg-black text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            <Wallet className="w-5 h-5" />
-            {isSavingToWallet ? 'Saving...' : 'Add to Wallet'}
-          </button>
-          
-          <button
-            onClick={() => navigate('/vouchers')}
+            onClick={() => navigate(PATHS.CUSTOMER.ME.ROOT)}
             className="w-full bg-gray-100 text-gray-900 py-4 rounded-2xl font-semibold hover:bg-gray-200 active:scale-[0.98] transition-all"
           >
             View All Vouchers
