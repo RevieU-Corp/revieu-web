@@ -28,8 +28,7 @@ import {
   QrCode,
   Wallet,
   Tag,
-  ShoppingBag,
-  Trash2
+  ShoppingBag
 } from 'lucide-react';
 
 export const Icons = {
@@ -63,6 +62,5 @@ export const Icons = {
   QrCode,
   Wallet,
   Tag,
-  ShoppingBag,
-  Trash: Trash2
+  ShoppingBag
 };

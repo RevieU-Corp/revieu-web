@@ -158,6 +158,15 @@ export class VoucherServiceImpl implements VoucherService {
     });
   }
 
+  async deleteVoucher(voucherId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/vouchers/${voucherId}`);
+    } catch (error) {
+      console.error('Failed to delete voucher:', error);
+      throw error;
+    }
+  }
+
   async shareVoucher(voucherId: string, shareOptions: VoucherShareOptions): Promise<boolean> {
     try {
       const voucher = await this.getVoucherById(voucherId);

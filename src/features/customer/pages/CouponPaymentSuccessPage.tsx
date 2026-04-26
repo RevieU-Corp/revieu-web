@@ -110,7 +110,7 @@ const CouponPaymentSuccessPage: React.FC = () => {
   };
 
   const handleViewVouchers = () => {
-    navigate(PATHS.CUSTOMER.VOUCHERS);
+    navigate(PATHS.CUSTOMER.ME.ROOT);
   };
 
   // QR Code component
