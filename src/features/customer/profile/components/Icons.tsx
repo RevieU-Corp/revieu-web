@@ -1,14 +1,14 @@
 import { 
-  Star, 
-  MapPin, 
-  Calendar, 
-  Camera, 
-  ThumbsUp, 
-  Eye, 
-  MoreHorizontal, 
-  Settings, 
-  Share2, 
-  Edit3, 
+  Star,
+  MapPin,
+  Calendar,
+  Camera,
+  ThumbsUp,
+  Eye,
+  MoreHorizontal,
+  Settings,
+  Share2,
+  Edit3,
   Sparkles,
   Ticket,
   MessageSquare,
@@ -28,7 +28,8 @@ import {
   QrCode,
   Wallet,
   Tag,
-  ShoppingBag
+  ShoppingBag,
+  Trash2
 } from 'lucide-react';
 
 export const Icons = {
@@ -62,5 +63,6 @@ export const Icons = {
   QrCode,
   Wallet,
   Tag,
-  ShoppingBag
+  ShoppingBag,
+  Trash: Trash2
 };

@@ -1,15 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Coupon } from '../types';
 import { Icons } from './Icons';
 
 interface CouponCardProps {
   coupon: Coupon;
-  className?: string; // Allow custom classes for layout flexibility
-  compact?: boolean; // New compact mode for list view if needed
+  className?: string;
+  compact?: boolean;
+  onDelete?: (id: string) => Promise<void>;
 }
 
-const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact = false }) => {
+const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact = false, onDelete }) => {
   const isExpired = coupon.status === 'expired';
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = () => setConfirming(true);
+
+  const handleConfirmDelete = async () => {
+    if (!onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(coupon.id);
+    } finally {
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
   
   return (
     <div className={`group relative flex flex-col w-full bg-white rounded-2xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-transform active:scale-[0.98] ${isExpired ? 'opacity-60 grayscale' : ''} ${className}`}>
@@ -55,13 +71,44 @@ const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact
                <Icons.Clock size={14} className="text-brand-red"/> {coupon.expiryDate}
             </p>
          </div>
-         
-         {!compact && (
-           <button className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-100 transition-colors shadow-sm">
-              <Icons.QrCode size={18} />
-              <span className="text-xs font-bold">Use</span>
-           </button>
-         )}
+
+         <div className="flex items-center gap-2">
+           {!compact && (
+             <button className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-4 py-2.5 rounded-xl border border-gray-100 transition-colors shadow-sm">
+                <Icons.QrCode size={18} />
+                <span className="text-xs font-bold">Use</span>
+             </button>
+           )}
+
+           {onDelete && !confirming && (
+             <button
+               onClick={handleDeleteClick}
+               className="p-2 text-gray-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+               title="Remove coupon"
+             >
+               <Icons.Trash size={16} />
+             </button>
+           )}
+
+           {onDelete && confirming && (
+             <div className="flex items-center gap-1">
+               <button
+                 onClick={handleConfirmDelete}
+                 disabled={deleting}
+                 className="text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+               >
+                 {deleting ? '...' : 'Delete'}
+               </button>
+               <button
+                 onClick={() => setConfirming(false)}
+                 disabled={deleting}
+                 className="text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg transition-colors"
+               >
+                 Cancel
+               </button>
+             </div>
+           )}
+         </div>
       </div>
     </div>
   );

@@ -158,6 +158,10 @@ export class CouponServiceImpl implements CouponService {
     return false;
   }
 
+  async deleteStoreCoupon(storeId: string, couponId: string): Promise<void> {
+    await apiClient.delete(`/merchant/stores/${storeId}/coupons/${couponId}`);
+  }
+
   private mapCoupon(raw: BackendCoupon): Coupon {
     const price = raw.price ?? undefined;
     const isPaid = (raw.coupon_type ?? '').toLowerCase() === 'paid' || (price ?? 0) > 0;
