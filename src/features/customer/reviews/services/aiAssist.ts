@@ -31,10 +31,15 @@ export interface AIAssistRequest {
   storeName?: string;
   images?: UploadedImage[];
   language?: ReviewLanguage;
+  // useStyle controls whether the backend should apply the caller's saved writing
+  // style profile to this polish request. Defaults to true when omitted; the
+  // backend treats missing as "opt in".
+  useStyle?: boolean;
 }
 
 export interface AIAssistResponse {
   candidates: string[];
+  styleApplied: boolean;
   error?: string;
 }
 
@@ -81,6 +86,13 @@ export async function buildAiReviewFormData(request: AIAssistRequest): Promise<F
     formData.append('storeName', request.storeName.trim());
   }
 
+  // Only emit useStyle when the user has explicitly opted out — sending nothing keeps
+  // the field absent so the backend's default-true behavior applies and old clients
+  // continue to work.
+  if (request.useStyle === false) {
+    formData.append('useStyle', 'false');
+  }
+
   const images = request.images ?? [];
   for (const image of images.slice(0, AI_MAX_IMAGES)) {
     const aiImage = await toAiReadyImageFile(image);
@@ -122,10 +134,12 @@ export async function generateReviewSuggestions(request: AIAssistRequest): Promi
 
     return {
       candidates: response.candidates,
+      styleApplied: response.styleApplied,
     };
   } catch (error) {
     return {
       candidates: [],
+      styleApplied: false,
       error: normalizeAiError(error),
     };
   }

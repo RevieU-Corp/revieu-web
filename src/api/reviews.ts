@@ -83,6 +83,10 @@ export interface StoreReviewListResponse {
 
 export interface AiReviewCandidatesResponse {
     candidates: string[];
+    // styleApplied is true when the polish call actually injected the user's saved
+    // writing-style profile. Frontends use this to surface a "applied your writing
+    // style" hint after the request returns.
+    styleApplied: boolean;
 }
 
 interface BackendReviewResponse {
@@ -165,6 +169,7 @@ interface BackendStoreReviewListResponse {
 
 interface BackendAiReviewCandidatesResponse {
     candidates?: string[];
+    style_applied?: boolean;
 }
 
 export interface ReviewListRequest {
@@ -330,6 +335,7 @@ export const reviewsApi = {
 
         return {
             candidates: response.data.candidates ?? [],
+            styleApplied: response.data.style_applied === true,
         };
     },
 

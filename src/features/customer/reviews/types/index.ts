@@ -226,6 +226,13 @@ export interface AIAssistantState {
   currentSuggestion: string;
   error: string | null;
   isVisible: boolean;
+  // useStyle is the per-call toggle the user controls in the polish UI. Defaults to
+  // true on first render; flipping it off skips the user's saved writing-style
+  // profile for the next AI Assist call only — it is not a persisted preference.
+  useStyle: boolean;
+  // styleApplied is set after each successful AI Assist response. True only when the
+  // backend actually injected the user's profile (UseStyle on, profile derived).
+  styleApplied: boolean;
 }
 
 export interface AIStreamingRequest {
@@ -338,6 +345,7 @@ export interface ReviewContextActions {
   selectAISuggestion: (suggestion: string) => void;
   toggleAIAssistant: () => void;
   clearAISuggestions: () => void;
+  setUseStyle: (value: boolean) => void;
   // New Upload & Submit Actions
   retryImage: (imageId: string) => Promise<boolean>;
   uploadImages: () => Promise<string[] | null>;

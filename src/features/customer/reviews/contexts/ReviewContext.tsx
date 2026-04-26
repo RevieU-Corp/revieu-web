@@ -68,6 +68,8 @@ const initialAIAssistantState: AIAssistantState = {
   currentSuggestion: '',
   error: null,
   isVisible: false,
+  useStyle: true,
+  styleApplied: false,
 };
 
 const initialState: ReviewContextState = {
@@ -147,11 +149,12 @@ type ReviewAction =
   | { type: 'AI_STREAMING_COMPLETE' }
   | { type: 'AI_STREAMING_ERROR'; payload: string }
   | { type: 'GENERATE_AI_SUGGESTIONS_START' }
-  | { type: 'GENERATE_AI_SUGGESTIONS_SUCCESS'; payload: string[] }
+  | { type: 'GENERATE_AI_SUGGESTIONS_SUCCESS'; payload: { candidates: string[]; styleApplied: boolean } }
   | { type: 'GENERATE_AI_SUGGESTIONS_ERROR'; payload: string }
   | { type: 'SELECT_AI_SUGGESTION'; payload: string }
   | { type: 'TOGGLE_AI_ASSISTANT' }
   | { type: 'CLEAR_AI_SUGGESTIONS' }
+  | { type: 'SET_USE_STYLE'; payload: boolean }
   | { type: 'SAVE_DRAFT_START' }
   | { type: 'SAVE_DRAFT_SUCCESS'; payload: Date }
   | { type: 'SAVE_DRAFT_ERROR'; payload: string }
@@ -421,7 +424,8 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
         aiAssistantState: {
           ...state.aiAssistantState,
           isGenerating: false,
-          suggestions: action.payload,
+          suggestions: action.payload.candidates,
+          styleApplied: action.payload.styleApplied,
           error: null,
           isVisible: true,
         },
@@ -473,6 +477,16 @@ const reviewReducer = (state: ReviewContextState, action: ReviewAction): ReviewC
           suggestions: [],
           currentSuggestion: '',
           error: null,
+          styleApplied: false,
+        },
+      };
+
+    case 'SET_USE_STYLE':
+      return {
+        ...state,
+        aiAssistantState: {
+          ...state.aiAssistantState,
+          useStyle: action.payload,
         },
       };
 
@@ -833,16 +847,20 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
           businessCategory: state.reviewData.merchantCategory || BusinessCategory.RESTAURANT,
           images: state.reviewData.images || [],
           language: state.reviewData.preferredLanguage,
+          useStyle: state.aiAssistantState.useStyle,
         });
         if (response.error) {
           dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: response.error });
         } else {
-          dispatch({ type: 'GENERATE_AI_SUGGESTIONS_SUCCESS', payload: response.candidates });
+          dispatch({
+            type: 'GENERATE_AI_SUGGESTIONS_SUCCESS',
+            payload: { candidates: response.candidates, styleApplied: response.styleApplied },
+          });
         }
       } catch (error) {
         dispatch({ type: 'GENERATE_AI_SUGGESTIONS_ERROR', payload: 'Failed to generate suggestions' });
       }
-    }, [state.reviewData]),
+    }, [state.reviewData, state.aiAssistantState.useStyle]),
 
     selectAISuggestion: useCallback((suggestion: string) => {
       dispatch({ type: 'SELECT_AI_SUGGESTION', payload: suggestion });
@@ -854,6 +872,10 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
     clearAISuggestions: useCallback(() => {
       dispatch({ type: 'CLEAR_AI_SUGGESTIONS' });
+    }, []),
+
+    setUseStyle: useCallback((value: boolean) => {
+      dispatch({ type: 'SET_USE_STYLE', payload: value });
     }, []),
 
     saveDraft: useCallback(() => {

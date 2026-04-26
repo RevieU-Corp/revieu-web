@@ -212,6 +212,19 @@ describe('reviewsApi', () => {
         'I really liked the noodles here, but the wait for service was longer than expected.',
         'Great noodles with rich flavor, but the slower service kept the meal from feeling seamless.',
       ],
+      styleApplied: false,
     });
+  });
+
+  test('generateAiReviewCandidates surfaces style_applied=true from the backend', async () => {
+    mockPost.mockResolvedValue({
+      data: {
+        candidates: ['c1', 'c2', 'c3'],
+        style_applied: true,
+      },
+    });
+
+    const response = await reviewsApi.generateAiReviewCandidates(new FormData());
+    expect(response.styleApplied).toBe(true);
   });
 });

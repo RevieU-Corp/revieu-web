@@ -127,13 +127,14 @@ describe('aiAssist service', () => {
     expect(formData.getAll('images')).toHaveLength(1);
   });
 
-  it('returns backend candidates without altering them', async () => {
+  it('returns backend candidates and styleApplied flag without altering them', async () => {
     generateAiReviewCandidatesMock.mockResolvedValue({
       candidates: [
         'Candidate one',
         'Candidate two',
         'Candidate three',
       ],
+      styleApplied: true,
     });
 
     const response = await generateReviewSuggestions({
@@ -152,7 +153,29 @@ describe('aiAssist service', () => {
 
     expect(response).toEqual({
       candidates: ['Candidate one', 'Candidate two', 'Candidate three'],
+      styleApplied: true,
     });
+  });
+
+  it('forwards useStyle=false as a form field; omits it when on (the backend default)', async () => {
+    const onForm = await buildAiReviewFormData({
+      reviewText: 'Latte was strong, ambience was calm.',
+      overallRating: 4,
+      detailedRatings: { quality: 4, environment: 4, service: 4, value: 4 } as any,
+      merchantName: 'Cafe 101',
+      businessCategory: BusinessCategory.RESTAURANT,
+    });
+    expect(onForm.has('useStyle')).toBe(false);
+
+    const offForm = await buildAiReviewFormData({
+      reviewText: 'Latte was strong, ambience was calm.',
+      overallRating: 4,
+      detailedRatings: { quality: 4, environment: 4, service: 4, value: 4 } as any,
+      merchantName: 'Cafe 101',
+      businessCategory: BusinessCategory.RESTAURANT,
+      useStyle: false,
+    });
+    expect(offForm.get('useStyle')).toBe('false');
   });
 
   it('surfaces backend error messages when AI suggestion generation fails', async () => {
@@ -181,6 +204,7 @@ describe('aiAssist service', () => {
 
     expect(response).toEqual({
       candidates: [],
+      styleApplied: false,
       error: 'ai: content blocked by safety filter',
     });
   });

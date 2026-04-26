@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Copy, Check, AlertCircle } from 'lucide-react';
+import { X, Copy, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { useReviewContext } from '../contexts/ReviewContext';
 
 export const AISuggestionsList: React.FC = () => {
@@ -63,6 +63,14 @@ export const AISuggestionsList: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              {aiAssistantState.styleApplied && (
+                <div className="flex items-center space-x-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                  <Sparkles className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                  <p className="text-sm text-emerald-900">
+                    Polished using your writing style from past reviews.
+                  </p>
+                </div>
+              )}
               <div className="space-y-2 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
                 <p className="text-sm font-medium text-amber-900">
                   Select one candidate to replace your current draft.
