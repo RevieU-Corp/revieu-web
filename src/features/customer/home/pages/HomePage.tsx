@@ -98,7 +98,7 @@ const HomePage: React.FC = () => {
           <div className="flex justify-between items-end mb-6">
             <div>
               <h2 className="text-[20px] font-[700] text-[#4B4B4B] tracking-tight leading-none">Discount</h2>
-              <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-[3px]">Daily Performance</p>
+              <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-[3px]">Daily Recommendation</p>
             </div>
             <button className="font-['Roboto'] text-[12px] font-[525] text-[#7F7D92]">Detail</button>
           </div>
