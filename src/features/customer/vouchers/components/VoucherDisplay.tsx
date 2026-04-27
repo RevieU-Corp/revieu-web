@@ -185,7 +185,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
                 <Check className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-800">Added to My Rewards!</h3>
+                <h3 className="font-semibold text-green-800">Added to My Wallet!</h3>
                 <p className="text-sm text-green-600">Present this QR code to the merchant to redeem.</p>
               </div>
             </div>

@@ -410,7 +410,7 @@ const ProfilePage: React.FC = () => {
             <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <SectionHeading
                 icon={<Icons.Wallet />}
-                title="My Rewards"
+                title="My Wallet"
                 rightSlot={(
                   <span className="text-xs font-bold text-[#C41111] bg-[#C41111]/5 px-3 py-1.5 rounded-full border border-[#C41111]/15">
                     {activeCoupons.length} Available
