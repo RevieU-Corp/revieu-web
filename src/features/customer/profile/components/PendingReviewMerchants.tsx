@@ -17,7 +17,7 @@ export const PendingReviewMerchants: React.FC<PendingReviewMerchantsProps> = ({
 }) => {
   return (
     <section className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-      <SectionHeading icon={<Icons.ShoppingBag />} title="Laet Merchant I Visit" />
+      <SectionHeading icon={<Icons.ShoppingBag />} title="Merchant History" />
       <p className="-mt-2 mb-5 text-sm text-gray-500">Places you visited but still have not reviewed.</p>
 
       {loading && (

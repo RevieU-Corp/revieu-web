@@ -5,7 +5,7 @@ import { PendingReviewMerchants } from '../PendingReviewMerchants';
 import { PendingReviewMerchant } from '../../types';
 
 describe('PendingReviewMerchants', () => {
-  it('renders Laet Merchant I Visit cards and handles write review action', () => {
+  it('renders Merchant History cards and handles write review action', () => {
     const merchants: PendingReviewMerchant[] = [
       {
         merchantId: '205',
@@ -28,7 +28,7 @@ describe('PendingReviewMerchants', () => {
 
     render(<PendingReviewMerchants merchants={merchants} onWriteReview={onWriteReview} />);
 
-    expect(screen.getByText('Laet Merchant I Visit')).toBeInTheDocument();
+    expect(screen.getByText('Merchant History')).toBeInTheDocument();
     expect(screen.getByText('Sushirrito')).toBeInTheDocument();
     expect(screen.getByText('Philz Coffee')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /write review/i })).toHaveLength(2);
