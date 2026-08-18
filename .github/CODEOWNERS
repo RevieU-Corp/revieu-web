@@ -8,25 +8,25 @@
 # --------------------------------------------------------
 # 1. Infra 团队 (负责基建、配置、CI)
 # --------------------------------------------------------
-Dockerfile              @RevieU-Corp/Infra-Team
-nginx/                  @RevieU-Corp/Infra-Team
-vite.config.ts          @RevieU-Corp/Infra-Team
-vitest.config.ts        @RevieU-Corp/Infra-Team
-commitlint.config.js    @RevieU-Corp/Infra-Team
-tsconfig.json           @RevieU-Corp/Infra-Team
-package.json            @RevieU-Corp/Infra-Team
-package-lock.json       @RevieU-Corp/Infra-Team
-.github/                @RevieU-Corp/Infra-Team
+Dockerfile              @revieu-corp/infra
+nginx/                  @revieu-corp/infra
+vite.config.ts          @revieu-corp/infra
+vitest.config.ts        @revieu-corp/infra
+commitlint.config.js    @revieu-corp/infra
+tsconfig.json           @revieu-corp/infra
+package.json            @revieu-corp/infra
+package-lock.json       @revieu-corp/infra
+.github/                @revieu-corp/infra
 
 # --------------------------------------------------------
 # 2. Frontend 团队 (负责业务源码)
 # --------------------------------------------------------
-src/                    @RevieU-Corp/Frontend-Devs
-index.html              @RevieU-Corp/Frontend-Devs
+src/                    @revieu-corp/fe
+index.html              @revieu-corp/fe
 
 # --------------------------------------------------------
 # 3. Arch 团队 (负责文档、元数据)
 # --------------------------------------------------------
-README.md               @RevieU-Corp/Arch-Team
-docs/                   @RevieU-Corp/Arch-Team
-metadata.json           @RevieU-Corp/Arch-Team
+README.md               @revieu-corp/ui
+docs/                   @revieu-corp/ui
+metadata.json           @revieu-corp/ui
