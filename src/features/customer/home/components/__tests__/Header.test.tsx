@@ -15,7 +15,7 @@ vi.mock('../../../../../contexts/AuthContext', () => ({
 }));
 
 describe('Header', () => {
-  it('keeps search tap navigation while rendering only the primary search action button', () => {
+  it('keeps search tap navigation while rendering only the notification button', () => {
     const onSearchTap = vi.fn();
 
     render(<Header onSearchTap={onSearchTap} />);
@@ -25,6 +25,7 @@ describe('Header', () => {
     fireEvent.mouseDown(input);
 
     expect(onSearchTap).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole('button')).toHaveLength(2);
+    // Voice/mic button was removed (#202); only the notification bell remains.
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 });
