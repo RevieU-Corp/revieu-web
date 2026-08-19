@@ -3,7 +3,6 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import revieUIcon from '../../../../assets/images/customer/home/revieUIcon.svg';
 import notificationIcon from '../../../../assets/images/customer/home/notification.svg';
 import defaultAvatar from '../../../../assets/images/customer/home/avatar.svg';
-import micIcon from '../../../../assets/images/customer/home/searchBar/mic.svg';
 import searchIcon from '../../../../assets/images/customer/home/searchBar/search.svg';
 
 interface HeaderProps {
@@ -80,10 +79,6 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                             className="h-full flex-1 bg-transparent border-none py-0 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
                         />
                     </div>
-                    <button className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
-                        <img src={micIcon} className="w-[25px] h-[25px]">
-                        </img>
-                    </button>
                 </div>
             </div>
         </header>
