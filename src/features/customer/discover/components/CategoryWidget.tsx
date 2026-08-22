@@ -87,10 +87,7 @@ const CategoryButton: React.FC<CategoryButtonProps> = ({
         transition-all duration-200
         cursor-pointer
         bg-transparent
-        ${isSelected
-          ? 'opacity-100'
-          : 'opacity-70 hover:opacity-100'
-        }
+        ${isSelected ? 'text-gray-900' : 'text-gray-700 hover:text-gray-900'}
       `}
       style={{
         minHeight: '44px', // 确保触控友好
@@ -105,7 +102,7 @@ const CategoryButton: React.FC<CategoryButtonProps> = ({
       )}
 
       {/* 分类名称 */}
-      <span className={`text-xs font-medium leading-tight text-center ${isSelected ? 'text-[#990000] font-semibold' : 'text-gray-600'
+        <span className={`text-xs font-medium leading-tight text-center ${isSelected ? 'text-[#990000] font-semibold' : 'text-gray-700'
         }`}>
         {category.name}
       </span>

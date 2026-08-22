@@ -324,8 +324,12 @@ const ProfilePage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
 
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white hover:text-gray-900 transition-all shadow-lg">
-                    <Icons.Share size={18} />
+                  <button
+                    type="button"
+                    aria-label="Share profile"
+                    className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white hover:text-gray-900 transition-all shadow-lg"
+                  >
+                    <Icons.Share aria-hidden="true" size={18} />
                   </button>
                 </div>
               </div>
@@ -372,12 +376,14 @@ const ProfilePage: React.FC = () => {
                     {user.bio}
                   </p>
                   <button
+                    type="button"
+                    aria-label="Enhance bio with AI"
                     onClick={handleGenerateBio}
                     disabled={isGeneratingBio}
                     className="absolute -right-2 -top-2 p-2 text-[#C41111]/60 hover:text-[#C41111] bg-transparent hover:bg-[#C41111]/5 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                     title="AI Enhance"
                   >
-                    <Icons.Sparkles size={16} className={isGeneratingBio ? "animate-spin" : ""} />
+                    <Icons.Sparkles aria-hidden="true" size={16} className={isGeneratingBio ? "animate-spin" : ""} />
                   </button>
                 </div>
 
@@ -431,12 +437,16 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                 ))}
-                <div className="min-w-[120px] snap-center flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 hover:border-[#F7CD46] hover:text-[#F59E0B] transition-all cursor-pointer md:h-full min-h-[200px] hover:bg-[#F7CD46]/10 group">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('reviews')}
+                  className="min-w-[120px] snap-center flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 hover:border-[#F7CD46] hover:text-[#F59E0B] transition-all md:h-full min-h-[200px] hover:bg-[#F7CD46]/10 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000]"
+                >
                   <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-[#F7CD46]/20 group-hover:scale-110 transition-transform">
                     <Icons.ChevronRight size={24} />
                   </div>
-                  <span className="text-xs font-bold tracking-wide">VIEW ALL</span>
-                </div>
+                  <span className="text-xs font-bold tracking-wide text-gray-700">VIEW ALL</span>
+                </button>
               </div>
             </section>
 

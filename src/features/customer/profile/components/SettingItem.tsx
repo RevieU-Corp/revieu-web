@@ -6,15 +6,21 @@ interface SettingItemProps {
   label: string;
   badge?: string;
   isDestructive?: boolean;
+  onClick: () => void;
 }
 
 export const SettingItem: React.FC<SettingItemProps> = ({
   icon,
   label,
   badge,
-  isDestructive
+  isDestructive,
+  onClick,
 }) => (
-  <div className="flex items-center justify-between p-4 px-5 bg-white active:bg-gray-50 transition-colors cursor-pointer group hover:bg-gray-50/80">
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full flex items-center justify-between p-4 px-5 bg-white text-left active:bg-gray-50 transition-colors group hover:bg-gray-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#990000]"
+  >
     <div className="flex items-center gap-3.5">
       <div className={`p-2 rounded-full transition-colors ${
         isDestructive
@@ -37,5 +43,5 @@ export const SettingItem: React.FC<SettingItemProps> = ({
       )}
       <Icons.ChevronRight size={16} className="text-gray-300 group-hover:text-gray-400" />
     </div>
-  </div>
+  </button>
 );

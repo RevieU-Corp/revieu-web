@@ -31,16 +31,20 @@ export const MeHeader: React.FC<MeHeaderProps> = ({ user, onEdit, onSettings, on
                 <h2 className="text-xl font-black text-[#990000] tracking-tighter italic">REVIEU.</h2>
                 <div className="flex items-center gap-2">
                     <button
+                        type="button"
+                        aria-label="Open voucher QR code"
                         onClick={onQr}
                         className="p-2 text-gray-700 hover:bg-gray-100 rounded-2xl transition-all active:scale-95 flex items-center justify-center bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm"
                     >
-                        <QrCode className="w-5 h-5" />
+                        <QrCode aria-hidden="true" className="w-5 h-5" />
                     </button>
                     <button
+                        type="button"
+                        aria-label="Open profile settings"
                         onClick={onSettings}
                         className="p-2 text-gray-700 hover:bg-gray-100 rounded-2xl transition-all active:scale-95 flex items-center justify-center bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm"
                     >
-                        <Settings className="w-5 h-5" />
+                        <Settings aria-hidden="true" className="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -63,10 +67,12 @@ export const MeHeader: React.FC<MeHeaderProps> = ({ user, onEdit, onSettings, on
                                 </div>
                             </div>
                             <button
+                                type="button"
+                                aria-label="Edit profile photo"
                                 onClick={onEdit}
                                 className="absolute -bottom-1 -right-1 p-1.5 bg-[#990000] shadow-lg rounded-xl text-white hover:scale-110 transition-transform ring-2 ring-white"
                             >
-                                <Edit2 className="w-3 h-3" />
+                                <Edit2 aria-hidden="true" className="w-3 h-3" />
                             </button>
                         </div>
                         <div className="flex-1">

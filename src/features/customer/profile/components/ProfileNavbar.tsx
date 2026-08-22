@@ -17,8 +17,8 @@ const Navbar: React.FC = () => {
 
         {/* Right: Global Actions */}
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-black/5 text-gray-500 hover:text-gray-900 transition-colors md:hidden">
-            <Icons.More size={20} />
+          <button type="button" aria-label="More profile actions" className="p-2 rounded-full hover:bg-black/5 text-gray-500 hover:text-gray-900 transition-colors md:hidden">
+            <Icons.More aria-hidden="true" size={20} />
           </button>
         </div>
       </div>

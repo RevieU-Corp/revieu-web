@@ -50,7 +50,20 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
                 <div
                     key={merchant.id}
                     onClick={() => handleMerchantClick(merchant.id, merchant.name)}
-                    className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${merchant.name}`}
+                    onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget) {
+                            return;
+                        }
+
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleMerchantClick(merchant.id, merchant.name);
+                        }
+                    }}
+                    className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000]"
                 >
                     <div className="relative aspect-[16/9] rounded-[22px] overflow-hidden mb-4 bg-gray-100">
                         <ImageWithFallback
@@ -121,7 +134,7 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
 
                         <div className="flex items-center space-x-4 pt-3 border-t border-gray-50">
                             <div className="flex items-center space-x-1.5">
-                                <img src={activeHeatIcon} alt="Active Heat"  />
+                                <img src={activeHeatIcon} alt="" aria-hidden="true" />
                                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
                                     {merchant.isOpen ? 'Active Heat' : 'Closed'}
                                 </span>
@@ -131,7 +144,7 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
                                 onClick={(event) => handleReviewsClick(merchant.id, merchant.name, event)}
                                 className="flex items-center space-x-1.5 rounded-md px-1 py-0.5 hover:bg-gray-50"
                             >
-                                <img src={reviewIcon} alt="Reviews" />
+                                <img src={reviewIcon} alt="" aria-hidden="true" />
                                 <span className="text-[11px] font-bold text-gray-500">{merchant.reviewCount} Reviews</span>
                             </button>
                         </div>
