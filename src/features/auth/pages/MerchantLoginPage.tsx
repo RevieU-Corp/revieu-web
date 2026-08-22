@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { PATHS } from '../../../routes/paths';
 import { authService } from '../api/authService';
 import { useAuth } from '../../../contexts/AuthContext';
+import { storeProfileService } from '../../merchant/profile/services/storeProfileService';
 
 const GoogleIcon = () => (
     <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
@@ -31,16 +32,12 @@ const MerchantLoginPage: React.FC = () => {
             // Call real backend API through AuthContext
             await login(email, password);
 
-            // After successful login, check user role
-            const userData = localStorage.getItem('user');
-            if (userData) {
-                const user = JSON.parse(userData);
-                if (user.role === 'merchant') {
-                    navigate(PATHS.MERCHANT.DASHBOARD);
-                } else {
-                    setError('This account is not registered as a merchant.');
-                }
-            }
+            // Merchant ownership is represented by the backend Merchant/Store
+            // relationship, not only by the legacy users.role field. Existing
+            // merchant accounts can therefore have a valid store while the
+            // auth payload still says role="user".
+            const primaryStore = await storeProfileService.getPrimaryStore();
+            navigate(primaryStore ? PATHS.MERCHANT.DASHBOARD : PATHS.MERCHANT.VERIFICATION);
         } catch (err: any) {
             console.error('Merchant login error:', err);
             const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
