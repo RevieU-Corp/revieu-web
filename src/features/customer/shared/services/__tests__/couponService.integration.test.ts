@@ -121,4 +121,18 @@ describe('couponService', () => {
       },
     });
   });
+
+  test('loads a direct coupon link from the server when the local cache is empty', async () => {
+    const directCoupon = { ...backendCoupon, id: 10 };
+    mockGet.mockResolvedValueOnce({
+      data: {
+        data: directCoupon,
+      },
+    });
+
+    const coupon = await couponService.getCouponById('10');
+
+    expect(mockGet).toHaveBeenCalledWith('/coupons/10');
+    expect(coupon).toMatchObject({ id: '10', type: 'paid', price: 9.99 });
+  });
 });

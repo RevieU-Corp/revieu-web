@@ -143,6 +143,18 @@ describe('Payment Integration for Coupons', () => {
 
 
   describe('CouponPaymentSuccessPage', () => {
+    it('does not fabricate a success result when opened without server navigation state', () => {
+      render(
+        <MemoryRouter initialEntries={['/customer/payment/coupon-success']}>
+          <CouponPaymentSuccessPage />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByText('Payment result unavailable')).toBeInTheDocument();
+      expect(screen.queryByText(/ORD\d+/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/VCH[A-Z0-9]+/)).not.toBeInTheDocument();
+    });
+
     it('should display coupon redemption success information', () => {
       // Render with MemoryRouter and inject coupon payment success state
       render(

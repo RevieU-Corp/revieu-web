@@ -85,13 +85,10 @@ export const mapVoucherResponse = (raw: BackendVoucher, context?: VoucherContext
 };
 
 export class VoucherServiceImpl implements VoucherService {
-  async generateVoucher(couponData: Coupon, userId: string, paymentId?: string): Promise<VoucherResult> {
+  async generateVoucher(couponData: Coupon, _userId: string, paymentId?: string): Promise<VoucherResult> {
     try {
-      const voucherCode = this.generateVoucherCode(couponData);
       const response = await apiClient.post('/vouchers', {
         couponId: couponData.id,
-        userId,
-        code: voucherCode,
       });
 
       const voucher = mapVoucherResponse(response.data, {
@@ -211,14 +208,6 @@ export class VoucherServiceImpl implements VoucherService {
   async updateVoucherStatus(voucherId: string, status: Voucher['status']): Promise<Voucher> {
     await apiClient.patch(`/vouchers/${voucherId}/status`, { status });
     return this.getVoucherById(voucherId);
-  }
-
-  private generateVoucherCode(couponData: Coupon): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
-    const merchantPrefix = (couponData.merchantId.slice(0, 3) || 'VCH').toUpperCase();
-
-    return `${merchantPrefix}-${timestamp}-${randomPart}`;
   }
 
   private generateShareContent(voucher: Voucher, shareOptions: VoucherShareOptions) {
