@@ -255,12 +255,6 @@ const MerchantDashboard: React.FC = () => {
     });
   };
 
-  const handleUpdatePackages = (updatedPackages: any[]) => {
-    console.log('Packages updated:', updatedPackages);
-    console.log('Active packages:', updatedPackages.filter(pkg => pkg.isActive));
-    setPackages(updatedPackages);
-  };
-
   const closeConfirmDialog = () => {
     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
   };
