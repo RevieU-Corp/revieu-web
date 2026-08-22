@@ -8,9 +8,16 @@ import searchIcon from '../../../../assets/images/customer/home/searchBar/search
 interface HeaderProps {
     onSearch?: (q: string) => void;
     onSearchTap?: () => void;
+    onNotificationTap?: () => void;
+    onProfileTap?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) => {
+const Header: React.FC<HeaderProps> = ({
+    onSearch = () => { },
+    onSearchTap,
+    onNotificationTap,
+    onProfileTap,
+}) => {
     const [isFocused, setIsFocused] = useState(false);
     const { user } = useAuth();
 
@@ -32,12 +39,30 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                     </div>
                 </div>
                 <div className="ml-auto flex items-center gap-1">
-                    <button className="p-1 mr-3 rounded-full hover:scale-105 active:scale-95 transition-all">
-                        <img src={notificationIcon} className="w-[25px] h-[25px]" alt="Notifications" />
-                    </button>
-                    <div className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center cursor-pointer">
-                        <img src={avatarUrl} className="w-[38px] h-[38px]" alt="Profile" />
-                    </div>
+                    {onNotificationTap ? (
+                        <button
+                            type="button"
+                            aria-label="Open notifications"
+                            onClick={onNotificationTap}
+                            className="p-1 mr-3 rounded-full hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <img src={notificationIcon} className="w-[25px] h-[25px]" alt="" aria-hidden="true" />
+                        </button>
+                    ) : null}
+                    {onProfileTap ? (
+                        <button
+                            type="button"
+                            aria-label="Open profile"
+                            onClick={onProfileTap}
+                            className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000]"
+                        >
+                            <img src={avatarUrl} className="w-[38px] h-[38px]" alt="" aria-hidden="true" />
+                        </button>
+                    ) : (
+                        <div className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center">
+                            <img src={avatarUrl} className="w-[38px] h-[38px]" alt="Profile" />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -48,11 +73,12 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                         isFocused ? 'bg-white border-[#990000]/30 shadow-lg shadow-[#990000]/5' : 'border-transparent'
                     }`}>
                         <div className="pl-3 pr-2">
-                            <img src={searchIcon} className="" />
+                            <img src={searchIcon} className="" alt="" aria-hidden="true" />
                         </div>
 
                         <input
                             type="text"
+                            aria-label="Search"
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder="Search"

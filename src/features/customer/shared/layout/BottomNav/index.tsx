@@ -68,6 +68,8 @@ export function BottomNav() {
         {/* <div className="absolute left-1/2 -translate-x-1/2 -top-[55px] w-28 h-[55px] bg-gray-200 pointer-events-none"> */}
         {/* </div> */}
         <button
+          type="button"
+          aria-label="Add review"
           onClick={handlePostClick}
           className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 p-0 bg-transparent border-0 shadow-none appearance-none overflow-visible"
         >

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star } from 'lucide-react';
 import { FoodCategoryWidget, BeautyCategoryWidget, ShoppingEntertainmentWidget, FilterModal } from '../components';
 import { filterMerchantsByCategory } from '../../shared/utils/categoryUtils';
@@ -47,12 +47,6 @@ const DiscoverPage: React.FC = () => {
     };
   }, []);
 
-  // 处理商家点击
-  const handleMerchantClick = (merchant: Pick<RecommendedMerchant, 'id' | 'name'>) => {
-    navigate(PATHS.CUSTOMER.MERCHANT_INFO(merchant.id.toString()), {
-      state: { merchantName: merchant.name },
-    });
-  };
   // 从所有商家中提取所有可用的 tags
   const availableTags = useMemo(() => {
     const tagsSet = new Set<string>();
@@ -130,9 +124,10 @@ const DiscoverPage: React.FC = () => {
           {/* 搜索栏 - 与标题对齐 */}
           <div className="flex-1 ml-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
+                aria-label="Search restaurants and shops"
                 placeholder="Search restaurants, shops..."
                 readOnly
                 onMouseDown={(event) => {
@@ -182,7 +177,7 @@ const DiscoverPage: React.FC = () => {
               : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
               }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal aria-hidden="true" className="w-4 h-4" />
             <span>Filter</span>
             {selectedTags.length > 0 && (
               <span className="ml-1 bg-white text-[#990000] text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -200,10 +195,11 @@ const DiscoverPage: React.FC = () => {
           )}
 
           {!isLoading && recommendations.map((merchant: RecommendedMerchant) => (
-            <div
+            <Link
               key={merchant.id}
+              to={PATHS.CUSTOMER.MERCHANT_INFO(merchant.id.toString())}
+              state={{ merchantName: merchant.name }}
               className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"
-              onClick={() => handleMerchantClick({ id: merchant.id, name: merchant.name })}
             >
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
                 <ImageWithFallback
@@ -224,29 +220,29 @@ const DiscoverPage: React.FC = () => {
                 <div>
                   <div className="flex justify-between items-start">
                     <h3 className="font-bold text-gray-900 text-sm truncate pr-2">{merchant.name}</h3>
-                    <span className="text-xs font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{merchant.distance}</span>
+                    <span className="text-xs font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{merchant.distance}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-1 font-medium">{merchant.category}</p>
+                  <p className="text-xs text-gray-700 mb-1 font-medium">{merchant.category}</p>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-1 mb-1.5">
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-bold text-gray-900">{merchant.rating}</span>
-                    <span className="text-xs text-gray-400">({merchant.reviews})</span>
+                    <span className="text-xs text-gray-700">({merchant.reviews})</span>
                     <span className="text-xs text-gray-300 mx-1">•</span>
                     <span className="text-xs font-bold text-green-600">{merchant.price}</span>
                   </div>
                   <div className="flex gap-1 flex-wrap">
                     {merchant.tags.slice(0, 2).map((tag: string) => (
-                      <span key={tag} className="text-xs bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded border border-gray-100 font-medium">
+                      <span key={tag} className="text-xs bg-gray-50 text-gray-700 px-1.5 py-0.5 rounded border border-gray-100 font-medium">
                         {tag}
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
