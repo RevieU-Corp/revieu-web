@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { PATHS } from '../../../routes/paths';
 import { authService } from '../api/authService';
+import PasswordField from '../components/PasswordField';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const GoogleIcon = () => (
@@ -97,21 +98,16 @@ const MerchantLoginPage: React.FC = () => {
                         />
                     </div>
 
-                    <div>
-                        <label htmlFor="password" className="text-sm font-medium text-gray-700 sr-only">Password</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 text-gray-900 bg-gray-50 border-gray-300 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors"
-                            placeholder="Password"
-                            disabled={isLoading}
-                        />
-                    </div>
+                    <PasswordField
+                        id="password"
+                        name="password"
+                        label="Password"
+                        placeholder="Password"
+                        autoComplete="current-password"
+                        value={password}
+                        disabled={isLoading}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
                     <div className="text-right">
                         <Link to={PATHS.AUTH.FORGOT_PASSWORD} d-link="forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
