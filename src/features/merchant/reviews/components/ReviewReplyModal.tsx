@@ -15,14 +15,16 @@ interface ReviewReplyModalProps {
   isOpen: boolean;
   onClose: () => void;
   review: Review | null;
-  onSubmitReply: (reviewId: number, replyText: string) => void;
+  onSubmitReply: (reviewId: number, replyText: string) => Promise<boolean>;
+  error?: string | null;
 }
 
 const ReviewReplyModal: React.FC<ReviewReplyModalProps> = ({ 
   isOpen, 
   onClose, 
   review, 
-  onSubmitReply 
+  onSubmitReply,
+  error,
 }) => {
   const [replyText, setReplyText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,13 +36,12 @@ const ReviewReplyModal: React.FC<ReviewReplyModalProps> = ({
     
     setIsSubmitting(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    onSubmitReply(review.id, replyText.trim());
-    setReplyText('');
+    const didPersist = await onSubmitReply(review.id, replyText.trim());
     setIsSubmitting(false);
-    onClose();
+    if (didPersist) {
+      setReplyText('');
+      onClose();
+    }
   };
 
   const handleClose = () => {
@@ -57,6 +58,12 @@ const ReviewReplyModal: React.FC<ReviewReplyModalProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">Reply to Review</h3>
             <p className="text-sm text-gray-600">Respond professionally to customer feedback</p>
           </div>
+
+          {error && (
+            <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <button
             onClick={handleClose}
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"

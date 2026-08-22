@@ -3,29 +3,22 @@ import { ArrowLeft, Search, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ReviewReplyModal from '../components/ReviewReplyModal';
 import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
-
-interface Review {
-  id: number;
-  customerName: string;
-  rating: number;
-  text: string;
-  date: string;
-  hasReply: boolean;
-  replyText: string;
-}
+import type { MerchantReview } from '../../../../api/reviews';
 
 interface AllReviewsProps {
-  reviews: Review[];
-  onUpdateReviews: (reviews: Review[]) => void;
+  reviews: MerchantReview[];
+  onReply: (reviewId: number, replyText: string) => Promise<boolean>;
+  onDelete: (reviewId: number) => Promise<boolean>;
+  error?: string | null;
   onClose?: () => void;
 }
 
-const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onUpdateReviews, onClose }) => {
+const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onReply, onDelete, error, onClose }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unreplied' | 'negative' | 'positive' | 'recent'>('all');
   const [showReplyModal, setShowReplyModal] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [selectedReview, setSelectedReview] = useState<MerchantReview | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -97,28 +90,27 @@ const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onUpdateReviews, onClo
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [reviews, activeFilter, searchQuery]);
 
-  const handleReplyToReview = (review: Review) => {
+  const handleReplyToReview = (review: MerchantReview) => {
     setSelectedReview(review);
     setShowReplyModal(true);
   };
 
-  const handleSubmitReply = (reviewId: number, replyText: string) => {
-    const updatedReviews = reviews.map(review =>
-      review.id === reviewId
-        ? { ...review, hasReply: true, replyText }
-        : review
-    );
-    onUpdateReviews(updatedReviews);
+  const handleSubmitReply = async (reviewId: number, replyText: string) => {
+    return onReply(reviewId, replyText);
   };
 
-  const handleDeleteReview = (review: Review) => {
+  const handleDeleteReview = (review: MerchantReview) => {
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Review',
       message: `Are you sure you want to delete the review from ${review.customerName}? This action cannot be undone.`,
       onConfirm: () => {
-        const updatedReviews = reviews.filter(r => r.id !== review.id);
-        onUpdateReviews(updatedReviews);
+        void (async () => {
+          const didPersist = await onDelete(review.id);
+          if (didPersist) {
+            closeConfirmDialog();
+          }
+        })();
       }
     });
   };
@@ -153,6 +145,12 @@ const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onUpdateReviews, onClo
                 <p className="text-gray-600">Manage and respond to customer feedback</p>
               </div>
             </div>
+
+            {error && (
+              <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             {/* Search Bar */}
             <div className="relative mb-4">
@@ -244,6 +242,7 @@ const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onUpdateReviews, onClo
                         )}
                         <button
                           onClick={() => handleDeleteReview(review)}
+                          aria-label="Delete review"
                           className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors flex items-center gap-1"
                         >
                           <Trash2 size={12} />
@@ -281,6 +280,7 @@ const AllReviews: React.FC<AllReviewsProps> = ({ reviews, onUpdateReviews, onClo
         onClose={() => setShowReplyModal(false)}
         review={selectedReview}
         onSubmitReply={handleSubmitReply}
+        error={error}
       />
 
       <ConfirmationDialog

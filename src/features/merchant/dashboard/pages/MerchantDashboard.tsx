@@ -13,6 +13,7 @@ import ReviewReplyModal from '../../reviews/components/ReviewReplyModal';
 import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
 import AllReviews from '../../reviews/pages/AllReviews';
 import { PATHS } from '../../../../routes/paths';
+import { reviewsApi, type MerchantReview } from '../../../../api/reviews';
 
 const MerchantDashboard: React.FC = () => {
   console.log('🏪 MerchantDashboard: Component rendering');
@@ -23,7 +24,7 @@ const MerchantDashboard: React.FC = () => {
   const [showPackageManager, setShowPackageManager] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<any>(null);
+  const [selectedReview, setSelectedReview] = useState<MerchantReview | null>(null);
   const [expandedPackages, setExpandedPackages] = useState<Set<number>>(new Set());
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -44,7 +45,9 @@ const MerchantDashboard: React.FC = () => {
     trendPercentage: 0,
   };
 
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<MerchantReview[]>([]);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [storeId, setStoreId] = useState<string | null>(null);
@@ -53,6 +56,33 @@ const MerchantDashboard: React.FC = () => {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
   const [packages, setPackages] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadReviews = async () => {
+      setIsLoadingReviews(true);
+      try {
+        const fetchedReviews = await reviewsApi.listMerchant();
+        if (isMounted) {
+          setReviews(fetchedReviews);
+          setReviewError(null);
+        }
+      } catch (error) {
+        console.error('Failed to load merchant reviews:', error);
+        if (isMounted) {
+          setReviewError('Unable to load reviews. Please retry after confirming your merchant session.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingReviews(false);
+        }
+      }
+    };
+    void loadReviews();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const loadStoreAndCoupons = async () => {
@@ -101,8 +131,9 @@ const MerchantDashboard: React.FC = () => {
   };
 
   // Handler functions
-  const handleReplyToReview = (review: any) => {
+  const handleReplyToReview = (review: MerchantReview) => {
     setSelectedReview(review);
+    setReviewError(null);
     setShowReplyModal(true);
   };
 
@@ -118,22 +149,47 @@ const MerchantDashboard: React.FC = () => {
     });
   };
 
-  const handleSubmitReply = (reviewId: number, replyText: string) => {
-    setReviews(reviews.map(review =>
-      review.id === reviewId
-        ? { ...review, hasReply: true, replyText }
-        : review
-    ));
+  const handleSubmitReply = async (reviewId: number, replyText: string): Promise<boolean> => {
+    try {
+      const updatedReview = await reviewsApi.replyMerchant(reviewId, replyText);
+      setReviews((currentReviews) => currentReviews.map((review) => (
+        review.id === reviewId ? updatedReview : review
+      )));
+      setReviewError(null);
+      return true;
+    } catch (error) {
+      console.error('Failed to persist merchant reply:', error);
+      setReviewError('Reply was not saved. Check your connection and merchant permissions, then try again.');
+      return false;
+    }
   };
 
-  const handleDeleteReview = (review: any) => {
+  const deleteReview = async (reviewId: number): Promise<boolean> => {
+    try {
+      await reviewsApi.deleteMerchant(reviewId);
+      setReviews((currentReviews) => currentReviews.filter((review) => review.id !== reviewId));
+      setReviewError(null);
+      return true;
+    } catch (error) {
+      console.error('Failed to archive merchant review:', error);
+      setReviewError('Review was not deleted. Check your connection and merchant permissions, then try again.');
+      return false;
+    }
+  };
+
+  const handleDeleteReview = (review: MerchantReview) => {
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Review',
       message: `Are you sure you want to delete the review from ${review.customerName}? This action cannot be undone.`,
       onConfirm: () => {
-        setReviews(reviews.filter(r => r.id !== review.id));
-      }
+        void (async () => {
+          const didPersist = await deleteReview(review.id);
+          if (didPersist) {
+            closeConfirmDialog();
+          }
+        })();
+      },
     });
   };
 
@@ -204,10 +260,6 @@ const MerchantDashboard: React.FC = () => {
     console.log('Packages updated:', updatedPackages);
     console.log('Active packages:', updatedPackages.filter(pkg => pkg.isActive));
     setPackages(updatedPackages);
-  };
-
-  const handleUpdateReviews = (updatedReviews: any[]) => {
-    setReviews(updatedReviews);
   };
 
   const closeConfirmDialog = () => {
@@ -468,8 +520,15 @@ const MerchantDashboard: React.FC = () => {
             View All
           </button>
         </div>
+        {reviewError && (
+          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {reviewError}
+          </div>
+        )}
         <div className="space-y-4">
-          {reviews.filter(review => isToday(review.date)).map((review) => (
+          {isLoadingReviews ? (
+            <p className="py-8 text-center text-gray-500">Loading reviews...</p>
+          ) : reviews.filter(review => isToday(review.date)).map((review) => (
             <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
@@ -525,7 +584,7 @@ const MerchantDashboard: React.FC = () => {
               )}
             </div>
           ))}
-          {reviews.filter(review => isToday(review.date)).length === 0 && (
+          {!isLoadingReviews && reviews.filter(review => isToday(review.date)).length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No reviews today yet.</p>
             </div>
@@ -562,6 +621,7 @@ const MerchantDashboard: React.FC = () => {
         onClose={() => setShowReplyModal(false)}
         review={selectedReview}
         onSubmitReply={handleSubmitReply}
+        error={reviewError}
       />
 
       <ConfirmationDialog
@@ -578,7 +638,9 @@ const MerchantDashboard: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-white">
           <AllReviews
             reviews={reviews}
-            onUpdateReviews={handleUpdateReviews}
+            onReply={handleSubmitReply}
+            onDelete={deleteReview}
+            error={reviewError}
             onClose={() => setShowAllReviews(false)}
           />
         </div>

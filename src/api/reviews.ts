@@ -85,6 +85,16 @@ export interface AiReviewCandidatesResponse {
     candidates: string[];
 }
 
+export interface MerchantReview {
+    id: number;
+    customerName: string;
+    rating: number;
+    text: string;
+    date: string;
+    hasReply: boolean;
+    replyText?: string;
+}
+
 interface BackendReviewResponse {
     id: string;
     merchantId: string;
@@ -167,6 +177,16 @@ interface BackendAiReviewCandidatesResponse {
     candidates?: string[];
 }
 
+interface BackendMerchantReview {
+    id: number;
+    customerName: string;
+    rating: number;
+    text: string;
+    date: string;
+    hasReply: boolean;
+    replyText?: string;
+}
+
 export interface ReviewListRequest {
     cursor?: string;
     limit?: number;
@@ -245,6 +265,18 @@ function mapStoreReviewResponse(review: BackendStoreReviewItem): StoreReviewResp
     };
 }
 
+function mapMerchantReviewResponse(review: BackendMerchantReview): MerchantReview {
+    return {
+        id: review.id,
+        customerName: review.customerName,
+        rating: review.rating,
+        text: review.text,
+        date: review.date,
+        hasReply: review.hasReply,
+        replyText: review.replyText,
+    };
+}
+
 /**
  * Reviews API service
  */
@@ -315,6 +347,23 @@ export const reviewsApi = {
             data: response.data.data.map(mapStoreReviewResponse),
             cursor: response.data.cursor !== undefined ? String(response.data.cursor) : undefined,
         };
+    },
+
+    listMerchant: async (): Promise<MerchantReview[]> => {
+        const response = await apiClient.get<{ data: BackendMerchantReview[] }>('/merchant/reviews');
+        return response.data.data.map(mapMerchantReviewResponse);
+    },
+
+    replyMerchant: async (reviewId: number, text: string): Promise<MerchantReview> => {
+        const response = await apiClient.post<BackendMerchantReview>(
+            `/merchant/reviews/${reviewId}/reply`,
+            { text },
+        );
+        return mapMerchantReviewResponse(response.data);
+    },
+
+    deleteMerchant: async (reviewId: number): Promise<void> => {
+        await apiClient.delete(`/merchant/reviews/${reviewId}`);
     },
 
     generateAiReviewCandidates: async (formData: FormData): Promise<AiReviewCandidatesResponse> => {
