@@ -142,6 +142,8 @@ const StoreProfile: React.FC = () => {
   const [isSubmittingNewStore, setIsSubmittingNewStore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isStoreActive, setIsStoreActive] = useState(false);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -188,6 +190,7 @@ const StoreProfile: React.FC = () => {
         const normalizedStore = normalizeStoreData(primaryStore, defaultStoreData);
         setStoreData(normalizedStore);
         setSavedStoreData(normalizedStore);
+        setIsStoreActive(primaryStore.status === 1);
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load store profile:', error);
@@ -259,6 +262,25 @@ const StoreProfile: React.FC = () => {
     setIsEditing(false);
     setStatusMessage(null);
     setStoreData(savedStoreData);
+  };
+
+  const handleToggleActive = async () => {
+    if (!storeData.id) return;
+    setIsTogglingActive(true);
+    try {
+      if (isStoreActive) {
+        await storeProfileService.deactivateStore(storeData.id);
+        setIsStoreActive(false);
+      } else {
+        await storeProfileService.activateStore(storeData.id);
+        setIsStoreActive(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle store active state:', error);
+      setStatusMessage('Failed to update store status.');
+    } finally {
+      setIsTogglingActive(false);
+    }
   };
 
   const handleFileUpload = async (
@@ -580,6 +602,18 @@ const StoreProfile: React.FC = () => {
             {isLoadingStore && <p className="mt-1 text-sm text-gray-500">Loading store profile...</p>}
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={handleToggleActive}
+              disabled={isTogglingActive || !storeData.id}
+              className={
+                isStoreActive
+                  ? 'flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+                  : 'flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50'
+              }
+              style={isStoreActive ? undefined : { backgroundColor: '#FFBC0D' }}
+            >
+              {isTogglingActive ? 'Updating...' : isStoreActive ? 'Disable store' : 'Enable store'}
+            </button>
             {isEditing ? (
               <>
                 <button

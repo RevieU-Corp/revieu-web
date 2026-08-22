@@ -16,6 +16,7 @@ export interface MerchantStoreRecord {
   cover_image_url?: string | null;
   images?: string[] | string | null;
   menu_images?: string[] | string | null;
+  status?: number | null;
 }
 
 export interface UpdateMerchantStorePayload {
