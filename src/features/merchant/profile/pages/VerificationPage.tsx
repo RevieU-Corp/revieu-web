@@ -6,7 +6,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 
 const VerificationPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, isMerchant } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [showModal, setShowModal] = useState(true);
 
   const handleCloseModal = () => {
@@ -15,10 +15,10 @@ const VerificationPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !isMerchant)) {
+    if (!isLoading && !isAuthenticated) {
       setShowModal(false);
     }
-  }, [isAuthenticated, isLoading, isMerchant]);
+  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
     return (
@@ -28,7 +28,7 @@ const VerificationPage: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated || !isMerchant) {
+  if (!isAuthenticated) {
     return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
   }
 

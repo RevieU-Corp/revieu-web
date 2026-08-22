@@ -55,13 +55,10 @@ const MerchantLayout: React.FC = () => {
     return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
   }
 
-  // Redirect to merchant login if authenticated but not a merchant
-  if (isAuthenticated && !isMerchant) {
-    console.log('❌ MerchantLayout: User is not a merchant, redirecting to login');
-    return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
-  }
-
-  console.log('✅ MerchantLayout: Rendering dashboard for merchant:', {
+  // Merchant onboarding starts from an authenticated account. Backend-owned
+  // merchant/store endpoints decide whether the account can manage data; a
+  // users.role value alone must not bounce a valid merchant back to login.
+  console.log('✅ MerchantLayout: Rendering merchant portal:', {
     user: user?.name,
     isAuthenticated,
     isMerchant,
