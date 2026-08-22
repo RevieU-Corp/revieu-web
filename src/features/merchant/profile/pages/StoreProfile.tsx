@@ -515,51 +515,54 @@ const StoreProfile: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">Create your store</h1>
         <p className="text-sm text-gray-500">You don't have a store yet — fill in the basics to get started. You can add hours, photos, and menu images after creating it.</p>
         {statusMessage && (
-          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{statusMessage}</div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {statusMessage}
+          </div>
         )}
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Store name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Store name</label>
             <input
               type="text"
               value={storeData.name}
               onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               placeholder="e.g. Downtown Burger House"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               value={storeData.bio}
               onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               rows={3}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
             <input
               type="text"
               value={storeData.streetAddress}
               onChange={(e) => setStoreData({ ...storeData, streetAddress: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
             <input
               type="text"
               value={storeData.phone}
               onChange={(e) => setStoreData({ ...storeData, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             />
           </div>
         </div>
         <button
           onClick={handleCreateStore}
           disabled={isSubmittingNewStore}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="w-full py-3 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 transition-colors disabled:opacity-50"
+          style={{ backgroundColor: '#FFBC0D' }}
         >
           {isSubmittingNewStore ? 'Creating...' : 'Create store'}
         </button>
