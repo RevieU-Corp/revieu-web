@@ -15,16 +15,21 @@ vi.mock('../../../../../contexts/AuthContext', () => ({
 }));
 
 describe('Header', () => {
-  it('keeps search tap navigation while rendering only the primary search action button', () => {
+  it('submits typed search text without navigating outside the application', () => {
     const onSearchTap = vi.fn();
 
     render(<Header onSearchTap={onSearchTap} />);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('searchbox', { name: 'Search merchants' });
 
     fireEvent.mouseDown(input);
+    expect(onSearchTap).not.toHaveBeenCalled();
 
-    expect(onSearchTap).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole('button')).toHaveLength(2);
+    fireEvent.change(input, { target: { value: 'ramen' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onSearchTap).toHaveBeenCalledWith('ramen');
+    expect(screen.getByDisplayValue('ramen')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Voice search' })).toBeInTheDocument();
   });
 });

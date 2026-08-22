@@ -49,6 +49,14 @@ const HomePage: React.FC = () => {
 
   const enrichedMerchants = useMemo(() => enrichMerchantsData(merchants), [merchants]);
 
+  const handleSearchSubmit = (query: string) => {
+    const normalizedQuery = query.trim();
+    const searchPath = normalizedQuery
+      ? `${PATHS.CUSTOMER.EXPLORE}?q=${encodeURIComponent(normalizedQuery)}`
+      : PATHS.CUSTOMER.EXPLORE;
+    navigate(searchPath);
+  };
+
   // Use the filtering hook
   const {
     activeFeature,
@@ -81,7 +89,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="bg-white min-h-screen pb-20 max-w-lg mx-auto overflow-x-hidden">
       {/* Compact Header */}
-      <Header onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)} />
+      <Header onSearchTap={handleSearchSubmit} />
 
       <main className="px-8 space-y-6 mt-4">
         {/* Compact Feature Buttons with Distance Slider */}
