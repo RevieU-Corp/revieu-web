@@ -313,7 +313,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
 
       <div className="px-6 pb-8 pt-16">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
+          <h1 className="break-words text-3xl font-bold text-gray-900">{store.name}</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">{store.description}</p>
         </div>
 
@@ -347,7 +347,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
           </div>
         </div>
 
-        <div className="mt-6 flex rounded-full border border-gray-200 bg-gray-50 p-1">
+        <div className="mt-6 flex min-w-0 rounded-full border border-gray-200 bg-gray-50 p-1">
           {[
             { key: 'deals', label: 'Deals', icon: Ticket },
             { key: 'menu', label: 'Menu', icon: MenuSquare },
@@ -359,7 +359,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
                 key={key}
                 type="button"
                 onClick={() => setActiveTab(key as 'deals' | 'menu' | 'reviews')}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
+                className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full px-1 py-3 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
                   isActive ? 'bg-white text-[#FF6900] shadow-sm' : 'text-gray-500'
                 }`}
               >

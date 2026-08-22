@@ -121,6 +121,19 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
   };
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, html5QrCode, isScanning]);
+
+  useEffect(() => {
     // Cleanup on unmount
     return () => {
       if (html5QrCode && isScanning) {
@@ -132,8 +145,13 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="presentation">
+      <div
+        className="bg-white rounded-xl shadow-xl max-w-md w-full"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="redemption-dialog-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -141,7 +159,7 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
               {isMobile ? <QrCode className="w-5 h-5 text-blue-600" /> : <Keyboard className="w-5 h-5 text-blue-600" />}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 id="redemption-dialog-title" className="text-lg font-semibold text-gray-900">
                 {isMobile ? 'Scan Coupon' : 'Enter Coupon Code'}
               </h3>
               <p className="text-sm text-gray-600">
@@ -151,6 +169,8 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
           </div>
           <button
             onClick={handleClose}
+            type="button"
+            aria-label="Close redemption dialog"
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={20} />
@@ -209,6 +229,7 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
                   <button
                     type="submit"
                     disabled={!manualCode.trim()}
+                    aria-label="Search coupon code"
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <Search size={16} />
@@ -233,6 +254,7 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
                   </label>
                   <input
                     type="text"
+                    aria-label="Coupon code"
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                     placeholder="e.g., STUDENT20, SAVE15"
