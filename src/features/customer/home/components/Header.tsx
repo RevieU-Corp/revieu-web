@@ -8,15 +8,24 @@ import searchIcon from '../../../../assets/images/customer/home/searchBar/search
 
 interface HeaderProps {
     onSearch?: (q: string) => void;
-    onSearchTap?: () => void;
+    onSearchTap?: (q: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) => {
     const [isFocused, setIsFocused] = useState(false);
+    const [query, setQuery] = useState('');
     const { user } = useAuth();
 
     // Use user avatar from AuthContext, fallback to local default avatar image
     const avatarUrl = user?.avatar || defaultAvatar;
+    const submitSearch = () => {
+        if (onSearchTap) {
+            onSearchTap(query.trim());
+            return;
+        }
+
+        onSearch(query.trim());
+    };
 
     return (
         <header className="px-8 pt-11 pb-3 bg-white/80 backdrop-blur-xl sticky top-0 z-40 transition-all border-b border-black/[0.03]">
@@ -53,34 +62,27 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                         </div>
 
                         <input
-                            type="text"
+                            type="search"
+                            aria-label="Search merchants"
+                            value={query}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder="Search"
-                            readOnly={Boolean(onSearchTap)}
-                            onMouseDown={(e) => {
-                                if (!onSearchTap) {
-                                    return;
-                                }
-
-                                e.preventDefault();
-                                onSearchTap();
-                            }}
+                            enterKeyHint="search"
                             onKeyDown={(e) => {
-                                if (!onSearchTap) {
-                                    return;
-                                }
-
-                                if (e.key === 'Enter' || e.key === ' ') {
+                                if (e.key === 'Enter') {
                                     e.preventDefault();
-                                    onSearchTap();
+                                    submitSearch();
                                 }
                             }}
-                            onChange={(e) => onSearch(e.target.value)}
+                            onChange={(e) => {
+                                setQuery(e.target.value);
+                                onSearch(e.target.value);
+                            }}
                             className="h-full flex-1 bg-transparent border-none py-0 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
                         />
                     </div>
-                    <button className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
+                    <button type="button" aria-label="Voice search" className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
                         <img src={micIcon} className="w-[25px] h-[25px]">
                         </img>
                     </button>
