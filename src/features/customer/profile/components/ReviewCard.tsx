@@ -25,8 +25,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             <div className="flex items-center gap-2 mt-1">
                  <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Icons.Star 
+                    <Icons.Star
                       key={star} 
+                      aria-hidden="true"
                       size={12} 
                       className={`${star <= review.rating ? 'fill-brand-gold text-brand-gold' : 'text-gray-200'}`} 
                     />
@@ -36,8 +37,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             </div>
           </div>
         </div>
-        <button className="text-gray-300 hover:text-gray-600 p-1">
-          <Icons.More size={18} />
+        <button type="button" aria-label="More review actions" className="text-gray-300 hover:text-gray-600 p-1">
+          <Icons.More aria-hidden="true" size={18} />
         </button>
       </div>
 
@@ -48,10 +49,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
       {review.images.length > 0 && (
         <div className="flex gap-2.5 mb-5 overflow-hidden">
           {review.images.map((img, idx) => (
-            <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+            <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden hover:opacity-90 transition-opacity">
                 <ImageWithFallback
                 src={img}
-                alt="Attachment"
+                alt={`Review attachment ${idx + 1} for ${review.businessName}`}
                 className="w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
@@ -64,13 +65,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
 
       {/* Footer Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-        <button className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 -ml-3 rounded-lg transition-colors">
-          <Icons.ThumbsUp size={16} />
+        <button type="button" aria-label={`Mark ${review.businessName} review helpful`} className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 -ml-3 rounded-lg transition-colors">
+          <Icons.ThumbsUp aria-hidden="true" size={16} />
           <span>Helpful</span>
           {review.helpfulCount > 0 && <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] text-gray-600 ml-1">{review.helpfulCount}</span>}
         </button>
-        <button className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
-           <Icons.MessageSquare size={16} />
+        <button type="button" aria-label={`Comment on ${review.businessName} review`} className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
+           <Icons.MessageSquare aria-hidden="true" size={16} />
            <span>Comment</span>
         </button>
       </div>

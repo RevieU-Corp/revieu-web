@@ -5,6 +5,8 @@ import { authService } from '../api/authService';
 import AuthLayout from '../components/AuthLayout';
 import AuthSuccessPanel from '../components/AuthSuccessPanel';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +16,12 @@ const ForgotPasswordPage: React.FC = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -21,7 +29,7 @@ const ForgotPasswordPage: React.FC = () => {
       setIsSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      const message = err.response?.data?.message || 'Failed to send reset email. Please try again.';
+      const message = err.response?.data?.message || err.response?.data?.error || 'Failed to send reset email. Please try again.';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -85,7 +93,7 @@ const ForgotPasswordPage: React.FC = () => {
 
         <div className="auth-ui-spacer" />
 
-        <button className="auth-ui-btn" type="submit" disabled={isLoading || !email.trim()}>
+        <button className="auth-ui-btn" type="submit" disabled={isLoading || !EMAIL_PATTERN.test(email.trim())}>
           {isLoading ? (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <svg className="auth-ui-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">

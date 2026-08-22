@@ -7,6 +7,8 @@ import AuthLayout from '../components/AuthLayout';
 import GoogleIcon from '../components/GoogleIcon';
 import PasswordField from '../components/PasswordField';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +20,12 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -29,7 +37,7 @@ const LoginPage: React.FC = () => {
       navigate(destination);
     } catch (err: any) {
       console.error('Login error:', err);
-      const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      const message = err.response?.data?.message || err.response?.data?.error || 'Login failed. Please check your credentials.';
       setError(message);
     } finally {
       setIsLoading(false);

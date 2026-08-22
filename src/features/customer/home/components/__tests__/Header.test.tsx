@@ -15,16 +15,26 @@ vi.mock('../../../../../contexts/AuthContext', () => ({
 }));
 
 describe('Header', () => {
-  it('keeps search tap navigation while rendering only the primary search action button', () => {
+  it('keeps search tap navigation and exposes named header actions', () => {
     const onSearchTap = vi.fn();
+    const onNotificationTap = vi.fn();
+    const onProfileTap = vi.fn();
 
-    render(<Header onSearchTap={onSearchTap} />);
+    render(
+      <Header
+        onSearchTap={onSearchTap}
+        onNotificationTap={onNotificationTap}
+        onProfileTap={onProfileTap}
+      />
+    );
 
     const input = screen.getByRole('textbox');
 
     fireEvent.mouseDown(input);
 
     expect(onSearchTap).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole('button')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Open notifications' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open profile' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search' })).toBeInTheDocument();
   });
 });

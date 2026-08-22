@@ -30,15 +30,16 @@ const CouponPaymentSuccessPage: React.FC = () => {
   const [voucherError, setVoucherError] = useState<string>('');
 
   // Get payment data from navigation state
-  const paymentData = location.state as CouponPaymentSuccessState || {
+  const hasPaymentData = Boolean(location.state);
+  const paymentData = (location.state as CouponPaymentSuccessState | null) || {
     dealInfo: {
-      title: 'Lunch Combo A',
-      price: '12.99',
-      description: 'Orange chicken, fried rice, and egg roll'
+      title: '',
+      price: '',
+      description: ''
     },
-    paymentMethod: 'UPay',
-    orderNumber: `ORD${Date.now()}`,
-    voucherCode: `VCH${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+    paymentMethod: '',
+    orderNumber: '',
+    voucherCode: '',
     isCouponPayment: false
   };
 
@@ -48,7 +49,7 @@ const CouponPaymentSuccessPage: React.FC = () => {
     let cancelled = false;
 
     const loadVoucher = async () => {
-      if (!isCouponPayment) {
+      if (!hasPaymentData || !isCouponPayment) {
         setIsGeneratingVoucher(false);
         return;
       }
@@ -85,7 +86,7 @@ const CouponPaymentSuccessPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [initialVoucher, isCouponPayment]);
+  }, [hasPaymentData, initialVoucher, isCouponPayment]);
 
   const handleCopyCode = async () => {
     try {
@@ -173,6 +174,26 @@ const CouponPaymentSuccessPage: React.FC = () => {
       </div>
     </div>
   );
+
+  if (!hasPaymentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md rounded-2xl bg-white p-6 text-center shadow-sm border border-gray-100">
+          <h1 className="text-lg font-bold text-gray-900">Payment result unavailable</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            This page can only show a confirmed server payment result. No order or voucher was created from this page.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/customer/payment')}
+            className="mt-5 w-full rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white"
+          >
+            Return to payment
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">

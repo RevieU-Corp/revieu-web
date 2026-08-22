@@ -235,6 +235,12 @@ const StoreProfile: React.FC = () => {
       return;
     }
 
+    if (storeData.operatingHours.open && storeData.operatingHours.close &&
+      storeData.operatingHours.open >= storeData.operatingHours.close) {
+      setStatusMessage('Closing time must be later than opening time.');
+      return;
+    }
+
     setIsSaving(true);
     setStatusMessage(null);
 
@@ -799,6 +805,7 @@ const StoreProfile: React.FC = () => {
                   <label className="block text-xs text-gray-500 mb-1">Opening Time</label>
                   {isEditing ? (
                     <input
+                      aria-label="Opening time"
                       type="time"
                       value={storeData.operatingHours.open}
                       onChange={(e) => setStoreData({
@@ -815,6 +822,7 @@ const StoreProfile: React.FC = () => {
                   <label className="block text-xs text-gray-500 mb-1">Closing Time</label>
                   {isEditing ? (
                     <input
+                      aria-label="Closing time"
                       type="time"
                       value={storeData.operatingHours.close}
                       onChange={(e) => setStoreData({

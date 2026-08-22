@@ -124,8 +124,10 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
                   <ImageIcon size={32} className="text-gray-400 mb-2" />
                   <span className="text-sm text-gray-500">Click to upload image</span>
                   <input
+                    id="menu-item-image"
                     type="file"
                     accept="image/*"
+                    aria-label="Upload menu item image"
                     onChange={handleImageUpload}
                     className="hidden"
                   />

@@ -81,7 +81,11 @@ const HomePage: React.FC = () => {
   return (
     <div className="bg-white min-h-screen pb-20 max-w-lg mx-auto overflow-x-hidden">
       {/* Compact Header */}
-      <Header onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)} />
+      <Header
+        onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)}
+        onNotificationTap={() => navigate(PATHS.CUSTOMER.ME.NOTIFICATIONS)}
+        onProfileTap={() => navigate(PATHS.CUSTOMER.ME.ROOT)}
+      />
 
       <main className="px-8 space-y-6 mt-4">
         {/* Compact Feature Buttons with Distance Slider */}
