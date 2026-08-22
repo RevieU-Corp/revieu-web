@@ -152,8 +152,23 @@ const DishManagementPage: React.FC = () => {
             <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" rows={2} />
             <input type="number" step="0.01" placeholder="Original price" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
             <input type="text" placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-            <input type="file" accept="image/*" onChange={handleImageChange} disabled={isUploadingImage} />
-            {form.image_url && <img src={form.image_url} alt="preview" className="w-20 h-20 object-cover rounded-lg" />}
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="dish-image-upload"
+                className={`px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium cursor-pointer hover:bg-gray-50 ${isUploadingImage ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                {isUploadingImage ? 'Uploading...' : form.image_url ? 'Change photo' : 'Upload photo'}
+              </label>
+              <input
+                id="dish-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                disabled={isUploadingImage}
+                className="hidden"
+              />
+              {form.image_url && <img src={form.image_url} alt="preview" className="w-12 h-12 object-cover rounded-lg" />}
+            </div>
             <div className="flex gap-2 pt-2">
               <button onClick={() => setIsModalOpen(false)} className="flex-1 py-2 border border-gray-300 rounded-lg">Cancel</button>
               <button onClick={handleSubmit} disabled={isSaving} className="flex-1 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{isSaving ? 'Saving...' : 'Save'}</button>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dish } from '../../dishes/services/dishService';
-import { Coupon, UpsertCouponPayload } from '../services/couponService';
+import { Coupon, UpsertCouponPayload, couponService } from '../services/couponService';
 
 interface CouponFormModalProps {
   isOpen: boolean;
@@ -32,6 +32,8 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
   const [totalQuantity, setTotalQuantity] = useState(1);
   const [validFrom, setValidFrom] = useState('');
   const [validUntil, setValidUntil] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -47,6 +49,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
       setTotalQuantity(coupon.total_quantity);
       setValidFrom(toDatetimeLocal(coupon.valid_from));
       setValidUntil(toDatetimeLocal(coupon.valid_until));
+      setImageUrl(coupon.image_url ?? '');
     } else {
       setTitle('');
       setCouponType('normal');
@@ -56,6 +59,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
       setTotalQuantity(1);
       setValidFrom('');
       setValidUntil('');
+      setImageUrl('');
     }
   }, [isOpen, coupon]);
 
@@ -63,6 +67,22 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
 
   const toggleDish = (dishId: number) => {
     setSelectedDishIds((prev) => (prev.includes(dishId) ? prev.filter((id) => id !== dishId) : [...prev, dishId]));
+  };
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setIsUploadingImage(true);
+    try {
+      const url = await couponService.uploadImage(file);
+      setImageUrl(url);
+    } catch (uploadError) {
+      console.error('Failed to upload coupon image:', uploadError);
+      setFormError('Failed to upload image.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const discountPercentage = originalPrice > 0 ? Math.round(((originalPrice - salePrice) / originalPrice) * 100) : 0;
@@ -83,6 +103,13 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
       max_per_user: 1,
       status,
     };
+
+    // Omit the key entirely when no manual image was chosen, so the backend's
+    // single-dish auto-fill fallback can still apply instead of us sending an
+    // explicit empty string that would look like a deliberate clear.
+    if (imageUrl) {
+      payload.image_url = imageUrl;
+    }
 
     // The backend's *time.Time fields cannot tell a JSON null from an absent
     // key, so sending null is misleading — omit the keys instead when they
@@ -164,6 +191,27 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
                 {dish.name}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Coupon photo (optional — falls back to the dish photo if left blank)</p>
+          <div className="flex items-center gap-3">
+            <label
+              htmlFor="coupon-image-upload"
+              className={`px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium cursor-pointer hover:bg-gray-50 ${isUploadingImage ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              {isUploadingImage ? 'Uploading...' : imageUrl ? 'Change photo' : 'Upload photo'}
+            </label>
+            <input
+              id="coupon-image-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={isUploadingImage}
+              className="hidden"
+            />
+            {imageUrl && <img src={imageUrl} alt="preview" className="w-12 h-12 object-cover rounded-lg" />}
           </div>
         </div>
 

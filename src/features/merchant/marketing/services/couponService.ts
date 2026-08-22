@@ -1,4 +1,5 @@
 import { apiClient } from '../../../../api/apiClient';
+import { mediaApi, uploadToR2 } from '../../../../api/media';
 
 export interface Coupon {
   id: number;
@@ -67,5 +68,14 @@ export const couponService = {
 
   async remove(storeId: string, couponId: number): Promise<void> {
     await apiClient.delete(`/merchant/stores/${storeId}/coupons/${couponId}`);
+  },
+
+  async uploadImage(file: File): Promise<string> {
+    const uploadUrlsResponse = await mediaApi.getUploadUrls({
+      files: [{ filename: file.name, contentType: file.type || 'application/octet-stream' }],
+    });
+    const upload = uploadUrlsResponse.uploads[0];
+    await uploadToR2(upload.uploadUrl, file);
+    return upload.fileUrl;
   },
 };
