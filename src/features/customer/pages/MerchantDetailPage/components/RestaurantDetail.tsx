@@ -255,7 +255,8 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white pb-20 animate-pulse">
+      <div className="min-h-screen bg-white pb-20 motion-safe:animate-pulse">
+        <h1 className="sr-only">Loading merchant</h1>
         <div className="relative h-64 w-full bg-gray-200">
           <button
             type="button"
@@ -318,7 +319,7 @@ export function RestaurantDetail({ storeId, onBack }: RestaurantDetailProps) {
         </div>
 
         <div className="mt-5 flex items-center justify-center gap-3">
-          <div className="flex items-center gap-1 rounded-full bg-[#FFA500] px-3 py-1 text-white">
+          <div className="flex items-center gap-1 rounded-full bg-[#A66900] px-3 py-1 text-white">
             <Star className="h-4 w-4 fill-white text-white" />
             <span className="font-semibold">{store.rating.toFixed(1)}</span>
           </div>

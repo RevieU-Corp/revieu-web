@@ -40,6 +40,7 @@
         VERIFICATION: '/merchant/verification',
         DASHBOARD: '/merchant/dashboard',
         ANALYTICS: '/merchant/analytics',
+        DISHES: '/merchant/dishes',
         ADS: '/merchant/ads',
         PROFILE: '/merchant/profile',
         CREATE_POST: '/merchant/create-post',

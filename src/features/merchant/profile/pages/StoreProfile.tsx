@@ -19,6 +19,7 @@ import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
 import {
   MerchantStoreRecord,
+  StoreHourPayload,
   storeProfileService,
   parseStringArray,
   uploadMerchantImages,
@@ -115,9 +116,26 @@ const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultS
   gallery: parseStringArray(raw.images),
   menuImages: parseStringArray(raw.menu_images),
   bio: raw.description ?? '',
+  operatingHours: (() => {
+    const firstOpenDay = (raw.hours ?? []).find(
+      (hour) => !hour.is_closed && hour.open_time && hour.close_time
+    );
+    return {
+      open: firstOpenDay?.open_time ?? base.operatingHours.open,
+      close: firstOpenDay?.close_time ?? base.operatingHours.close,
+    };
+  })(),
 });
 
-const buildStoreUpdatePayload = (store: StoreData) => ({
+const buildStoreHours = (store: StoreData): StoreHourPayload[] =>
+  Array.from({ length: 7 }, (_, dayOfWeek) => ({
+    day_of_week: dayOfWeek,
+    open_time: store.operatingHours.open,
+    close_time: store.operatingHours.close,
+    is_closed: false,
+  }));
+
+const buildStoreUpdatePayload = (store: StoreData, includeHours = true) => ({
   name: store.name,
   description: store.bio,
   address: store.streetAddress,
@@ -131,6 +149,7 @@ const buildStoreUpdatePayload = (store: StoreData) => ({
   cover_image_url: store.coverPhoto,
   images: store.gallery,
   menu_images: store.menuImages,
+  ...(includeHours ? { hours: buildStoreHours(store) } : {}),
 });
 
 const StoreProfile: React.FC = () => {
@@ -138,8 +157,12 @@ const StoreProfile: React.FC = () => {
   const [storeData, setStoreData] = useState(defaultStoreData);
   const [savedStoreData, setSavedStoreData] = useState(defaultStoreData);
   const [isLoadingStore, setIsLoadingStore] = useState(true);
+  const [isCreatingStore, setIsCreatingStore] = useState(false);
+  const [isSubmittingNewStore, setIsSubmittingNewStore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isStoreActive, setIsStoreActive] = useState(false);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -177,15 +200,16 @@ const StoreProfile: React.FC = () => {
         }
 
         if (!primaryStore) {
-          setStatusMessage('No merchant store found yet.');
           setStoreData(defaultStoreData);
           setSavedStoreData(defaultStoreData);
+          setIsCreatingStore(true);
           return;
         }
 
         const normalizedStore = normalizeStoreData(primaryStore, defaultStoreData);
         setStoreData(normalizedStore);
         setSavedStoreData(normalizedStore);
+        setIsStoreActive(primaryStore.status === 1);
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load store profile:', error);
@@ -237,10 +261,63 @@ const StoreProfile: React.FC = () => {
     }
   };
 
+  const handleCreateStore = async () => {
+    if (!storeData.name.trim()) {
+      setStatusMessage('Store name is required.');
+      return;
+    }
+    setIsSubmittingNewStore(true);
+    setStatusMessage(null);
+    try {
+      const created = await storeProfileService.createStore(buildStoreUpdatePayload(storeData, false));
+      const normalizedStore = normalizeStoreData(created, storeData);
+      setStoreData(normalizedStore);
+      setSavedStoreData(normalizedStore);
+      setIsCreatingStore(false);
+      setIsEditing(false);
+
+      // The backend creates stores as drafts, but coupon creation requires a
+      // published store — publish it now so the merchant can start right away.
+      // A failure here must not fail the create: the "Enable store" toggle
+      // remains available as a retry.
+      try {
+        await storeProfileService.activateStore(normalizedStore.id);
+        setIsStoreActive(true);
+      } catch (activationError) {
+        console.error('Failed to activate newly created store:', activationError);
+        setStatusMessage('Store created, but it could not be enabled automatically. Use "Enable store" to publish it.');
+      }
+    } catch (error) {
+      console.error('Failed to create store:', error);
+      setStatusMessage('Failed to create store.');
+    } finally {
+      setIsSubmittingNewStore(false);
+    }
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
     setStatusMessage(null);
     setStoreData(savedStoreData);
+  };
+
+  const handleToggleActive = async () => {
+    if (!storeData.id) return;
+    setIsTogglingActive(true);
+    try {
+      if (isStoreActive) {
+        await storeProfileService.deactivateStore(storeData.id);
+        setIsStoreActive(false);
+      } else {
+        await storeProfileService.activateStore(storeData.id);
+        setIsStoreActive(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle store active state:', error);
+      setStatusMessage('Failed to update store status.');
+    } finally {
+      setIsTogglingActive(false);
+    }
   };
 
   const handleFileUpload = async (
@@ -491,6 +568,67 @@ const StoreProfile: React.FC = () => {
     });
   };
 
+  if (isCreatingStore) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">Create your store</h1>
+        <p className="text-sm text-gray-500">You don't have a store yet — fill in the basics to get started. You can add hours, photos, and menu images after creating it.</p>
+        {statusMessage && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {statusMessage}
+          </div>
+        )}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Store name</label>
+            <input
+              type="text"
+              value={storeData.name}
+              onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              placeholder="e.g. Downtown Burger House"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={storeData.bio}
+              onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <input
+              type="text"
+              value={storeData.streetAddress}
+              onChange={(e) => setStoreData({ ...storeData, streetAddress: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <input
+              type="text"
+              value={storeData.phone}
+              onChange={(e) => setStoreData({ ...storeData, phone: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleCreateStore}
+          disabled={isSubmittingNewStore}
+          className="w-full py-3 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 transition-colors disabled:opacity-50"
+          style={{ backgroundColor: '#FFBC0D' }}
+        >
+          {isSubmittingNewStore ? 'Creating...' : 'Create store'}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -501,6 +639,18 @@ const StoreProfile: React.FC = () => {
             {isLoadingStore && <p className="mt-1 text-sm text-gray-500">Loading store profile...</p>}
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={handleToggleActive}
+              disabled={isTogglingActive || !storeData.id}
+              className={
+                isStoreActive
+                  ? 'flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+                  : 'flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50'
+              }
+              style={isStoreActive ? undefined : { backgroundColor: '#FFBC0D' }}
+            >
+              {isTogglingActive ? 'Updating...' : isStoreActive ? 'Disable store' : 'Enable store'}
+            </button>
             {isEditing ? (
               <>
                 <button

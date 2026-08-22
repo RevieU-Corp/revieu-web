@@ -6,7 +6,7 @@ import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleC
 import {
   HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
   CustomerLayout, VoucherDisplay, ReviewsPage, WriteReviewPage, WriteReviewSelectPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
-  MerchantProfileCouponPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
+  RestaurantDetailPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
 } from '../features/customer';
 
 // Merchant Portal Components
@@ -18,6 +18,7 @@ import {
   StoreAnalytics,
   AdManager,
   StoreProfile,
+  DishManagementPage,
   Messages,
   ChatDetail,
   SearchMessages,
@@ -53,7 +54,7 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.CUSTOMER.ME.HELP} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.POST_DETAIL} element={<PostPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_DETAIL} element={<MerchantDetailPage />} />
-        <Route path={PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON_DETAIL} element={<MerchantProfileCouponPage />} />
+        <Route path={PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON_DETAIL} element={<RestaurantDetailPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_DEAL_QR_DETAIL} element={<DealQrPage />} />
         <Route path="/customer/merchant/:id/reviews" element={<MerchantReviewsPage />} />
         <Route path={PATHS.CUSTOMER.WRITE_REVIEW_SELECT} element={<WriteReviewSelectPage />} />
@@ -68,6 +69,7 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.MERCHANT.DASHBOARD} element={<MerchantDashboard />} />
         <Route path={PATHS.MERCHANT.CREATE_POST} element={<PostCreation />} />
         <Route path={PATHS.MERCHANT.ANALYTICS} element={<StoreAnalytics />} />
+        <Route path={PATHS.MERCHANT.DISHES} element={<DishManagementPage />} />
         <Route path={PATHS.MERCHANT.ADS} element={<AdManager />} />
         <Route path={PATHS.MERCHANT.PROFILE} element={<StoreProfile />} />
         <Route path={PATHS.MERCHANT.MESSAGES} element={<Messages />} />

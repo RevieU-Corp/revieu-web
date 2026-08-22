@@ -13,3 +13,4 @@ export * from './messages';
 export * from './reviews';
 export * from './profile';
 export * from './marketing';
+export * from './dishes';
