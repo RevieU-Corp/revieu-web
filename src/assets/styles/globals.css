@@ -24,6 +24,32 @@ body {
   min-height: 100vh;
 }
 
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid CanvasText;
+  }
+
+  .forced-colors-readable {
+    color: CanvasText !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Utility to hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

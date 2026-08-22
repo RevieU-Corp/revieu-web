@@ -3,29 +3,26 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import revieUIcon from '../../../../assets/images/customer/home/revieUIcon.svg';
 import notificationIcon from '../../../../assets/images/customer/home/notification.svg';
 import defaultAvatar from '../../../../assets/images/customer/home/avatar.svg';
-import micIcon from '../../../../assets/images/customer/home/searchBar/mic.svg';
 import searchIcon from '../../../../assets/images/customer/home/searchBar/search.svg';
 
 interface HeaderProps {
     onSearch?: (q: string) => void;
-    onSearchTap?: (q: string) => void;
+    onSearchTap?: () => void;
+    onNotificationTap?: () => void;
+    onProfileTap?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) => {
+const Header: React.FC<HeaderProps> = ({
+    onSearch = () => { },
+    onSearchTap,
+    onNotificationTap,
+    onProfileTap,
+}) => {
     const [isFocused, setIsFocused] = useState(false);
-    const [query, setQuery] = useState('');
     const { user } = useAuth();
 
     // Use user avatar from AuthContext, fallback to local default avatar image
     const avatarUrl = user?.avatar || defaultAvatar;
-    const submitSearch = () => {
-        if (onSearchTap) {
-            onSearchTap(query.trim());
-            return;
-        }
-
-        onSearch(query.trim());
-    };
 
     return (
         <header className="px-8 pt-11 pb-3 bg-white/80 backdrop-blur-xl sticky top-0 z-40 transition-all border-b border-black/[0.03]">
@@ -42,12 +39,30 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                     </div>
                 </div>
                 <div className="ml-auto flex items-center gap-1">
-                    <button className="p-1 mr-3 rounded-full hover:scale-105 active:scale-95 transition-all">
-                        <img src={notificationIcon} className="w-[25px] h-[25px]" alt="Notifications" />
-                    </button>
-                    <div className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center cursor-pointer">
-                        <img src={avatarUrl} className="w-[38px] h-[38px]" alt="Profile" />
-                    </div>
+                    {onNotificationTap ? (
+                        <button
+                            type="button"
+                            aria-label="Open notifications"
+                            onClick={onNotificationTap}
+                            className="p-1 mr-3 rounded-full hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <img src={notificationIcon} className="w-[25px] h-[25px]" alt="" aria-hidden="true" />
+                        </button>
+                    ) : null}
+                    {onProfileTap ? (
+                        <button
+                            type="button"
+                            aria-label="Open profile"
+                            onClick={onProfileTap}
+                            className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#990000]"
+                        >
+                            <img src={avatarUrl} className="w-[38px] h-[38px]" alt="" aria-hidden="true" />
+                        </button>
+                    ) : (
+                        <div className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center">
+                            <img src={avatarUrl} className="w-[38px] h-[38px]" alt="Profile" />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -58,34 +73,38 @@ const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) =>
                         isFocused ? 'bg-white border-[#990000]/30 shadow-lg shadow-[#990000]/5' : 'border-transparent'
                     }`}>
                         <div className="pl-3 pr-2">
-                            <img src={searchIcon} className="" />
+                            <img src={searchIcon} className="" alt="" aria-hidden="true" />
                         </div>
 
                         <input
-                            type="search"
-                            aria-label="Search merchants"
-                            value={query}
+                            type="text"
+                            aria-label="Search"
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder="Search"
-                            enterKeyHint="search"
+                            readOnly={Boolean(onSearchTap)}
+                            onMouseDown={(e) => {
+                                if (!onSearchTap) {
+                                    return;
+                                }
+
+                                e.preventDefault();
+                                onSearchTap();
+                            }}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (!onSearchTap) {
+                                    return;
+                                }
+
+                                if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
-                                    submitSearch();
+                                    onSearchTap();
                                 }
                             }}
-                            onChange={(e) => {
-                                setQuery(e.target.value);
-                                onSearch(e.target.value);
-                            }}
+                            onChange={(e) => onSearch(e.target.value)}
                             className="h-full flex-1 bg-transparent border-none py-0 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
                         />
                     </div>
-                    <button type="button" aria-label="Voice search" className="w-[50px] h-[50px] shrink-0 rounded-[18px] bg-[linear-gradient(48.58deg,_#990000_6.33%,_#CB3232_96.68%)] text-white flex items-center justify-center">
-                        <img src={micIcon} className="w-[25px] h-[25px]">
-                        </img>
-                    </button>
                 </div>
             </div>
         </header>

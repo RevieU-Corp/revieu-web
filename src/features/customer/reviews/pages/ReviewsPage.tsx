@@ -37,10 +37,12 @@ const ReviewsPage: React.FC = () => {
             {/* Premium Header */}
             <div className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-xl z-50 px-6 flex items-center justify-between border-b border-gray-50">
                 <button
+                    type="button"
+                    aria-label="Go back"
                     onClick={handleBack}
                     className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all"
                 >
-                    <ChevronLeft className="w-6 h-6 text-gray-900" />
+                    <ChevronLeft aria-hidden="true" className="w-6 h-6 text-gray-900" />
                 </button>
                 <h1 className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">My Reviews</h1>
                 <div className="w-10" />
@@ -81,6 +83,7 @@ const ReviewsPage: React.FC = () => {
                                     {[...Array(5)].map((_, i) => (
                                         <Star
                                             key={i}
+                                            aria-hidden="true"
                                             className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
                                         />
                                     ))}
@@ -96,7 +99,7 @@ const ReviewsPage: React.FC = () => {
                                     <div className="relative aspect-video rounded-2xl overflow-hidden mb-4">
                                         <img
                                             src={review.image}
-                                            alt="Review"
+                                            alt={`Review photo from ${review.merchant}`}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                         />
                                         <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[9px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5">
@@ -109,17 +112,17 @@ const ReviewsPage: React.FC = () => {
                                 {/* Engagement Bar */}
                                 <div className="flex items-center justify-between pt-2">
                                     <div className="flex gap-4">
-                                        <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors">
-                                            <Heart className="w-4 h-4" />
+                                        <button type="button" aria-label={`Like review by ${review.merchant}`} className="flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                                            <Heart aria-hidden="true" className="w-4 h-4" />
                                             <span className="text-[11px] font-bold">{review.likes}</span>
                                         </button>
-                                        <button className="flex items-center gap-1.5 text-gray-400 hover:text-blue-500 transition-colors">
-                                            <MessageSquare className="w-4 h-4" />
+                                        <button type="button" aria-label={`View comments for ${review.merchant}`} className="flex items-center gap-1.5 text-gray-400 hover:text-blue-500 transition-colors">
+                                            <MessageSquare aria-hidden="true" className="w-4 h-4" />
                                             <span className="text-[11px] font-bold">{review.comments}</span>
                                         </button>
                                     </div>
-                                    <button className="p-2 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition-all">
-                                        <Share2 className="w-4 h-4" />
+                                    <button type="button" aria-label={`Share review by ${review.merchant}`} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition-all">
+                                        <Share2 aria-hidden="true" className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>

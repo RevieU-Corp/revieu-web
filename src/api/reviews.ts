@@ -10,6 +10,7 @@ export interface CreateReviewRequest {
         quality: number;
         environment: number;
         service: number;
+        value?: number;
     };
     text?: string;
     images?: string[];  // Array of R2 URLs
@@ -36,6 +37,7 @@ export interface ReviewResponse {
     images: string[];
     tags: string[];
     visitDate?: string;
+    locationVerified?: boolean;
     createdAt: string;
     status?: string;
     businessName: string;
@@ -62,6 +64,7 @@ export interface StoreReviewResponse {
     images: string[];
     tags: string[];
     visitDate?: string;
+    locationVerified?: boolean;
     createdAt: string;
     likeCount: number;
     commentCount: number;
@@ -102,6 +105,11 @@ interface BackendReviewResponse {
     storeId?: string;
     userId: string;
     rating: number;
+    ratingEnv?: number;
+    ratingService?: number;
+    ratingValue?: number;
+    ratingFood?: number;
+    locationVerified?: boolean;
     text?: string;
     images?: string[];
     tags?: string[];
@@ -133,6 +141,7 @@ interface BackendContentReviewItem {
     };
     tags?: string[];
     created_at: string;
+    location_verified?: boolean;
 }
 
 interface BackendStoreReviewItem {
@@ -153,6 +162,7 @@ interface BackendStoreReviewItem {
     comment_count: number;
     is_liked: boolean;
     created_at: string;
+    location_verified?: boolean;
     user?: {
         id: number;
         profile?: {
@@ -226,10 +236,17 @@ function mapReviewResponse(review: BackendReviewResponse): ReviewResponse {
         storeId: review.storeId,
         userId: review.userId,
         overallRating: review.rating,
+        detailedRatings: {
+            quality: review.ratingFood ?? review.rating,
+            environment: review.ratingEnv ?? 0,
+            service: review.ratingService ?? 0,
+            value: review.ratingValue ?? 0,
+        },
         text: review.text,
         images: review.images ?? [],
         tags: review.tags ?? [],
         visitDate: review.visitDate,
+        locationVerified: review.locationVerified,
         createdAt: review.createdAt,
         status: review.status,
         businessName: review.businessName,
@@ -256,6 +273,7 @@ function mapStoreReviewResponse(review: BackendStoreReviewItem): StoreReviewResp
         images: normalizeStringArray(review.images),
         tags: normalizeStringArray(review.tags),
         visitDate: review.visit_date,
+        locationVerified: review.location_verified,
         createdAt: review.created_at,
         likeCount: review.like_count,
         commentCount: review.comment_count,
@@ -289,6 +307,11 @@ export const reviewsApi = {
             merchantId: request.merchantId,
             storeId: request.storeId ?? request.venueId,
             rating: request.overallRating,
+            ratingEnv: request.detailedRatings?.environment,
+            ratingService: request.detailedRatings?.service,
+            ratingValue: request.detailedRatings?.value,
+            ratingFood: request.detailedRatings?.quality,
+            locationVerified: request.locationVerified,
             text: request.text,
             images: request.images,
             tags: request.tags,
@@ -322,6 +345,7 @@ export const reviewsApi = {
                 text: review.content,
                 images: normalizeStringArray(review.images),
                 tags: normalizeStringArray(review.tags),
+                locationVerified: review.location_verified,
                 createdAt: review.created_at,
                 businessName: review.merchant.name,
                 businessImage: '',

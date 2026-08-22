@@ -47,9 +47,9 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
-
   useEffect(() => {
+    if (!isOpen) return;
+
     let isMounted = true;
 
     const loadVerificationStatus = async () => {
@@ -78,7 +78,9 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};

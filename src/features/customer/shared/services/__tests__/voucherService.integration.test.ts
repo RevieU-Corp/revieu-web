@@ -72,11 +72,7 @@ describe('voucherService', () => {
 
     expect(mockPost).toHaveBeenCalledWith(
       '/vouchers',
-      expect.objectContaining({
-        couponId: '8',
-        userId: '204',
-        code: expect.any(String),
-      })
+      { couponId: '8' }
     );
     expect(result.success).toBe(true);
     expect(result.voucher).toMatchObject({

@@ -23,6 +23,11 @@ const backendReview = {
   storeId: '34',
   userId: '7',
   rating: 4.5,
+  ratingEnv: 4.4,
+  ratingService: 4.5,
+  ratingValue: 4.6,
+  ratingFood: 4.5,
+  locationVerified: true,
   text: 'Excellent noodles',
   images: ['https://cdn.revieu.com/reviews/noodles.jpg'],
   tags: ['#noodles'],
@@ -48,6 +53,13 @@ describe('reviewsApi', () => {
       merchantId: '12',
       storeId: '34',
       overallRating: 4.5,
+      detailedRatings: {
+        quality: 4.5,
+        environment: 4.4,
+        service: 4.5,
+        value: 4.6,
+      },
+      locationVerified: true,
       text: 'Excellent noodles',
       images: ['https://cdn.revieu.com/reviews/noodles.jpg'],
       tags: ['#noodles'],
@@ -58,6 +70,11 @@ describe('reviewsApi', () => {
       merchantId: '12',
       storeId: '34',
       rating: 4.5,
+      ratingEnv: 4.4,
+      ratingService: 4.5,
+      ratingValue: 4.6,
+      ratingFood: 4.5,
+      locationVerified: true,
       text: 'Excellent noodles',
       images: ['https://cdn.revieu.com/reviews/noodles.jpg'],
       tags: ['#noodles'],
@@ -70,6 +87,13 @@ describe('reviewsApi', () => {
       overallRating: 4.5,
       text: 'Excellent noodles',
       businessName: 'Northern Cafe',
+      locationVerified: true,
+    });
+    expect(response.detailedRatings).toEqual({
+      quality: 4.5,
+      environment: 4.4,
+      service: 4.5,
+      value: 4.6,
     });
   });
 

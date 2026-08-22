@@ -146,4 +146,18 @@ describe('couponService', () => {
     await expect(couponService.hasUserRedeemedCoupon('9', '204')).resolves.toBe(true);
     expect(mockGet).toHaveBeenCalledWith('/vouchers');
   });
+
+  test('loads a direct coupon link from the server when the local cache is empty', async () => {
+    const directCoupon = { ...backendCoupon, id: 10 };
+    mockGet.mockResolvedValueOnce({
+      data: {
+        data: directCoupon,
+      },
+    });
+
+    const coupon = await couponService.getCouponById('10');
+
+    expect(mockGet).toHaveBeenCalledWith('/coupons/10');
+    expect(coupon).toMatchObject({ id: '10', type: 'paid', price: 9.99 });
+  });
 });

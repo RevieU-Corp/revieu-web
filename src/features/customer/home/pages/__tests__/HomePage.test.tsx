@@ -73,7 +73,7 @@ describe('HomePage', () => {
     });
   });
 
-  it('preserves a typed home search in the in-app explore route', async () => {
+  it('taps the home search bar into the in-app explore route', async () => {
     const LocationProbe = () => {
       const location = useLocation();
       return <output data-testid="location">{location.pathname}{location.search}</output>;
@@ -87,10 +87,9 @@ describe('HomePage', () => {
       </MemoryRouter>,
     );
 
-    const input = screen.getByRole('searchbox', { name: 'Search merchants' });
-    fireEvent.change(input, { target: { value: 'ramen' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    const input = screen.getByRole('textbox', { name: 'Search' });
+    fireEvent.mouseDown(input);
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/customer/explore?q=ramen');
+    expect(screen.getByTestId('location')).toHaveTextContent('/customer/explore');
   });
 });

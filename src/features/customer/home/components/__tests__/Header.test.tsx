@@ -15,21 +15,26 @@ vi.mock('../../../../../contexts/AuthContext', () => ({
 }));
 
 describe('Header', () => {
-  it('submits typed search text without navigating outside the application', () => {
+  it('keeps search tap navigation and exposes named header actions', () => {
     const onSearchTap = vi.fn();
+    const onNotificationTap = vi.fn();
+    const onProfileTap = vi.fn();
 
-    render(<Header onSearchTap={onSearchTap} />);
+    render(
+      <Header
+        onSearchTap={onSearchTap}
+        onNotificationTap={onNotificationTap}
+        onProfileTap={onProfileTap}
+      />
+    );
 
-    const input = screen.getByRole('searchbox', { name: 'Search merchants' });
+    const input = screen.getByRole('textbox');
 
     fireEvent.mouseDown(input);
-    expect(onSearchTap).not.toHaveBeenCalled();
 
-    fireEvent.change(input, { target: { value: 'ramen' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-
-    expect(onSearchTap).toHaveBeenCalledWith('ramen');
-    expect(screen.getByDisplayValue('ramen')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Voice search' })).toBeInTheDocument();
+    expect(onSearchTap).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Open notifications' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open profile' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search' })).toBeInTheDocument();
   });
 });

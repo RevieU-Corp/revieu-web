@@ -134,11 +134,19 @@ export class CouponServiceImpl implements CouponService {
 
   async getCouponById(couponId: string): Promise<Coupon> {
     const coupon = this.couponCache.get(couponId);
-    if (!coupon) {
-      throw new Error('Coupon data is not loaded');
+    if (coupon) {
+      return coupon;
     }
 
-    return coupon;
+    const response = await apiClient.get(`/coupons/${couponId}`);
+    const rawCoupon = response.data?.data ?? response.data;
+    if (!rawCoupon?.id) {
+      throw new Error('Coupon data is unavailable');
+    }
+
+    const loadedCoupon = this.mapCoupon(rawCoupon as BackendCoupon);
+    this.couponCache.set(loadedCoupon.id, loadedCoupon);
+    return loadedCoupon;
   }
 
   async getAvailableCoupons(storeId: string, _userId: string): Promise<Coupon[]> {
