@@ -14,6 +14,7 @@ type BackendCoupon = {
   merchant_id: number | string;
   title: string;
   description?: string | null;
+  image_url?: string | null;
   coupon_type?: string | null;
   value?: string | null;
   price?: number | null;
@@ -169,6 +170,7 @@ export class CouponServiceImpl implements CouponService {
       merchantId: String(raw.merchant_id),
       title: raw.title,
       description: raw.description ?? '',
+      imageUrl: raw.image_url ?? undefined,
       type: isPaid ? 'paid' : 'free',
       value: raw.value ?? '',
       price,

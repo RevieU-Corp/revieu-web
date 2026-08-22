@@ -500,6 +500,7 @@ const MerchantProfileCouponPage: React.FC = () => {
                       id={coupon.id}
                       title={coupon.title}
                       description={coupon.description}
+                      imageUrl={coupon.imageUrl}
                       expiry={`Valid until ${coupon.expiryDate.toLocaleDateString('en-US')}`}
                       expiryDate={coupon.expiryDate}
                       value={coupon.value || (coupon.price ? `$${coupon.price}` : 'FREE')}

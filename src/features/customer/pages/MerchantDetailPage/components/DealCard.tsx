@@ -4,11 +4,13 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { couponService } from '../../../shared/services/couponService';
 import { MerchantInfo } from '../../../shared/types/coupons';
 import { useAuth } from '../../../../../contexts/AuthContext';
+import { ImageWithFallback } from './ImageWithFallback';
 
 interface DealCardProps {
   id: string;
   title: string;
   description: string;
+  imageUrl?: string;
   expiry: string;
   expiryDate: Date;
   value: string;
@@ -23,6 +25,7 @@ export function DealCard({
   id,
   title,
   description,
+  imageUrl,
   expiry,
   expiryDate,
   value,
@@ -120,6 +123,13 @@ export function DealCard({
     >
       {/* Left Accent Strip */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6900]" />
+
+      {/* Coupon photo (manually uploaded, or falls back to the linked dish's photo) */}
+      {imageUrl && (
+        <div className="w-full h-28">
+          <ImageWithFallback src={imageUrl} alt={title} className="w-full h-full object-cover" />
+        </div>
+      )}
 
       {/* Loading overlay */}
       {isLoading && (
