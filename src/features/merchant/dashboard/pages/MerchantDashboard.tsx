@@ -16,7 +16,6 @@ import { PATHS } from '../../../../routes/paths';
 import { reviewsApi, type MerchantReview } from '../../../../api/reviews';
 
 const MerchantDashboard: React.FC = () => {
-  console.log('🏪 MerchantDashboard: Component rendering');
   const navigate = useNavigate();
 
   // State management
@@ -55,7 +54,7 @@ const MerchantDashboard: React.FC = () => {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
-  const [packages, setPackages] = useState<any[]>([]);
+  const packages: any[] = [];
 
   useEffect(() => {
     let isMounted = true;
@@ -389,26 +388,19 @@ const MerchantDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Active Packages */}
+      {/* Packages */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Active Packages</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Packages</h2>
           <button
             onClick={() => setShowPackageManager(true)}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:bg-green-600 transition-colors bg-green-500"
           >
             <Package size={16} />
-            Manage Packages
+            View Availability
           </button>
         </div>
         <div className="space-y-3">
-          {/* Debug info - remove this later */}
-          <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-            Debug: Total packages: {packages.length}, Active packages: {packages.filter(pkg => pkg.isActive).length}
-            <br />
-            Package names: {packages.map(pkg => `${pkg.name} (${pkg.isActive ? 'active' : 'inactive'})`).join(', ')}
-          </div>
-
           {packages.filter(pkg => pkg.isActive).map((pkg) => {
             const isExpanded = expandedPackages.has(pkg.id);
             const savings = pkg.originalPrice - pkg.bundlePrice;
@@ -503,7 +495,7 @@ const MerchantDashboard: React.FC = () => {
           })}
           {packages.filter(pkg => pkg.isActive).length === 0 && (
             <div className="text-center py-4 text-gray-500">
-              <p>No active packages. Click "Manage Packages" to create some!</p>
+              <p>Package creation is coming soon. This screen does not save local-only changes.</p>
             </div>
           )}
         </div>
@@ -613,7 +605,6 @@ const MerchantDashboard: React.FC = () => {
         isOpen={showPackageManager}
         onClose={() => setShowPackageManager(false)}
         packages={packages}
-        onUpdatePackages={handleUpdatePackages}
       />
 
       <ReviewReplyModal
