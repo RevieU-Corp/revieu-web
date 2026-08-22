@@ -120,5 +120,30 @@ describe('couponService', () => {
         usageInstructions: 'Show this voucher to the cashier.',
       },
     });
+    expect(result).not.toHaveProperty('paymentUrl');
+    expect(result).not.toHaveProperty('sessionId');
+  });
+
+  test('checks redeemed state from the authenticated voucher collection', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: 31,
+            code: 'VCH-PAID-9',
+            coupon_id: 9,
+            user_id: 204,
+            merchant_id: 205,
+            status: 'active',
+            expiry_date: '2026-09-24T08:35:25.232537Z',
+            created_at: '2026-03-28T08:38:08.330669Z',
+            updated_at: '2026-03-28T08:38:08.330669Z',
+          },
+        ],
+      },
+    });
+
+    await expect(couponService.hasUserRedeemedCoupon('9', '204')).resolves.toBe(true);
+    expect(mockGet).toHaveBeenCalledWith('/vouchers');
   });
 });

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Clock3, Search, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PATHS } from '../../../../routes/paths';
 import { SuggestionItem } from '../components';
 import {
@@ -15,11 +15,24 @@ import {
   ExploreSuggestion,
 } from '../types';
 
+const FILTER_KEYS: ExploreQuickFilterKey[] = ['nearby', 'open-now', 'popular', 'price'];
+
+const parseFilters = (value: string | null): ExploreQuickFilterKey[] => {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .filter((filter): filter is ExploreQuickFilterKey => FILTER_KEYS.includes(filter as ExploreQuickFilterKey));
+};
+
 const ExplorePage: React.FC = () => {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get('q') || '');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [activeFilters, setActiveFilters] = useState<ExploreQuickFilterKey[]>([]);
+  const [activeFilters, setActiveFilters] = useState<ExploreQuickFilterKey[]>(() => parseFilters(searchParams.get('filters')));
   const [quickFilters, setQuickFilters] = useState<ExploreQuickFilter[]>([]);
   const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
   const [browseCategories, setBrowseCategories] = useState<ExploreBrowseCategory[]>([]);
@@ -28,6 +41,30 @@ const ExplorePage: React.FC = () => {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    setQuery(searchParams.get('q') || '');
+    setActiveFilters(parseFilters(searchParams.get('filters')));
+  }, [searchParams]);
+
+  const syncSearchUrl = (nextQuery: string, nextFilters: ExploreQuickFilterKey[]) => {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      const normalizedQuery = nextQuery.trim();
+      if (normalizedQuery) {
+        next.set('q', normalizedQuery);
+      } else {
+        next.delete('q');
+      }
+
+      if (nextFilters.length > 0) {
+        next.set('filters', nextFilters.join(','));
+      } else {
+        next.delete('filters');
+      }
+      return next;
+    }, { replace: true });
+  };
 
   const navigateBackOrHome = () => {
     if (window.history.length > 1) {
@@ -147,15 +184,18 @@ const ExplorePage: React.FC = () => {
   };
 
   const handleSearchSubmit = () => {
-    if (!query.trim()) {
-      return;
+    const normalizedQuery = query.trim();
+    if (normalizedQuery) {
+      addRecentSearch(normalizedQuery);
     }
-    addRecentSearch(query);
+    syncSearchUrl(normalizedQuery, activeFilters);
   };
 
   const applySearchTerm = (searchTerm: string) => {
-    setQuery(searchTerm);
-    addRecentSearch(searchTerm);
+    const normalizedSearchTerm = searchTerm.trim();
+    setQuery(normalizedSearchTerm);
+    addRecentSearch(normalizedSearchTerm);
+    syncSearchUrl(normalizedSearchTerm, activeFilters);
   };
 
   const handleSuggestionSelect = (suggestion: ExploreSuggestion) => {
@@ -166,11 +206,11 @@ const ExplorePage: React.FC = () => {
   };
 
   const toggleFilter = (filterKey: ExploreQuickFilterKey) => {
-    setActiveFilters((previous) =>
-      previous.includes(filterKey)
-        ? previous.filter((item) => item !== filterKey)
-        : [...previous, filterKey],
-    );
+    const nextFilters = activeFilters.includes(filterKey)
+      ? activeFilters.filter((item) => item !== filterKey)
+      : [...activeFilters, filterKey];
+    setActiveFilters(nextFilters);
+    syncSearchUrl(query, nextFilters);
   };
 
   const normalizedQuery = query.trim();

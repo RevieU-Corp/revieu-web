@@ -105,8 +105,6 @@ export class CouponServiceImpl implements CouponService {
     }
 
     return {
-      paymentUrl: '',
-      sessionId: `coupon-${couponId}`,
       paymentData: {
         couponId,
         userId,
@@ -154,8 +152,9 @@ export class CouponServiceImpl implements CouponService {
     return coupons;
   }
 
-  async hasUserRedeemedCoupon(_couponId: string, _userId: string): Promise<boolean> {
-    return false;
+  async hasUserRedeemedCoupon(couponId: string, userId: string): Promise<boolean> {
+    const vouchers = await voucherService.getUserVouchers(userId);
+    return vouchers.active.concat(vouchers.used, vouchers.expired).some((voucher) => voucher.couponId === couponId);
   }
 
   private mapCoupon(raw: BackendCoupon): Coupon {
