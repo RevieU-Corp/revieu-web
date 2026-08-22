@@ -1,21 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronDown, Heart, MapPin, Phone, Star, ThumbsUp } from 'lucide-react';
+import { apiClient } from '../../../../api/apiClient';
 import { ImageWithFallback } from './components/ImageWithFallback';
-import { PATHS } from '../../../../routes/paths';
+import { couponService } from '../../shared/services/couponService';
+import { Coupon, MerchantInfo } from '../../shared/types/coupons';
+import { DealCard } from './components/DealCard';
 
 type CouponTab = 'deal' | 'menu' | 'review';
 type ReviewFilter = 'Hot' | 'Bad' | 'Recent';
-
-interface CouponDeal {
-  id: string;
-  brand: string;
-  image: string;
-  distance: string;
-  originalPrice: string;
-  salePrice: string;
-  timerSeconds?: number;
-}
 
 interface PopDish {
   id: string;
@@ -36,6 +29,27 @@ interface MerchantCouponLocationState {
   initialTab?: CouponTab;
 }
 
+interface BackendStoreDetail {
+  id: number | string;
+  merchant_id: number | string;
+  name: string;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  cover_image_url?: string | null;
+}
+
+interface LiveStoreDetail {
+  id: string;
+  merchantId: string;
+  name: string;
+  address: string;
+  phone: string;
+  coverImageUrl: string;
+}
+
 type MerchantTheme = 'coffee' | 'pizza' | 'mexican' | 'healthy' | 'asian' | 'dessert' | 'grocery' | 'default';
 
 interface MerchantMenuTemplate {
@@ -47,8 +61,6 @@ interface MerchantMenuTemplate {
 
 interface MerchantCouponContent {
   heroImages: Record<CouponTab, string>;
-  flashDeals: CouponDeal[];
-  comboDeals: CouponDeal[];
   popDishes: PopDish[];
   reviews: CouponReview[];
   menuBoard: {
@@ -145,16 +157,6 @@ function toPrice(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-function dedupeDealsByBrand(deals: CouponDeal[]): CouponDeal[] {
-  const seen = new Set<string>();
-  return deals.filter((deal) => {
-    const key = deal.brand.trim().toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function getDishFoodImage(dishName: string): string {
   const normalizedDish = dishName.toLowerCase();
   if (normalizedDish.includes('protein avo toast') || normalizedDish.includes('avo toast')) {
@@ -199,32 +201,6 @@ function buildMerchantCouponContent(merchantName: string): MerchantCouponContent
     image: getDishFoodImage(title),
   }));
 
-  const flashDeals: CouponDeal[] = template.dishes.slice(0, 2).map((dish, index) => {
-    const basePrice = 12 + ((seed + index * 7) % 10);
-    return {
-      id: `${safeName}-flash-${index}`,
-      brand: dish,
-      image: getDishFoodImage(dish),
-      distance: `${(0.1 + ((seed + index) % 5) * 0.1).toFixed(1)} Miles`,
-      originalPrice: toPrice(basePrice + 4),
-      salePrice: toPrice(basePrice),
-      timerSeconds: 5 * 60 + ((seed + index * 13) % 35) * 60 + ((seed + index * 7) % 60),
-    };
-  });
-
-  const comboDealsRaw: CouponDeal[] = template.dishes.slice(2, 4).map((dish, index) => {
-    const basePrice = 14 + ((seed + index * 5) % 9);
-    return {
-      id: `${safeName}-combo-${index}`,
-      brand: dish,
-      image: getDishFoodImage(dish),
-      distance: `${(0.2 + ((seed + index) % 6) * 0.1).toFixed(1)} Miles`,
-      originalPrice: toPrice(basePrice + 5),
-      salePrice: toPrice(basePrice),
-    };
-  });
-  const comboDeals = dedupeDealsByBrand(comboDealsRaw);
-
   const reviews: CouponReview[] = [0, 1, 2].map((index) => {
     const firstDish = template.dishes[index % template.dishes.length];
     const secondDish = template.dishes[(index + 1) % template.dishes.length];
@@ -255,8 +231,6 @@ function buildMerchantCouponContent(merchantName: string): MerchantCouponContent
         ? 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80'
         : '',
     },
-    flashDeals,
-    comboDeals,
     popDishes,
     reviews,
     menuBoard: {
@@ -293,56 +267,6 @@ const StarMeter: React.FC<StarMeterProps> = ({ score, compact = false }) => {
     </div>
   );
 };
-
-interface DealRowProps {
-  deal: CouponDeal;
-  onRedeem?: (deal: CouponDeal) => void;
-  countdownLabel?: string;
-}
-
-const DealRow: React.FC<DealRowProps> = ({ deal, onRedeem, countdownLabel }) => {
-  return (
-    <article className="rounded-2xl border border-[#efeff1] bg-white px-4 py-3 shadow-[0_7px_18px_rgba(15,23,42,0.05)]">
-      <div className="mb-3 flex items-center justify-between text-xs">
-        <div>
-          {countdownLabel ? (
-            <span className="rounded-full bg-[#f8e4a3] px-3 py-1 font-bold tracking-wide text-[#9a7a16]">
-              {countdownLabel}
-            </span>
-          ) : null}
-        </div>
-        <span className="font-semibold text-[#37ae60]">{deal.distance}</span>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="h-16 w-16 overflow-hidden rounded-2xl border border-[#efeff1] bg-[#f8f8f9]">
-          <ImageWithFallback src={deal.image} alt={deal.brand} className="h-full w-full object-cover" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[17px] leading-snug font-semibold text-[#252934] break-words">{deal.brand}</p>
-        </div>
-        <div className="flex items-baseline gap-3">
-          <span className="text-sm text-[#c5c7cd] line-through">{deal.originalPrice}</span>
-          <span className="text-xl font-semibold leading-none text-[#ff4a4a]">{deal.salePrice}</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onRedeem?.(deal)}
-        className="mt-3 w-full rounded-xl bg-gradient-to-r from-[#cc1e1e] to-[#9c0f0f] py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(180,18,18,0.3)]"
-      >
-        Get QR
-      </button>
-    </article>
-  );
-};
-
-function formatCountdown(totalSeconds: number): string {
-  const safeSeconds = Math.max(0, totalSeconds);
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const seconds = safeSeconds % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
 
 interface PopDishTileProps {
   dish: PopDish;
@@ -403,53 +327,87 @@ const MerchantProfileCouponPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id: merchantId } = useParams();
-  const initialTab = (location.state as MerchantCouponLocationState | null)?.initialTab;
+  const locationState = location.state as MerchantCouponLocationState | null;
+  const initialTab = locationState?.initialTab;
   const [activeTab, setActiveTab] = useState<CouponTab>(initialTab || 'deal');
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('Hot');
   const [showReviewFilter, setShowReviewFilter] = useState(false);
-  const [dealCountdowns, setDealCountdowns] = useState<Record<string, number>>({});
-
-  const merchantName = ((location.state as MerchantCouponLocationState | null)?.merchantName || 'Ground Beef Tacos').trim();
-  const couponContent = useMemo(() => buildMerchantCouponContent(merchantName), [merchantName]);
+  const [liveStore, setLiveStore] = useState<LiveStoreDetail | null>(null);
+  const [liveCoupons, setLiveCoupons] = useState<Coupon[]>([]);
+  const [liveDataLoading, setLiveDataLoading] = useState(true);
+  const [liveDataError, setLiveDataError] = useState<string | null>(null);
 
   useEffect(() => {
-    const initialCountdowns = couponContent.flashDeals.reduce<Record<string, number>>((acc, deal) => {
-      if (typeof deal.timerSeconds === 'number') {
-        acc[deal.id] = deal.timerSeconds;
+    let cancelled = false;
+
+    const loadLiveData = async () => {
+      if (!merchantId) {
+        setLiveDataLoading(false);
+        setLiveDataError('Store id is missing.');
+        return;
       }
-      return acc;
-    }, {});
 
-    setDealCountdowns(initialCountdowns);
-    const intervalId = window.setInterval(() => {
-      setDealCountdowns((prev) => {
-        const next: Record<string, number> = {};
-        Object.entries(prev).forEach(([dealId, value]) => {
-          next[dealId] = Math.max(0, value - 1);
+      setLiveDataLoading(true);
+      setLiveDataError(null);
+      setLiveStore(null);
+      setLiveCoupons([]);
+
+      const [storeResult, couponResult] = await Promise.allSettled([
+        apiClient.get(`/stores/${merchantId}`),
+        couponService.getAvailableCoupons(merchantId, ''),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+
+      const errors: string[] = [];
+      if (storeResult.status === 'fulfilled') {
+        const raw = (storeResult.value.data?.data ?? storeResult.value.data) as BackendStoreDetail;
+        const address = [raw.address, raw.city, raw.state, raw.country].filter(Boolean).join(', ');
+        setLiveStore({
+          id: String(raw.id),
+          merchantId: String(raw.merchant_id),
+          name: raw.name,
+          address: address || 'Address unavailable',
+          phone: raw.phone ?? '',
+          coverImageUrl: raw.cover_image_url ?? '',
         });
-        return next;
-      });
-    }, 1000);
+      } else {
+        errors.push('Live store details are unavailable.');
+      }
 
-    return () => window.clearInterval(intervalId);
-  }, [couponContent.flashDeals]);
+      if (couponResult.status === 'fulfilled') {
+        setLiveCoupons(couponResult.value);
+      } else {
+        setLiveCoupons([]);
+        errors.push('Live coupons are unavailable.');
+      }
+
+      setLiveDataError(errors.length > 0 ? errors.join(' ') : null);
+      setLiveDataLoading(false);
+    };
+
+    void loadLiveData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId]);
+
+  const merchantName = (liveStore?.name || locationState?.merchantName || 'Merchant Preview').trim();
+  const couponContent = useMemo(() => buildMerchantCouponContent(merchantName), [merchantName]);
 
   const goBack = () => {
     navigate(-1);
   };
 
-  const handleRedeemDeal = (deal: CouponDeal) => {
-    const codeSeed = `${merchantName}-${deal.id}-${Date.now()}`.replace(/\s+/g, '-').toUpperCase();
-    const voucherCode = `DL-${codeSeed.slice(0, 18)}`;
-    navigate(PATHS.CUSTOMER.MERCHANT_DEAL_QR(merchantId || '1'), {
-      state: {
-        merchantName,
-        dealTitle: deal.brand,
-        dealPrice: deal.salePrice,
-        distance: deal.distance,
-        voucherCode,
-      },
-    });
+  const merchantInfo: MerchantInfo = {
+    id: liveStore?.merchantId || liveCoupons[0]?.merchantId || '',
+    name: merchantName,
+    logo: '',
+    address: liveStore?.address || couponContent.address,
+    phone: liveStore?.phone || couponContent.phone,
   };
 
   return (
@@ -457,7 +415,7 @@ const MerchantProfileCouponPage: React.FC = () => {
       <div className="mx-auto w-full max-w-[430px] px-4">
         <div className="rounded-[22px] border border-[#ececef] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
           <div className="relative h-56 overflow-hidden rounded-2xl">
-            <ImageWithFallback src={couponContent.heroImages[activeTab]} alt={`${merchantName} hero`} className="h-full w-full object-cover" />
+            <ImageWithFallback src={liveStore?.coverImageUrl || couponContent.heroImages[activeTab]} alt={`${merchantName} hero`} className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={goBack}
@@ -521,23 +479,36 @@ const MerchantProfileCouponPage: React.FC = () => {
           {activeTab === 'deal' ? (
             <div className="mt-6 space-y-5">
               <section>
-                <h3 className="mb-3 text-[2rem] font-semibold tracking-tight text-[#2c3039]">Flash Deal</h3>
-                <div className="space-y-3">
-                  {couponContent.flashDeals.map((deal) => (
-                    <DealRow
-                      key={deal.id}
-                      deal={deal}
-                      onRedeem={handleRedeemDeal}
-                      countdownLabel={typeof dealCountdowns[deal.id] === 'number' ? formatCountdown(dealCountdowns[deal.id]) : undefined}
-                    />
-                  ))}
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-[2rem] font-semibold tracking-tight text-[#2c3039]">Live Coupons</h3>
+                  {liveDataLoading ? <span className="text-sm text-[#8d919a]">Loading…</span> : null}
                 </div>
-              </section>
-              <section>
-                <h3 className="mb-3 text-[2rem] font-semibold tracking-tight text-[#2c3039]">Combol</h3>
+                {liveDataError ? (
+                  <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    {liveDataError}
+                  </div>
+                ) : null}
+                {!liveDataLoading && !liveDataError && liveCoupons.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#e1e2e6] bg-[#fafafa] px-4 py-8 text-center text-sm text-[#7f8490]">
+                    No live coupons are available for this store yet.
+                  </div>
+                ) : null}
                 <div className="space-y-3">
-                  {couponContent.comboDeals.map((deal) => (
-                    <DealRow key={deal.id} deal={deal} onRedeem={handleRedeemDeal} />
+                  {liveCoupons.map((coupon) => (
+                    <DealCard
+                      key={coupon.id}
+                      id={coupon.id}
+                      title={coupon.title}
+                      description={coupon.description}
+                      expiry={`Valid until ${coupon.expiryDate.toLocaleDateString('en-US')}`}
+                      expiryDate={coupon.expiryDate}
+                      value={coupon.value || (coupon.price ? `$${coupon.price}` : 'FREE')}
+                      type={coupon.type}
+                      price={coupon.price}
+                      merchantId={coupon.merchantId}
+                      usageInstructions={coupon.usageInstructions}
+                      merchantInfo={merchantInfo}
+                    />
                   ))}
                 </div>
               </section>
