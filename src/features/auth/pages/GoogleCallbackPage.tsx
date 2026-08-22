@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../routes/paths';
 import { useAuth } from '../../../contexts/AuthContext';
 import { authService } from '../api/authService';
 import { userService } from '../../../api/userService';
 
 const GoogleCallbackPage: React.FC = () => {
-    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { setUser } = useAuth();
     const [error, setError] = useState<string | null>(null);
@@ -15,19 +14,9 @@ const GoogleCallbackPage: React.FC = () => {
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // Extract token from URL query parameter
-                const token = searchParams.get('token');
-
-                if (!token) {
-                    setError('No authentication token received');
-                    setIsProcessing(false);
-                    return;
-                }
-
-                // Store token in localStorage
-                localStorage.setItem('authToken', token);
-
-                // Fetch user profile using the token
+                // The backend establishes an HttpOnly session cookie during
+                // the OAuth callback. Never accept or persist an access token
+                // from the URL.
                 const response = await authService.getMe();
                 const userData = response.data;
 
@@ -67,7 +56,7 @@ const GoogleCallbackPage: React.FC = () => {
         };
 
         handleCallback();
-    }, [searchParams, navigate, setUser]);
+    }, [navigate, setUser]);
 
     return (
         <div

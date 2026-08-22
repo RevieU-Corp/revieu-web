@@ -19,6 +19,9 @@ export const authService = {
     getMe: () =>
         apiClient.get(`${BASE_PATH}/me`),
 
+    logout: () =>
+        apiClient.post(`${BASE_PATH}/logout`),
+
     getUserProfile: () =>
         apiClient.get('/user/profile'),
 };
