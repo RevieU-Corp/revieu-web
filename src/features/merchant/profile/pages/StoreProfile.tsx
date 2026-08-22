@@ -18,6 +18,7 @@ import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
 import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
 import {
+  MerchantStoreHourPayload,
   MerchantStoreRecord,
   storeProfileService,
   parseStringArray,
@@ -50,6 +51,7 @@ interface StoreData {
   menuImages: string[];
   bio: string;
   menu: MenuItem[];
+  hours: MerchantStoreHourPayload[];
   operatingHours: {
     open: string;
     close: string;
@@ -79,6 +81,7 @@ const defaultStoreData: StoreData = {
     open: '09:00',
     close: '21:00',
   },
+  hours: [],
   outdoorSeating: false,
   accessibility: false,
   petFriendly: false,
@@ -97,25 +100,44 @@ const categoryColors: Record<string, string> = {
 const formatAddress = (store: Pick<StoreData, 'streetAddress' | 'city' | 'state' | 'country'>) =>
   [store.streetAddress, store.city, store.state, store.country].filter(Boolean).join(', ');
 
-const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultStoreData): StoreData => ({
-  ...base,
-  id: String(raw.id),
-  name: raw.name ?? base.name,
-  phone: raw.phone ?? '',
-  website: raw.website ?? '',
-  streetAddress: raw.address ?? '',
-  city: raw.city ?? '',
-  state: raw.state ?? '',
-  country: raw.country ?? '',
-  coordinates: {
-    lat: raw.latitude ?? base.coordinates.lat,
-    lng: raw.longitude ?? base.coordinates.lng,
-  },
-  coverPhoto: raw.cover_image_url || DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
-  gallery: parseStringArray(raw.images),
-  menuImages: parseStringArray(raw.menu_images),
-  bio: raw.description ?? '',
-});
+const normalizeStoreHours = (hours: MerchantStoreRecord['hours']): MerchantStoreHourPayload[] =>
+  Array.isArray(hours)
+    ? hours.map(({ day_of_week, open_time, close_time, is_closed }) => ({
+      day_of_week,
+      open_time: open_time || '09:00',
+      close_time: close_time || '21:00',
+      is_closed: Boolean(is_closed),
+    }))
+    : [];
+
+const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultStoreData): StoreData => {
+  const hours = normalizeStoreHours(raw.hours);
+  const representativeHour = hours.find((hour) => !hour.is_closed) ?? hours[0];
+
+  return {
+    ...base,
+    id: String(raw.id),
+    name: raw.name ?? base.name,
+    phone: raw.phone ?? '',
+    website: raw.website ?? '',
+    streetAddress: raw.address ?? '',
+    city: raw.city ?? '',
+    state: raw.state ?? '',
+    country: raw.country ?? '',
+    coordinates: {
+      lat: raw.latitude ?? base.coordinates.lat,
+      lng: raw.longitude ?? base.coordinates.lng,
+    },
+    coverPhoto: raw.cover_image_url || DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
+    gallery: parseStringArray(raw.images),
+    menuImages: parseStringArray(raw.menu_images),
+    bio: raw.description ?? '',
+    hours,
+    operatingHours: representativeHour
+      ? { open: representativeHour.open_time, close: representativeHour.close_time }
+      : base.operatingHours,
+  };
+};
 
 const buildStoreUpdatePayload = (store: StoreData) => ({
   name: store.name,
@@ -131,7 +153,41 @@ const buildStoreUpdatePayload = (store: StoreData) => ({
   cover_image_url: store.coverPhoto,
   images: store.gallery,
   menu_images: store.menuImages,
+  ...(store.hours.length > 0
+    ? {
+      hours: store.hours.map(({ day_of_week, open_time, close_time, is_closed }) => ({
+        day_of_week,
+        open_time,
+        close_time,
+        is_closed,
+      })),
+    }
+    : {}),
 });
+
+const updateOperatingHours = (
+  store: StoreData,
+  field: 'open_time' | 'close_time',
+  value: string,
+): StoreData => {
+  const hours = store.hours.length > 0
+    ? store.hours
+    : Array.from({ length: 7 }, (_, day_of_week) => ({
+      day_of_week,
+      open_time: store.operatingHours.open,
+      close_time: store.operatingHours.close,
+      is_closed: false,
+    }));
+
+  return {
+    ...store,
+    operatingHours: {
+      ...store.operatingHours,
+      [field === 'open_time' ? 'open' : 'close']: value,
+    },
+    hours: hours.map((hour) => ({ ...hour, [field]: value })),
+  };
+};
 
 const StoreProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -782,10 +838,7 @@ const StoreProfile: React.FC = () => {
                     <input
                       type="time"
                       value={storeData.operatingHours.open}
-                      onChange={(e) => setStoreData({
-                        ...storeData,
-                        operatingHours: { ...storeData.operatingHours, open: e.target.value }
-                      })}
+                      onChange={(e) => setStoreData((current) => updateOperatingHours(current, 'open_time', e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
                   ) : (
@@ -798,10 +851,7 @@ const StoreProfile: React.FC = () => {
                     <input
                       type="time"
                       value={storeData.operatingHours.close}
-                      onChange={(e) => setStoreData({
-                        ...storeData,
-                        operatingHours: { ...storeData.operatingHours, close: e.target.value }
-                      })}
+                      onChange={(e) => setStoreData((current) => updateOperatingHours(current, 'close_time', e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
                   ) : (

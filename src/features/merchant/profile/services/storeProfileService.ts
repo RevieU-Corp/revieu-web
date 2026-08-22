@@ -16,8 +16,19 @@ export interface MerchantStoreRecord {
   cover_image_url?: string | null;
   images?: string[] | string | null;
   menu_images?: string[] | string | null;
+  hours?: MerchantStoreHour[] | null;
   status?: number | null;
 }
+
+export interface MerchantStoreHour {
+  id?: number;
+  day_of_week: number;
+  open_time: string;
+  close_time: string;
+  is_closed: boolean;
+}
+
+export type MerchantStoreHourPayload = Omit<MerchantStoreHour, 'id'>;
 
 export interface UpdateMerchantStorePayload {
   name?: string;
@@ -33,6 +44,7 @@ export interface UpdateMerchantStorePayload {
   cover_image_url?: string;
   images?: string[];
   menu_images?: string[];
+  hours?: MerchantStoreHourPayload[];
 }
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -119,4 +131,3 @@ export const storeProfileService = {
     return response.data.data;
   },
 };
-
