@@ -51,10 +51,12 @@ const MerchantDashboard: React.FC = () => {
   const [isCouponFormOpen, setIsCouponFormOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
   const [packages, setPackages] = useState<any[]>([]);
 
   useEffect(() => {
     const loadStoreAndCoupons = async () => {
+      setIsLoadingCoupons(true);
       try {
         const store = await storeProfileService.getPrimaryStore();
         if (!store) return;
@@ -67,6 +69,9 @@ const MerchantDashboard: React.FC = () => {
         setDishes(fetchedDishes);
       } catch (error) {
         console.error('Failed to load coupons:', error);
+        setCouponError('Failed to load coupons.');
+      } finally {
+        setIsLoadingCoupons(false);
       }
     };
     void loadStoreAndCoupons();
@@ -319,13 +324,17 @@ const MerchantDashboard: React.FC = () => {
             {couponError}
           </div>
         )}
-        <CouponHorizontalList
-          coupons={coupons}
-          dishes={dishes}
-          onEdit={(coupon) => { setEditingCoupon(coupon); setIsCouponFormOpen(true); }}
-          onToggleEnabled={handleToggleCouponEnabled}
-          onDelete={handleDeleteCoupon}
-        />
+        {isLoadingCoupons ? (
+          <p className="text-gray-500 text-center py-4">Loading...</p>
+        ) : (
+          <CouponHorizontalList
+            coupons={coupons}
+            dishes={dishes}
+            onEdit={(coupon) => { setEditingCoupon(coupon); setIsCouponFormOpen(true); }}
+            onToggleEnabled={handleToggleCouponEnabled}
+            onDelete={handleDeleteCoupon}
+          />
+        )}
       </div>
 
       {/* Active Packages */}
@@ -536,6 +545,7 @@ const MerchantDashboard: React.FC = () => {
         isOpen={isCouponFormOpen}
         coupon={editingCoupon}
         dishes={dishes}
+        error={couponError}
         onClose={() => { setIsCouponFormOpen(false); setEditingCoupon(null); }}
         onSubmit={handleCreateOrUpdateCoupon}
       />

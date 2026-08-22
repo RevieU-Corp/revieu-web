@@ -250,6 +250,18 @@ const StoreProfile: React.FC = () => {
       setSavedStoreData(normalizedStore);
       setIsCreatingStore(false);
       setIsEditing(false);
+
+      // The backend creates stores as drafts, but coupon creation requires a
+      // published store — publish it now so the merchant can start right away.
+      // A failure here must not fail the create: the "Enable store" toggle
+      // remains available as a retry.
+      try {
+        await storeProfileService.activateStore(normalizedStore.id);
+        setIsStoreActive(true);
+      } catch (activationError) {
+        console.error('Failed to activate newly created store:', activationError);
+        setStatusMessage('Store created, but it could not be enabled automatically. Use "Enable store" to publish it.');
+      }
     } catch (error) {
       console.error('Failed to create store:', error);
       setStatusMessage('Failed to create store.');

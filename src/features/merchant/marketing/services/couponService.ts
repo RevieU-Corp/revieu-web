@@ -26,6 +26,9 @@ export interface UpsertCouponPayload {
   description?: string;
   type: string;
   coupon_type?: 'normal' | 'limited_time';
+  // Mirrors sale_price. The customer-facing app derives paid-vs-free from
+  // `price > 0`, so it has to be populated for paid coupons to show correctly.
+  price?: number;
   original_price?: number;
   sale_price?: number;
   discount_percentage?: number;
