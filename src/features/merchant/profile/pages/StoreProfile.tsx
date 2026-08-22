@@ -138,6 +138,8 @@ const StoreProfile: React.FC = () => {
   const [storeData, setStoreData] = useState(defaultStoreData);
   const [savedStoreData, setSavedStoreData] = useState(defaultStoreData);
   const [isLoadingStore, setIsLoadingStore] = useState(true);
+  const [isCreatingStore, setIsCreatingStore] = useState(false);
+  const [isSubmittingNewStore, setIsSubmittingNewStore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -177,9 +179,9 @@ const StoreProfile: React.FC = () => {
         }
 
         if (!primaryStore) {
-          setStatusMessage('No merchant store found yet.');
           setStoreData(defaultStoreData);
           setSavedStoreData(defaultStoreData);
+          setIsCreatingStore(true);
           return;
         }
 
@@ -228,6 +230,28 @@ const StoreProfile: React.FC = () => {
       setStatusMessage('Failed to save store profile.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCreateStore = async () => {
+    if (!storeData.name.trim()) {
+      setStatusMessage('Store name is required.');
+      return;
+    }
+    setIsSubmittingNewStore(true);
+    setStatusMessage(null);
+    try {
+      const created = await storeProfileService.createStore(buildStoreUpdatePayload(storeData));
+      const normalizedStore = normalizeStoreData(created, storeData);
+      setStoreData(normalizedStore);
+      setSavedStoreData(normalizedStore);
+      setIsCreatingStore(false);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to create store:', error);
+      setStatusMessage('Failed to create store.');
+    } finally {
+      setIsSubmittingNewStore(false);
     }
   };
 
@@ -484,6 +508,64 @@ const StoreProfile: React.FC = () => {
       item: null
     });
   };
+
+  if (isCreatingStore) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">Create your store</h1>
+        <p className="text-sm text-gray-500">You don't have a store yet — fill in the basics to get started. You can add hours, photos, and menu images after creating it.</p>
+        {statusMessage && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{statusMessage}</div>
+        )}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Store name</label>
+            <input
+              type="text"
+              value={storeData.name}
+              onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="e.g. Downtown Burger House"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={storeData.bio}
+              onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <input
+              type="text"
+              value={storeData.streetAddress}
+              onChange={(e) => setStoreData({ ...storeData, streetAddress: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input
+              type="text"
+              value={storeData.phone}
+              onChange={(e) => setStoreData({ ...storeData, phone: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleCreateStore}
+          disabled={isSubmittingNewStore}
+          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          {isSubmittingNewStore ? 'Creating...' : 'Create store'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
