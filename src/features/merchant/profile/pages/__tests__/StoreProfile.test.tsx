@@ -70,6 +70,10 @@ describe('StoreProfile', () => {
             images: '[]',
             menu_images:
               '["https://cdn.revieu.com/menu-1.jpg","https://cdn.revieu.com/menu-2.jpg"]',
+            hours: [
+              { id: 1, day_of_week: 1, open_time: '08:00', close_time: '20:00', is_closed: false },
+              { id: 2, day_of_week: 2, open_time: '08:00', close_time: '20:00', is_closed: false },
+            ],
             description: 'Brunch flagship.',
           },
         ],
@@ -91,6 +95,10 @@ describe('StoreProfile', () => {
           cover_image_url: 'https://cdn.revieu.com/store-cover.jpg',
           images: '[]',
           menu_images: '["https://cdn.revieu.com/menu-2.jpg"]',
+          hours: [
+            { id: 1, day_of_week: 1, open_time: '10:00', close_time: '22:00', is_closed: false },
+            { id: 2, day_of_week: 2, open_time: '10:00', close_time: '22:00', is_closed: false },
+          ],
           description: 'Brunch flagship.',
         },
       },
@@ -131,6 +139,29 @@ describe('StoreProfile', () => {
     await waitFor(() => {
       expect(mockPatch).toHaveBeenCalledWith('/merchant/stores/320', expect.objectContaining({
         menu_images: ['https://cdn.revieu.com/menu-2.jpg'],
+      }));
+    });
+  });
+
+  it('round-trips the backend store hours instead of falling back to defaults', async () => {
+    const { default: StoreProfile } = await import('../StoreProfile');
+
+    render(<StoreProfile />);
+
+    expect(await screen.findByText('08:00')).toBeInTheDocument();
+    expect(screen.getByText('20:00')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /edit profile/i }));
+    fireEvent.change(screen.getByDisplayValue('08:00'), { target: { value: '10:00' } });
+    fireEvent.change(screen.getByDisplayValue('20:00'), { target: { value: '22:00' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/merchant/stores/320', expect.objectContaining({
+        hours: [
+          { day_of_week: 1, open_time: '10:00', close_time: '22:00', is_closed: false },
+          { day_of_week: 2, open_time: '10:00', close_time: '22:00', is_closed: false },
+        ],
       }));
     });
   });

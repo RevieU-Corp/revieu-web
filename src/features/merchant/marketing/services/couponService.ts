@@ -38,6 +38,8 @@ export interface UpsertCouponPayload {
   max_per_user: number;
   valid_from?: string | null;
   valid_until?: string | null;
+  clear_valid_from?: boolean;
+  clear_valid_until?: boolean;
   terms?: string;
   status?: 'draft' | 'active';
 }

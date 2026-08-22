@@ -90,6 +90,12 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
     if (couponType === 'limited_time') {
       if (validFrom) payload.valid_from = new Date(validFrom).toISOString();
       if (validUntil) payload.valid_until = new Date(validUntil).toISOString();
+    } else if (coupon) {
+      // A PATCH cannot infer "clear" from an omitted nullable timestamp. Tell
+      // the backend explicitly when an existing limited-time coupon becomes
+      // a normal coupon, otherwise old dates can keep it scheduled/expired.
+      payload.clear_valid_from = Boolean(coupon.valid_from);
+      payload.clear_valid_until = Boolean(coupon.valid_until);
     }
 
     return payload;
