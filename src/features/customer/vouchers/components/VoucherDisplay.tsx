@@ -163,17 +163,23 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-xl z-50 px-6 flex items-center justify-between border-b border-gray-100">
         <button
+          type="button"
+          aria-label="Go back"
           onClick={handleBack}
           className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all"
         >
-          <ChevronLeft className="w-6 h-6 text-gray-900" />
+          <ChevronLeft aria-hidden="true" className="w-6 h-6 text-gray-900" />
         </button>
         <h1 className="text-sm font-bold text-gray-900">Your Voucher</h1>
         <button
+          type="button"
+          aria-label={showShareOptions ? 'Hide share options' : 'Show share options'}
+          aria-expanded={showShareOptions}
+          aria-controls="voucher-share-options"
           onClick={() => setShowShareOptions(!showShareOptions)}
           className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all"
         >
-          <Share2 className="w-5 h-5 text-gray-700" />
+          <Share2 aria-hidden="true" className="w-5 h-5 text-gray-700" />
         </button>
       </div>
 
@@ -186,7 +192,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
               </div>
               <div>
                 <h3 className="font-semibold text-green-800">Added to My Rewards!</h3>
-                <p className="text-sm text-green-600">Present this QR code to the merchant to redeem.</p>
+                <p className="text-sm text-green-800">Present this QR code to the merchant to redeem.</p>
               </div>
             </div>
           </div>
@@ -211,7 +217,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-2">{dealInfo.title}</h2>
-                <p className="text-blue-100 text-sm">{dealInfo.description}</p>
+                <p className="text-blue-100 forced-colors-readable text-sm">{dealInfo.description}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-black">{dealInfo.value}</div>
@@ -226,7 +232,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
               <MapPin className="w-4 h-4" />
               <div>
                 <p className="font-semibold">{merchantInfo.name}</p>
-                <p className="text-sm text-blue-100">{merchantInfo.address}</p>
+                <p className="text-sm text-blue-100 forced-colors-readable">{merchantInfo.address}</p>
               </div>
             </div>
           </div>
@@ -235,10 +241,10 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
           <div className="p-6 text-center border-b border-gray-100">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
               {qrCodeDataUrl ? (
-                <img src={qrCodeDataUrl} alt="Voucher QR Code" className="w-48 h-48 mx-auto" />
+                <img src={qrCodeDataUrl} alt="Voucher QR code" className="w-48 h-48 mx-auto" />
               ) : (
                 <div className="flex h-48 w-48 items-center justify-center rounded-xl bg-gray-50">
-                  <QrCode className="h-20 w-20 text-gray-300" />
+                  <QrCode aria-hidden="true" className="h-20 w-20 text-gray-300" />
                 </div>
               )}
             </div>
@@ -256,14 +262,16 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
                   {voucher.code}
                 </code>
                 <button
+                  type="button"
+                  aria-label={copied ? 'Voucher code copied' : 'Copy voucher code'}
                   onClick={handleCopyCode}
                   className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                   title="Copy code"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check aria-hidden="true" className="w-4 h-4 text-green-600" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-600" />
+                    <Copy aria-hidden="true" className="w-4 h-4 text-gray-600" />
                   )}
                 </button>
               </div>
@@ -317,7 +325,7 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
         {/* Action Buttons */}
         <div className="space-y-3">
           {walletError && (
-            <p className="text-sm text-red-500 text-center">{walletError}</p>
+            <p role="alert" className="text-sm text-red-500 text-center">{walletError}</p>
           )}
           {voucher ? (
             <div className="w-full bg-green-50 border border-green-200 text-green-700 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2">
@@ -345,50 +353,61 @@ const VoucherDisplay: React.FC<VoucherDisplayProps> = ({
 
       {/* Share Options Modal */}
       {showShareOptions && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+        <div
+          id="voucher-share-options"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="voucher-share-title"
+          className="fixed inset-0 bg-black/50 z-50 flex items-end"
+        >
           <div className="bg-white rounded-t-3xl w-full p-6 animate-in slide-in-from-bottom">
             <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
-            <h3 className="text-lg font-semibold text-center mb-6">Share Voucher</h3>
+            <h3 id="voucher-share-title" className="text-lg font-semibold text-center mb-6">Share Voucher</h3>
             
             <div className="grid grid-cols-2 gap-4 mb-6">
               <button
+                type="button"
                 onClick={() => handleShare('email')}
                 disabled={isSharing}
                 className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50"
               >
-                <Mail className="w-6 h-6 text-gray-700" />
+                <Mail aria-hidden="true" className="w-6 h-6 text-gray-700" />
                 <span className="text-sm font-medium">Email</span>
               </button>
               
               <button
+                type="button"
                 onClick={() => handleShare('sms')}
                 disabled={isSharing}
                 className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50"
               >
-                <MessageSquare className="w-6 h-6 text-gray-700" />
+                <MessageSquare aria-hidden="true" className="w-6 h-6 text-gray-700" />
                 <span className="text-sm font-medium">SMS</span>
               </button>
               
               <button
+                type="button"
                 onClick={() => handleShare('social')}
                 disabled={isSharing}
                 className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50"
               >
-                <Share2 className="w-6 h-6 text-gray-700" />
+                <Share2 aria-hidden="true" className="w-6 h-6 text-gray-700" />
                 <span className="text-sm font-medium">Social</span>
               </button>
               
               <button
+                type="button"
                 onClick={() => handleShare('copy')}
                 disabled={isSharing}
                 className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50"
               >
-                <Copy className="w-6 h-6 text-gray-700" />
+                <Copy aria-hidden="true" className="w-6 h-6 text-gray-700" />
                 <span className="text-sm font-medium">Copy Link</span>
               </button>
             </div>
             
             <button
+              type="button"
               onClick={() => setShowShareOptions(false)}
               className="w-full py-3 text-gray-600 font-medium"
             >

@@ -134,4 +134,19 @@ describe('StoreProfile', () => {
       }));
     });
   });
+
+  it('rejects closing hours that are earlier than opening hours', async () => {
+    const { default: StoreProfile } = await import('../StoreProfile');
+
+    render(<StoreProfile />);
+    expect(await screen.findAllByText('Northline Brunch Club - North Beach')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: /edit profile/i }));
+    fireEvent.change(screen.getByLabelText('Opening time'), { target: { value: '21:00' } });
+    fireEvent.change(screen.getByLabelText('Closing time'), { target: { value: '08:00' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+    expect(screen.getByText('Closing time must be later than opening time.')).toBeInTheDocument();
+    expect(mockPatch).not.toHaveBeenCalled();
+  });
 });
