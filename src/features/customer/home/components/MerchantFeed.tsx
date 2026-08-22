@@ -45,12 +45,12 @@ const MerchantFeed: React.FC<MerchantFeedProps> = ({ merchants }) => {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {merchants.map((merchant) => (
                 <div
                     key={merchant.id}
                     onClick={() => handleMerchantClick(merchant.id, merchant.name)}
-                    className="group cursor-pointer bg-white rounded-[28px] p-3 border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                    className="group cursor-pointer rounded-3xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
                 >
                     <div className="relative aspect-[16/9] rounded-[22px] overflow-hidden mb-4 bg-gray-100">
                         <ImageWithFallback

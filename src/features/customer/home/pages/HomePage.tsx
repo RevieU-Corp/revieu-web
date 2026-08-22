@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PageFrame } from '../../../../components/common';
 import { Header, FeatureBar, FeaturedSection, MerchantFeed } from '../components';
 import CategoryFilter from '../components/CategoryFilter';
 import { Activity, HomeMerchant } from '../../shared/types';
@@ -77,62 +78,68 @@ const HomePage: React.FC = () => {
         return 'Merchants';
     }
   };
-
   return (
-    <div className="bg-white min-h-screen pb-20 max-w-lg mx-auto overflow-x-hidden">
-      {/* Compact Header */}
+    <div className="min-h-dvh bg-slate-50">
       <Header onSearchTap={() => navigate(PATHS.CUSTOMER.EXPLORE)} />
 
-      <main className="px-8 space-y-6 mt-4">
-        {/* Compact Feature Buttons with Distance Slider */}
-        <FeatureBar 
-          activeFeature={activeFeature}
-          onFeatureChange={setActiveFeature}
-          showDistanceSlider={activeFeature === 'Nearby'}
-          selectedDistance={selectedDistance}
-          onDistanceChange={setSelectedDistance}
-        />
-
-        {/* Discount Section - Horizontal Scrolling Cards */}
-        <section>
-          <div className="flex justify-between items-end mb-6">
+      <PageFrame contentClassName="space-y-8">
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-[20px] font-[700] text-[#4B4B4B] tracking-tight leading-none">Discount</h2>
-              <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-[3px]">Daily Performance</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600">Explore RevieU</p>
+              <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                Find places worth talking about
+              </h1>
             </div>
-            <button className="font-['Roboto'] text-[12px] font-[525] text-[#7F7D92]">Detail</button>
+            <p className="max-w-md text-sm leading-6 text-slate-500">
+              Discover nearby businesses, compare experiences, and share your next recommendation.
+            </p>
+          </div>
+          <FeatureBar
+            activeFeature={activeFeature}
+            onFeatureChange={setActiveFeature}
+            showDistanceSlider={activeFeature === 'Nearby'}
+            selectedDistance={selectedDistance}
+            onDistanceChange={setSelectedDistance}
+          />
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">Discounts</h2>
+              <p className="mt-1 text-sm text-slate-500">Daily offers from local businesses</p>
+            </div>
+            <button type="button" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+              View all
+            </button>
           </div>
           <FeaturedSection activities={activities} />
         </section>
 
-        {/* Filtered Merchant List with Dropdown Filter */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-start gap-3">
-              <div>
-                <h2 className="text-[20px] font-[700] text-[rgba(75,_75,_75,_1)] tracking-tight leading-none">
-                  {getFeatureTitle()}
-                </h2>
-                <p className="font-['Roboto'] text-[12px] font-[525] text-[#BB4C4C] mt-1.5 ml-1 leading-none tracking-normal">
-                  {filteredCount} of {totalCount} places
-                </p>
-              </div>
-              <CategoryFilter 
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-              />
+        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">{getFeatureTitle()}</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {filteredCount} of {totalCount} places
+              </p>
             </div>
+            <CategoryFilter
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
           </div>
-          
+
           {isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#990000]"></div>
+            <div className="flex justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
             </div>
           ) : (
             <MerchantFeed merchants={filteredMerchants} />
           )}
         </section>
-      </main>
+      </PageFrame>
     </div>
   );
 };

@@ -1,84 +1,72 @@
 import React, { useState } from 'react';
+import { Bell, Search } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
-import revieUIcon from '../../../../assets/images/customer/home/revieUIcon.svg';
-import notificationIcon from '../../../../assets/images/customer/home/notification.svg';
 import defaultAvatar from '../../../../assets/images/customer/home/avatar.svg';
-import searchIcon from '../../../../assets/images/customer/home/searchBar/search.svg';
 
 interface HeaderProps {
     onSearch?: (q: string) => void;
     onSearchTap?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch = () => { }, onSearchTap }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch = () => {}, onSearchTap }) => {
     const [isFocused, setIsFocused] = useState(false);
     const { user } = useAuth();
-
-    // Use user avatar from AuthContext, fallback to local default avatar image
     const avatarUrl = user?.avatar || defaultAvatar;
 
     return (
-        <header className="px-8 pt-11 pb-3 bg-white/80 backdrop-blur-xl sticky top-0 z-40 transition-all border-b border-black/[0.03]">
-            {/* Brand & User Profile - Compact */}
-            <div className="flex justify-between items-center mb-10">
-                <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 flex items-center justify-center">
-                        <div
-                            className="w-10 h-10 rounded-[40px] flex items-center justify-center"
-                            style={{ backgroundColor: 'rgba(243, 240, 240, 1)' }}
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:px-8">
+                <div className="flex items-center justify-between gap-4 lg:min-w-[15rem]">
+                    <div>
+                        <p className="text-lg font-black tracking-tight text-brand-600 lg:hidden">RevieU</p>
+                        <p className="hidden text-sm font-semibold text-slate-500 lg:block">Welcome back</p>
+                        <h1 className="hidden text-xl font-bold tracking-tight text-slate-900 lg:block">
+                            Discover your next favorite place
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-3 lg:order-3">
+                        <button
+                            type="button"
+                            className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                            aria-label="Notifications"
                         >
-                            <img src={revieUIcon} alt="revieU icon" className="h-6 w-auto" />
-                        </div>
-                    </div>
-                </div>
-                <div className="ml-auto flex items-center gap-1">
-                    <button className="p-1 mr-3 rounded-full hover:scale-105 active:scale-95 transition-all">
-                        <img src={notificationIcon} className="w-[25px] h-[25px]" alt="Notifications" />
-                    </button>
-                    <div className="w-[42px] h-[42px] overflow-hidden rounded-full flex items-center justify-center cursor-pointer">
-                        <img src={avatarUrl} className="w-[38px] h-[38px]" alt="Profile" />
-                    </div>
-                </div>
-            </div>
-
-            {/* Compact Search Bar */}
-            <div className={`relative transition-all duration-300 ${isFocused ? 'scale-[1.01]' : ''}`}>
-                <div className="flex items-center gap-3">
-                    <div className={`flex flex-1 min-w-0 h-[50px] items-center bg-gray-100/60 rounded-[18px] transition-all duration-300 border ${
-                        isFocused ? 'bg-white border-[#990000]/30 shadow-lg shadow-[#990000]/5' : 'border-transparent'
-                    }`}>
-                        <div className="pl-3 pr-2">
-                            <img src={searchIcon} className="" />
-                        </div>
-
-                        <input
-                            type="text"
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            placeholder="Search"
-                            readOnly={Boolean(onSearchTap)}
-                            onMouseDown={(e) => {
-                                if (!onSearchTap) {
-                                    return;
-                                }
-
-                                e.preventDefault();
-                                onSearchTap();
-                            }}
-                            onKeyDown={(e) => {
-                                if (!onSearchTap) {
-                                    return;
-                                }
-
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    onSearchTap();
-                                }
-                            }}
-                            onChange={(e) => onSearch(e.target.value)}
-                            className="h-full flex-1 bg-transparent border-none py-0 text-[14px] font-semibold text-gray-900 outline-none placeholder:text-gray-400"
+                            <Bell className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                        <img
+                            src={avatarUrl}
+                            className="h-10 w-10 rounded-full object-cover"
+                            alt="Profile"
                         />
                     </div>
+                </div>
+
+                <div className="relative flex-1 lg:mx-8">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                    <input
+                        type="text"
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder="Search businesses, categories, or places"
+                        readOnly={Boolean(onSearchTap)}
+                        onMouseDown={(event) => {
+                            if (!onSearchTap) return;
+                            event.preventDefault();
+                            onSearchTap();
+                        }}
+                        onKeyDown={(event) => {
+                            if (!onSearchTap) return;
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                onSearchTap();
+                            }
+                        }}
+                        onChange={(event) => onSearch(event.target.value)}
+                        className={`h-12 w-full rounded-2xl border bg-slate-50 pl-12 pr-4 text-sm font-medium text-slate-900 outline-none transition ${
+                            isFocused
+                                ? 'border-brand-600 bg-white ring-4 ring-brand-600/10'
+                                : 'border-transparent hover:border-slate-300'
+                        }`}
+                    />
                 </div>
             </div>
         </header>

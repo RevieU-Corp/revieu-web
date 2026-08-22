@@ -24,18 +24,18 @@ vi.mock('../../../../../../contexts/AuthContext', () => ({
 }));
 
 describe('BottomNav', () => {
-  it('hides Discover and Explore tabs, keeping only Home, Review, and Profile buttons', () => {
+  it('renders all primary customer tabs around the add review action', () => {
     render(
       <MemoryRouter initialEntries={['/customer/home']}>
         <BottomNav />
       </MemoryRouter>
     );
 
-    expect(screen.queryByRole('button', { name: /discover/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /explore/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /discover/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /explore/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /home/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getAllByRole('button')).toHaveLength(5);
   });
 
   it('routes the add review button to the review target selector flow', () => {

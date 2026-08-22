@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import BottomNavigation from './BottomNavigation';
+import { MerchantSidebar } from './MerchantSidebar';
 import VerificationModal from '../../profile/components/VerificationModal';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { PATHS } from '../../../../routes/paths';
 import { verificationService } from '../services/verificationService';
-
 const MerchantLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, isMerchant } = useAuth();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -36,51 +36,41 @@ const MerchantLayout: React.FC = () => {
     setShowVerificationModal(false);
   };
 
-  // Show loading spinner while checking authentication
   if (isLoading) {
-    console.log('🔄 MerchantLayout: Loading authentication...');
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+          <p className="text-slate-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // If still not authenticated after trying to create demo user, redirect to login
   if (!isAuthenticated) {
-    console.log('❌ MerchantLayout: Not authenticated, redirecting to login');
     return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
   }
 
-  // Redirect to merchant login if authenticated but not a merchant
-  if (isAuthenticated && !isMerchant) {
-    console.log('❌ MerchantLayout: User is not a merchant, redirecting to login');
+  if (!isMerchant) {
     return <Navigate to={PATHS.MERCHANT.LOGIN} replace />;
   }
-
-  console.log('✅ MerchantLayout: Rendering dashboard for merchant:', {
-    user: user?.name,
-    isAuthenticated,
-    isMerchant,
-    showVerificationModal
-  });
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-gray-50 flex flex-col relative">
-      <main className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Outlet />
-        </div>
-      </main>
+    <div className="min-h-dvh bg-slate-100 lg:flex">
+      <MerchantSidebar />
 
-      <div className="shrink-0 z-40">
-        <BottomNavigation />
+      <div className="min-w-0 flex-1">
+        <main className="min-h-dvh overflow-y-auto pb-20 lg:pb-0">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <Outlet />
+          </div>
+        </main>
+
+        <div className="lg:hidden">
+          <BottomNavigation />
+        </div>
       </div>
 
-      {/* Verification Modal */}
       <VerificationModal
         isOpen={showVerificationModal}
         onClose={handleCloseVerificationModal}

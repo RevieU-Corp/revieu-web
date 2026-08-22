@@ -1,39 +1,33 @@
-import { useLocation, Outlet } from 'react-router-dom';
-import { BottomNav } from './index';
+import { matchPath, Outlet, useLocation } from 'react-router-dom';
 import { BackButton } from '../../../../components/common';
-import { PATHS } from '../../../../routes/paths';
+import { BottomNav } from './index';
+import { CustomerSidebar } from './CustomerSidebar';
+import { customerNavigation } from './navigation';
 
-const CustomerLayout: React.FC = () => {
+const CustomerLayout = () => {
   const location = useLocation();
-
-  // Main tabs where bottom navigation and FAB should be visible
-  const mainTabPaths = [
-    PATHS.CUSTOMER.ROOT,
-    PATHS.CUSTOMER.HOME,
-    PATHS.CUSTOMER.DISCOVER,
-    PATHS.CUSTOMER.EXPLORE,
-    PATHS.CUSTOMER.ME.ROOT,
-  ];
-
-  const isMainTab = mainTabPaths.includes(location.pathname);
+  const isPrimaryPage = customerNavigation.some(({ path, end }) =>
+    matchPath({ path, end: end ?? false }, location.pathname),
+  );
   const hideGlobalBackButton = /^\/customer\/merchant\/[^/]+(?:\/coupon)?$/.test(location.pathname);
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-white flex flex-col relative">
-      {/* Floating Back Button */}
-      {!isMainTab && !hideGlobalBackButton && <BackButton />}
+    <div className="min-h-dvh bg-slate-100 lg:flex">
+      <CustomerSidebar />
 
-      {/* Scrollable content area */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar relative">
-        <Outlet />
-      </main>
+      <div className="min-w-0 flex-1 bg-white">
+        {!isPrimaryPage && !hideGlobalBackButton && <BackButton />}
 
-      {/* Navigation bar - Stay outside scroll */}
-      {isMainTab && (
-        <div className="shrink-0 z-40">
-          <BottomNav />
-        </div>
-      )}
+        <main className="min-h-dvh overflow-y-auto pb-20 lg:pb-0">
+          <Outlet />
+        </main>
+
+        {isPrimaryPage && (
+          <div className="lg:hidden">
+            <BottomNav />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
