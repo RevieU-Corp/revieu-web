@@ -19,6 +19,7 @@ import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
 import {
   MerchantStoreRecord,
+  StoreHourPayload,
   storeProfileService,
   parseStringArray,
   uploadMerchantImages,
@@ -115,9 +116,26 @@ const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultS
   gallery: parseStringArray(raw.images),
   menuImages: parseStringArray(raw.menu_images),
   bio: raw.description ?? '',
+  operatingHours: (() => {
+    const firstOpenDay = (raw.hours ?? []).find(
+      (hour) => !hour.is_closed && hour.open_time && hour.close_time
+    );
+    return {
+      open: firstOpenDay?.open_time ?? base.operatingHours.open,
+      close: firstOpenDay?.close_time ?? base.operatingHours.close,
+    };
+  })(),
 });
 
-const buildStoreUpdatePayload = (store: StoreData) => ({
+const buildStoreHours = (store: StoreData): StoreHourPayload[] =>
+  Array.from({ length: 7 }, (_, dayOfWeek) => ({
+    day_of_week: dayOfWeek,
+    open_time: store.operatingHours.open,
+    close_time: store.operatingHours.close,
+    is_closed: false,
+  }));
+
+const buildStoreUpdatePayload = (store: StoreData, includeHours = true) => ({
   name: store.name,
   description: store.bio,
   address: store.streetAddress,
@@ -131,6 +149,7 @@ const buildStoreUpdatePayload = (store: StoreData) => ({
   cover_image_url: store.coverPhoto,
   images: store.gallery,
   menu_images: store.menuImages,
+  ...(includeHours ? { hours: buildStoreHours(store) } : {}),
 });
 
 const StoreProfile: React.FC = () => {
@@ -244,7 +263,7 @@ const StoreProfile: React.FC = () => {
     setIsSubmittingNewStore(true);
     setStatusMessage(null);
     try {
-      const created = await storeProfileService.createStore(buildStoreUpdatePayload(storeData));
+      const created = await storeProfileService.createStore(buildStoreUpdatePayload(storeData, false));
       const normalizedStore = normalizeStoreData(created, storeData);
       setStoreData(normalizedStore);
       setSavedStoreData(normalizedStore);

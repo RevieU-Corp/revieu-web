@@ -64,7 +64,7 @@ const CouponPaymentSuccessPage: React.FC = () => {
           setVoucher(initialVoucher);
         }
 
-        const qrCode = await voucherService.generateQRCode(initialVoucher.code);
+        const qrCode = await voucherService.generateQRCode(initialVoucher.scanUrl ?? initialVoucher.code);
         if (!cancelled) {
           setQrCodeDataUrl(qrCode);
         }

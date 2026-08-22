@@ -6,7 +6,7 @@ import { LoginPage, MerchantLoginPage, RegisterPage, ForgotPasswordPage, GoogleC
 import {
   HomePage, DiscoverPage, ExplorePage, ProfilePage, ProfileSettingsPage,
   CustomerLayout, VoucherDisplay, ReviewsPage, WriteReviewPage, WriteReviewSelectPage, ReviewSuccessPage, PostPage, MerchantDetailPage, MerchantReviewsPage,
-  MerchantProfileCouponPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
+  RestaurantDetailPage, PaymentPage, PaymentSuccessPage, CouponPaymentSuccessPage, DealQrPage
 } from '../features/customer';
 
 // Merchant Portal Components
@@ -54,7 +54,7 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.CUSTOMER.ME.HELP} element={<ProfileSettingsPage />} />
         <Route path={PATHS.CUSTOMER.POST_DETAIL} element={<PostPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_DETAIL} element={<MerchantDetailPage />} />
-        <Route path={PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON_DETAIL} element={<MerchantProfileCouponPage />} />
+        <Route path={PATHS.CUSTOMER.MERCHANT_PROFILE_COUPON_DETAIL} element={<RestaurantDetailPage />} />
         <Route path={PATHS.CUSTOMER.MERCHANT_DEAL_QR_DETAIL} element={<DealQrPage />} />
         <Route path="/customer/merchant/:id/reviews" element={<MerchantReviewsPage />} />
         <Route path={PATHS.CUSTOMER.WRITE_REVIEW_SELECT} element={<WriteReviewSelectPage />} />

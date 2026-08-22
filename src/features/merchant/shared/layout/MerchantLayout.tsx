@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import BottomNavigation from './BottomNavigation';
 import VerificationModal from '../../profile/components/VerificationModal';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -8,31 +8,40 @@ import { verificationService } from '../services/verificationService';
 
 const MerchantLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, isMerchant } = useAuth();
+  const location = useLocation();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && isMerchant && user) {
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('/verification')) {
-        return;
-      }
-
-      void verificationService.getVerificationStatus()
-        .then((status) => {
-          if (status.status !== 'verified') {
-            setShowVerificationModal(true);
-          } else {
-            setShowVerificationModal(false);
-          }
-        })
-        .catch((error) => {
-          console.error('Failed to load merchant verification status:', error);
-          setShowVerificationModal(true);
-        });
+    if (!isAuthenticated || !isMerchant || !user || location.pathname.includes('/verification')) {
+      setShowVerificationModal(false);
+      return;
     }
-  }, [isAuthenticated, isMerchant, user]);
+
+    const dismissalKey = `merchantVerificationDismissed_${user.id}`;
+    if (sessionStorage.getItem(dismissalKey) === 'true') {
+      setShowVerificationModal(false);
+      return;
+    }
+
+    void verificationService.getVerificationStatus()
+      .then((status) => {
+        if (status.status !== 'verified') {
+          setShowVerificationModal(true);
+        } else {
+          sessionStorage.removeItem(dismissalKey);
+          setShowVerificationModal(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load merchant verification status:', error);
+        setShowVerificationModal(true);
+      });
+  }, [isAuthenticated, isMerchant, location.pathname, user]);
 
   const handleCloseVerificationModal = () => {
+    if (user) {
+      sessionStorage.setItem(`merchantVerificationDismissed_${user.id}`, 'true');
+    }
     setShowVerificationModal(false);
   };
 

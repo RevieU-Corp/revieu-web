@@ -112,6 +112,18 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, coupon, dishe
       setFormError('Total quantity must be greater than 0.');
       return false;
     }
+    if (couponType === 'limited_time') {
+      if (!validFrom || !validUntil) {
+        setFormError('Start and end time are required for a limited-time coupon.');
+        return false;
+      }
+      const start = new Date(validFrom);
+      const end = new Date(validUntil);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) {
+        setFormError('End time must be later than start time.');
+        return false;
+      }
+    }
     setFormError(null);
     return true;
   };

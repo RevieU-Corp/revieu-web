@@ -266,8 +266,9 @@ const MerchantDashboard: React.FC = () => {
         </div>
 
         {/* Store Analytics Card - Clickable */}
-        <div
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+        <button
+          type="button"
+          className="w-full text-left bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           onClick={() => navigate(PATHS.MERCHANT.ANALYTICS)}
         >
           <div className="flex items-center justify-between">
@@ -275,7 +276,7 @@ const MerchantDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600">Store Analytics</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-2xl font-bold text-gray-900">{businessMetrics.monthlyViews.toLocaleString()}</span>
-                <div className="flex items-center gap-1 text-green-600">
+                <div className="flex items-center gap-1 text-[#00893A]">
                   <TrendingUp size={14} />
                   <span className="text-sm font-medium">+{businessMetrics.trendPercentage}%</span>
                 </div>
@@ -286,11 +287,12 @@ const MerchantDashboard: React.FC = () => {
               <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Dish Management Card - Clickable */}
-        <div
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+        <button
+          type="button"
+          className="w-full text-left bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
           onClick={() => navigate(PATHS.MERCHANT.DISHES)}
         >
           <div className="flex items-center justify-between">
@@ -302,7 +304,7 @@ const MerchantDashboard: React.FC = () => {
               <UtensilsCrossed className="w-6 h-6 text-orange-600" />
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Coupons */}
@@ -312,8 +314,7 @@ const MerchantDashboard: React.FC = () => {
           <button
             onClick={() => { setEditingCoupon(null); setIsCouponFormOpen(true); }}
             disabled={!storeId}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50"
-            style={{ backgroundColor: '#FFBC0D' }}
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg bg-[#9A6F00] hover:bg-[#7A5800] transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7A5800]"
           >
             <Gift size={16} />
             Create Coupon

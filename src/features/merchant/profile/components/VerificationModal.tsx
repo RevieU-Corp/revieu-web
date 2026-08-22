@@ -31,7 +31,7 @@ interface VerificationModalProps {
   onClose: () => void;
 }
 
-const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
+const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'form' | 'pending' | 'success'>('form');
   const [formData, setFormData] = useState<VerificationData>({
@@ -47,9 +47,9 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
-
   useEffect(() => {
+    if (!isOpen) return;
+
     let isMounted = true;
 
     const loadVerificationStatus = async () => {
@@ -78,7 +78,22 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
@@ -136,7 +151,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
   };
 
   const handleCancel = () => {
-    navigate(PATHS.MERCHANT.LOGIN);
+    onClose();
   };
 
   const handleSubmit = async () => {

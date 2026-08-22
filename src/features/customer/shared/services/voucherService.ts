@@ -98,7 +98,7 @@ export class VoucherServiceImpl implements VoucherService {
         coupon: couponData,
         paymentId,
       });
-      const qrCodeDataUrl = await this.generateQRCode(voucher.code);
+      const qrCodeDataUrl = await this.generateQRCode(voucher.scanUrl ?? voucher.code);
 
       return {
         voucher,

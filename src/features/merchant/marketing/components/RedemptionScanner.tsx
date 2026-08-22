@@ -150,7 +150,9 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
             </div>
           </div>
           <button
+            type="button"
             onClick={handleClose}
+            aria-label="Close voucher redemption"
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={20} />
@@ -197,9 +199,12 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
 
               {/* Fallback manual entry for mobile */}
               <div className="border-t border-gray-200 pt-4">
-                <p className="text-sm text-gray-600 mb-3">Or enter code manually:</p>
+                <label htmlFor="merchant-voucher-code-mobile" className="text-sm text-gray-600 mb-3 block">
+                  Or enter code manually:
+                </label>
                 <form onSubmit={handleManualSubmit} className="flex gap-2">
                   <input
+                    id="merchant-voucher-code-mobile"
                     type="text"
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value)}
@@ -228,13 +233,14 @@ const RedemptionScanner: React.FC<RedemptionScannerProps> = ({ isOpen, onClose, 
 
               <form onSubmit={handleManualSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="merchant-voucher-code" className="block text-sm font-medium text-gray-700 mb-2">
                     Coupon Code
                   </label>
                   <input
+                    id="merchant-voucher-code"
                     type="text"
                     value={manualCode}
-                    onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setManualCode(e.target.value)}
                     placeholder="e.g., STUDENT20, SAVE15"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-mono text-lg"
                     autoFocus

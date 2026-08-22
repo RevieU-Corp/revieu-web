@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QrCode, Keyboard, CheckCircle, AlertCircle, X } from 'lucide-react';
 import RedemptionScanner from './RedemptionScanner';
-import { voucherService } from '../../../customer/shared/services/voucherService';
+import { merchantVoucherService } from '../services/merchantVoucherService';
 
 // Device detection hook
 const useDeviceDetection = () => {
@@ -41,22 +41,30 @@ const RedemptionButton: React.FC = () => {
   const handleRedeem = async (code: string) => {
     setShowScanner(false);
     try {
-      const voucher = await voucherService.getVoucherByCode(code.trim());
-      if (voucher.status === 'used') {
-        setRedemptionResult({ success: false, message: 'This voucher has already been used.' });
-      } else if (voucher.status === 'expired') {
-        setRedemptionResult({ success: false, message: 'This voucher has expired.' });
+      const preview = await merchantVoucherService.preview(code);
+      if (!preview.can_redeem) {
+        const message = preview.reason === 'used'
+          ? 'This voucher has already been used.'
+          : preview.reason === 'expired'
+            ? 'This voucher has expired.'
+            : 'This voucher cannot be redeemed.';
+        setRedemptionResult({ success: false, message });
       } else {
-        await voucherService.markVoucherAsUsed(voucher.id, '');
+        await merchantVoucherService.redeem(code);
         setRedemptionResult({
           success: true,
           message: 'Voucher redeemed successfully!',
-          couponName: voucher.dealTitle,
-          discount: voucher.dealValue,
+          couponName: preview.coupon_title,
         });
       }
-    } catch {
-      setRedemptionResult({ success: false, message: 'Invalid voucher code. Please check and try again.' });
+    } catch (error) {
+      const response = (error as { response?: { status?: number; data?: { error?: string } } }).response;
+      const message = response?.status === 403
+        ? 'This voucher belongs to a different merchant.'
+        : response?.status === 400
+          ? response.data?.error || 'This voucher cannot be redeemed.'
+          : 'Invalid voucher code. Please check and try again.';
+      setRedemptionResult({ success: false, message });
     }
 
     setTimeout(() => setRedemptionResult(null), 5000);
@@ -115,7 +123,9 @@ const RedemptionButton: React.FC = () => {
               )}
             </div>
             <button
+              type="button"
               onClick={() => setRedemptionResult(null)}
+              aria-label="Dismiss redemption result"
               className={`p-1 rounded-full hover:bg-opacity-20 ${
                 redemptionResult.success 
                   ? 'text-green-600 hover:bg-green-600' 
