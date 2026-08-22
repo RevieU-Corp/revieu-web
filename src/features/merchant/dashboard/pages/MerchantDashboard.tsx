@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, TrendingUp, Users, Gift, Trash2, ChevronDown, ChevronUp, Package, Plus } from 'lucide-react';
+import { Star, TrendingUp, Users, Gift, Trash2, ChevronDown, ChevronUp, Package, Plus, UtensilsCrossed } from 'lucide-react';
 import TrafficChart from '../components/TrafficChart';
 import CouponManager from '../../marketing/components/CouponManager';
 import PackageManager from '../../marketing/components/PackageManager';
@@ -208,6 +208,22 @@ const MerchantDashboard: React.FC = () => {
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Users className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Dish Management Card - Clickable */}
+        <div
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate(PATHS.MERCHANT.DISHES)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Menu / Dishes</p>
+              <p className="text-xs text-gray-500 mt-1">Manage your dishes and their images</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-full">
+              <UtensilsCrossed className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>

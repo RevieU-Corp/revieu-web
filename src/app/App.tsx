@@ -18,6 +18,7 @@ import {
   StoreAnalytics,
   AdManager,
   StoreProfile,
+  DishManagementPage,
   Messages,
   ChatDetail,
   SearchMessages,
@@ -68,6 +69,7 @@ const AppRouter: React.FC = () => {
         <Route path={PATHS.MERCHANT.DASHBOARD} element={<MerchantDashboard />} />
         <Route path={PATHS.MERCHANT.CREATE_POST} element={<PostCreation />} />
         <Route path={PATHS.MERCHANT.ANALYTICS} element={<StoreAnalytics />} />
+        <Route path={PATHS.MERCHANT.DISHES} element={<DishManagementPage />} />
         <Route path={PATHS.MERCHANT.ADS} element={<AdManager />} />
         <Route path={PATHS.MERCHANT.PROFILE} element={<StoreProfile />} />
         <Route path={PATHS.MERCHANT.MESSAGES} element={<Messages />} />
