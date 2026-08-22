@@ -50,6 +50,7 @@ const MerchantDashboard: React.FC = () => {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [isCouponFormOpen, setIsCouponFormOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [packages, setPackages] = useState<any[]>([]);
 
   useEffect(() => {
@@ -133,25 +134,42 @@ const MerchantDashboard: React.FC = () => {
 
   const refreshCoupons = async () => {
     if (!storeId) return;
-    setCoupons(await couponService.list(storeId));
+    try {
+      setCoupons(await couponService.list(storeId));
+    } catch (error) {
+      console.error('Failed to load coupons:', error);
+      setCouponError('Failed to load coupons.');
+    }
   };
 
   const handleCreateOrUpdateCoupon = async (payload: Parameters<typeof couponService.create>[1]) => {
     if (!storeId) return;
-    if (editingCoupon) {
-      await couponService.update(storeId, editingCoupon.id, payload);
-    } else {
-      await couponService.create(storeId, payload);
+    setCouponError(null);
+    try {
+      if (editingCoupon) {
+        await couponService.update(storeId, editingCoupon.id, payload);
+      } else {
+        await couponService.create(storeId, payload);
+      }
+      setIsCouponFormOpen(false);
+      setEditingCoupon(null);
+      await refreshCoupons();
+    } catch (error) {
+      console.error('Failed to save coupon:', error);
+      setCouponError('Failed to save coupon.');
     }
-    setIsCouponFormOpen(false);
-    setEditingCoupon(null);
-    await refreshCoupons();
   };
 
   const handleToggleCouponEnabled = async (coupon: Coupon) => {
     if (!storeId) return;
-    await couponService.setEnabled(storeId, coupon.id, coupon.status === 'disabled');
-    await refreshCoupons();
+    setCouponError(null);
+    try {
+      await couponService.setEnabled(storeId, coupon.id, coupon.status === 'disabled');
+      await refreshCoupons();
+    } catch (error) {
+      console.error('Failed to update coupon status:', error);
+      setCouponError('Failed to update coupon status.');
+    }
   };
 
   const handleDeleteCoupon = (coupon: Coupon) => {
@@ -162,9 +180,16 @@ const MerchantDashboard: React.FC = () => {
       message: `Are you sure you want to delete "${coupon.title}"? This action cannot be undone.`,
       onConfirm: () => {
         void (async () => {
-          await couponService.remove(storeId, coupon.id);
-          await refreshCoupons();
-          closeConfirmDialog();
+          setCouponError(null);
+          try {
+            await couponService.remove(storeId, coupon.id);
+            await refreshCoupons();
+          } catch (error) {
+            console.error('Failed to delete coupon:', error);
+            setCouponError('Failed to delete coupon.');
+          } finally {
+            closeConfirmDialog();
+          }
         })();
       },
     });
@@ -289,6 +314,11 @@ const MerchantDashboard: React.FC = () => {
             Create Coupon
           </button>
         </div>
+        {couponError && (
+          <div className="mb-4 px-4 py-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+            {couponError}
+          </div>
+        )}
         <CouponHorizontalList
           coupons={coupons}
           dishes={dishes}
