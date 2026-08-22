@@ -79,9 +79,9 @@ export interface VoucherResult {
 }
 
 export interface PaymentFlowResult {
-  paymentUrl: string;
+  paymentUrl?: string;
   paymentData: CouponPaymentData;
-  sessionId: string;
+  sessionId?: string;
 }
 
 export interface CouponPaymentData {

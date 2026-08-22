@@ -104,16 +104,7 @@ const PaymentPage: React.FC = () => {
           }
         });
       } else {
-        const paymentResult = {
-          dealInfo,
-          paymentMethod: paymentMethods.find((method) => method.id === selectedMethod)?.name,
-          orderNumber: `ORD${Date.now()}`,
-          voucherCode: `VCH${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
-        };
-
-        navigate('/customer/payment/success', {
-          state: paymentResult
-        });
+        setPaymentError('This payment flow is not connected to a server order yet. Please return and choose a coupon payment.');
       }
     } catch (error) {
       console.error('Payment failed:', error);
