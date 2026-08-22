@@ -93,6 +93,19 @@ export const storeProfileService = {
     return response.data.data[0] ?? null;
   },
 
+  async createStore(payload: UpdateMerchantStorePayload): Promise<MerchantStoreRecord> {
+    const response = await apiClient.post<{ data: MerchantStoreRecord }>('/merchant/stores', payload);
+    return response.data.data;
+  },
+
+  async activateStore(storeId: string): Promise<void> {
+    await apiClient.post(`/merchant/stores/${storeId}/activate`);
+  },
+
+  async deactivateStore(storeId: string): Promise<void> {
+    await apiClient.post(`/merchant/stores/${storeId}/deactivate`);
+  },
+
   async updateStore(
     storeId: string,
     payload: UpdateMerchantStorePayload
