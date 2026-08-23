@@ -1,4 +1,5 @@
 import { apiClient } from '../../../../api/apiClient';
+import { mediaApi, uploadToR2 } from '../../../../api/media';
 
 export interface MerchantVerificationStatus {
   id?: string;
@@ -43,5 +44,17 @@ export const verificationService = {
       business_license: input.businessLicense,
     });
     return mapStatus(response.data?.data ?? {});
+  },
+
+  // The backend rejects document_url unless it's an absolute http(s) URL, so
+  // the picked file has to actually be uploaded first — a bare filename
+  // fails validation.
+  async uploadDocument(file: File): Promise<string> {
+    const uploadUrlsResponse = await mediaApi.getUploadUrls({
+      files: [{ filename: file.name, contentType: file.type || 'application/octet-stream' }],
+    });
+    const upload = uploadUrlsResponse.uploads[0];
+    await uploadToR2(upload.uploadUrl, file);
+    return upload.fileUrl;
   },
 };

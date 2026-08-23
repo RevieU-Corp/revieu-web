@@ -147,12 +147,18 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ isOpen }) => {
     setIsSubmitting(true);
 
     try {
-      const documentUrl = [
-        formData.storefrontPhoto?.name,
-        formData.businessLicense?.name,
-        formData.healthPermit?.name,
-        formData.ownerIdUpload?.name,
-      ].filter(Boolean).join(', ');
+      // documentType is fixed to 'business_license', so upload that file if
+      // it was provided; otherwise fall back to whichever document the
+      // merchant did attach (validateForm already guarantees at least one).
+      const primaryDocument =
+        formData.businessLicense ??
+        formData.storefrontPhoto ??
+        formData.healthPermit ??
+        formData.ownerIdUpload;
+
+      const documentUrl = primaryDocument
+        ? await verificationService.uploadDocument(primaryDocument)
+        : '';
 
       const result = await verificationService.submitVerification({
         documentType: 'business_license',
