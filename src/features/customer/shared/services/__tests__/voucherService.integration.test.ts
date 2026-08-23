@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { mockGet, mockPost, mockPatch, mockToDataURL } = vi.hoisted(() => ({
+const { mockGet, mockPost, mockPatch, mockDelete, mockToDataURL } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockPost: vi.fn(),
   mockPatch: vi.fn(),
+  mockDelete: vi.fn(),
   mockToDataURL: vi.fn(),
 }));
 
@@ -12,6 +13,7 @@ vi.mock('../../../../../api/apiClient', () => ({
     get: mockGet,
     post: mockPost,
     patch: mockPatch,
+    delete: mockDelete,
   },
 }));
 
@@ -46,6 +48,7 @@ describe('voucherService', () => {
     mockGet.mockReset();
     mockPost.mockReset();
     mockPatch.mockReset();
+    mockDelete.mockReset();
     mockToDataURL.mockReset();
     mockToDataURL.mockResolvedValue('data:image/png;base64,test-qr');
   });
@@ -117,5 +120,13 @@ describe('voucherService', () => {
       merchantId: '205',
       status: 'active',
     });
+  });
+
+  test('removes a voucher through the authenticated backend endpoint', async () => {
+    mockDelete.mockResolvedValue({ data: { status: 'ok' } });
+
+    await voucherService.deleteVoucher('3');
+
+    expect(mockDelete).toHaveBeenCalledWith('/vouchers/3');
   });
 });

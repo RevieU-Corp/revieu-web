@@ -13,13 +13,17 @@ interface CouponCardProps {
 const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact = false, onDelete }) => {
   const isExpired = coupon.status === 'expired';
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!onDelete || isDeleting) return;
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       await onDelete(coupon.id);
+    } catch {
+      setDeleteError('Unable to remove this coupon. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -64,6 +68,12 @@ const CouponCard: React.FC<CouponCardProps> = ({ coupon, className = '', compact
            <h3 className="font-medium text-white/80 text-xs uppercase tracking-wider mb-0.5">{coupon.businessName}</h3>
            <h2 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold leading-none tracking-tight`}>{coupon.offerTitle}</h2>
         </div>
+
+        {deleteError && (
+          <p role="alert" className="absolute left-5 right-5 bottom-2 rounded-md bg-white/95 px-2 py-1 text-xs font-medium text-red-700">
+            {deleteError}
+          </p>
+        )}
 
         {/* Abstract shapes for premium feel */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>

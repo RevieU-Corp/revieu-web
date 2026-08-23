@@ -14,6 +14,7 @@ type BackendCoupon = {
   merchant_id: number | string;
   title: string;
   description?: string | null;
+  image_url?: string | null;
   coupon_type?: string | null;
   value?: string | null;
   price?: number | null;
@@ -160,8 +161,9 @@ export class CouponServiceImpl implements CouponService {
     return coupons;
   }
 
-  async hasUserRedeemedCoupon(_couponId: string, _userId: string): Promise<boolean> {
-    return false;
+  async hasUserRedeemedCoupon(couponId: string, userId: string): Promise<boolean> {
+    const vouchers = await voucherService.getUserVouchers(userId);
+    return vouchers.active.concat(vouchers.used, vouchers.expired).some((voucher) => voucher.couponId === couponId);
   }
 
   private mapCoupon(raw: BackendCoupon): Coupon {
@@ -176,6 +178,7 @@ export class CouponServiceImpl implements CouponService {
       merchantId: String(raw.merchant_id),
       title: raw.title,
       description: raw.description ?? '',
+      imageUrl: raw.image_url ?? undefined,
       type: isPaid ? 'paid' : 'free',
       value: raw.value ?? '',
       price,

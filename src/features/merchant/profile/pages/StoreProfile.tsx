@@ -18,6 +18,7 @@ import ConfirmationDialog from '../../shared/components/ConfirmationDialog';
 import MenuItemModal from '../../shared/components/MenuItemModal';
 import { DEFAULT_MERCHANT_ASSETS } from '../../shared/constants/defaults';
 import {
+  MerchantStoreHourPayload,
   MerchantStoreRecord,
   storeProfileService,
   parseStringArray,
@@ -50,6 +51,7 @@ interface StoreData {
   menuImages: string[];
   bio: string;
   menu: MenuItem[];
+  hours: MerchantStoreHourPayload[];
   operatingHours: {
     open: string;
     close: string;
@@ -79,6 +81,7 @@ const defaultStoreData: StoreData = {
     open: '09:00',
     close: '21:00',
   },
+  hours: [],
   outdoorSeating: false,
   accessibility: false,
   petFriendly: false,
@@ -97,25 +100,44 @@ const categoryColors: Record<string, string> = {
 const formatAddress = (store: Pick<StoreData, 'streetAddress' | 'city' | 'state' | 'country'>) =>
   [store.streetAddress, store.city, store.state, store.country].filter(Boolean).join(', ');
 
-const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultStoreData): StoreData => ({
-  ...base,
-  id: String(raw.id),
-  name: raw.name ?? base.name,
-  phone: raw.phone ?? '',
-  website: raw.website ?? '',
-  streetAddress: raw.address ?? '',
-  city: raw.city ?? '',
-  state: raw.state ?? '',
-  country: raw.country ?? '',
-  coordinates: {
-    lat: raw.latitude ?? base.coordinates.lat,
-    lng: raw.longitude ?? base.coordinates.lng,
-  },
-  coverPhoto: raw.cover_image_url || DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
-  gallery: parseStringArray(raw.images),
-  menuImages: parseStringArray(raw.menu_images),
-  bio: raw.description ?? '',
-});
+const normalizeStoreHours = (hours: MerchantStoreRecord['hours']): MerchantStoreHourPayload[] =>
+  Array.isArray(hours)
+    ? hours.map(({ day_of_week, open_time, close_time, is_closed }) => ({
+      day_of_week,
+      open_time: open_time || '09:00',
+      close_time: close_time || '21:00',
+      is_closed: Boolean(is_closed),
+    }))
+    : [];
+
+const normalizeStoreData = (raw: MerchantStoreRecord, base: StoreData = defaultStoreData): StoreData => {
+  const hours = normalizeStoreHours(raw.hours);
+  const representativeHour = hours.find((hour) => !hour.is_closed) ?? hours[0];
+
+  return {
+    ...base,
+    id: String(raw.id),
+    name: raw.name ?? base.name,
+    phone: raw.phone ?? '',
+    website: raw.website ?? '',
+    streetAddress: raw.address ?? '',
+    city: raw.city ?? '',
+    state: raw.state ?? '',
+    country: raw.country ?? '',
+    coordinates: {
+      lat: raw.latitude ?? base.coordinates.lat,
+      lng: raw.longitude ?? base.coordinates.lng,
+    },
+    coverPhoto: raw.cover_image_url || DEFAULT_MERCHANT_ASSETS.COVER_PHOTO,
+    gallery: parseStringArray(raw.images),
+    menuImages: parseStringArray(raw.menu_images),
+    bio: raw.description ?? '',
+    hours,
+    operatingHours: representativeHour
+      ? { open: representativeHour.open_time, close: representativeHour.close_time }
+      : base.operatingHours,
+  };
+};
 
 const buildStoreUpdatePayload = (store: StoreData) => ({
   name: store.name,
@@ -131,15 +153,53 @@ const buildStoreUpdatePayload = (store: StoreData) => ({
   cover_image_url: store.coverPhoto,
   images: store.gallery,
   menu_images: store.menuImages,
+  ...(store.hours.length > 0
+    ? {
+      hours: store.hours.map(({ day_of_week, open_time, close_time, is_closed }) => ({
+        day_of_week,
+        open_time,
+        close_time,
+        is_closed,
+      })),
+    }
+    : {}),
 });
+
+const updateOperatingHours = (
+  store: StoreData,
+  field: 'open_time' | 'close_time',
+  value: string,
+): StoreData => {
+  const hours = store.hours.length > 0
+    ? store.hours
+    : Array.from({ length: 7 }, (_, day_of_week) => ({
+      day_of_week,
+      open_time: store.operatingHours.open,
+      close_time: store.operatingHours.close,
+      is_closed: false,
+    }));
+
+  return {
+    ...store,
+    operatingHours: {
+      ...store.operatingHours,
+      [field === 'open_time' ? 'open' : 'close']: value,
+    },
+    hours: hours.map((hour) => ({ ...hour, [field]: value })),
+  };
+};
 
 const StoreProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [storeData, setStoreData] = useState(defaultStoreData);
   const [savedStoreData, setSavedStoreData] = useState(defaultStoreData);
   const [isLoadingStore, setIsLoadingStore] = useState(true);
+  const [isCreatingStore, setIsCreatingStore] = useState(false);
+  const [isSubmittingNewStore, setIsSubmittingNewStore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isStoreActive, setIsStoreActive] = useState(false);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -177,15 +237,16 @@ const StoreProfile: React.FC = () => {
         }
 
         if (!primaryStore) {
-          setStatusMessage('No merchant store found yet.');
           setStoreData(defaultStoreData);
           setSavedStoreData(defaultStoreData);
+          setIsCreatingStore(true);
           return;
         }
 
         const normalizedStore = normalizeStoreData(primaryStore, defaultStoreData);
         setStoreData(normalizedStore);
         setSavedStoreData(normalizedStore);
+        setIsStoreActive(primaryStore.status === 1);
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load store profile:', error);
@@ -237,10 +298,63 @@ const StoreProfile: React.FC = () => {
     }
   };
 
+  const handleCreateStore = async () => {
+    if (!storeData.name.trim()) {
+      setStatusMessage('Store name is required.');
+      return;
+    }
+    setIsSubmittingNewStore(true);
+    setStatusMessage(null);
+    try {
+      const created = await storeProfileService.createStore(buildStoreUpdatePayload(storeData));
+      const normalizedStore = normalizeStoreData(created, storeData);
+      setStoreData(normalizedStore);
+      setSavedStoreData(normalizedStore);
+      setIsCreatingStore(false);
+      setIsEditing(false);
+
+      // The backend creates stores as drafts, but coupon creation requires a
+      // published store — publish it now so the merchant can start right away.
+      // A failure here must not fail the create: the "Enable store" toggle
+      // remains available as a retry.
+      try {
+        await storeProfileService.activateStore(normalizedStore.id);
+        setIsStoreActive(true);
+      } catch (activationError) {
+        console.error('Failed to activate newly created store:', activationError);
+        setStatusMessage('Store created, but it could not be enabled automatically. Use "Enable store" to publish it.');
+      }
+    } catch (error) {
+      console.error('Failed to create store:', error);
+      setStatusMessage('Failed to create store.');
+    } finally {
+      setIsSubmittingNewStore(false);
+    }
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
     setStatusMessage(null);
     setStoreData(savedStoreData);
+  };
+
+  const handleToggleActive = async () => {
+    if (!storeData.id) return;
+    setIsTogglingActive(true);
+    try {
+      if (isStoreActive) {
+        await storeProfileService.deactivateStore(storeData.id);
+        setIsStoreActive(false);
+      } else {
+        await storeProfileService.activateStore(storeData.id);
+        setIsStoreActive(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle store active state:', error);
+      setStatusMessage('Failed to update store status.');
+    } finally {
+      setIsTogglingActive(false);
+    }
   };
 
   const handleFileUpload = async (
@@ -491,6 +605,67 @@ const StoreProfile: React.FC = () => {
     });
   };
 
+  if (isCreatingStore) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">Create your store</h1>
+        <p className="text-sm text-gray-500">You don't have a store yet — fill in the basics to get started. You can add hours, photos, and menu images after creating it.</p>
+        {statusMessage && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {statusMessage}
+          </div>
+        )}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Store name</label>
+            <input
+              type="text"
+              value={storeData.name}
+              onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              placeholder="e.g. Downtown Burger House"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={storeData.bio}
+              onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <input
+              type="text"
+              value={storeData.streetAddress}
+              onChange={(e) => setStoreData({ ...storeData, streetAddress: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <input
+              type="text"
+              value={storeData.phone}
+              onChange={(e) => setStoreData({ ...storeData, phone: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleCreateStore}
+          disabled={isSubmittingNewStore}
+          className="w-full py-3 text-white bg-yellow-500 rounded-lg font-medium hover:bg-yellow-600 transition-colors disabled:opacity-50"
+          style={{ backgroundColor: '#FFBC0D' }}
+        >
+          {isSubmittingNewStore ? 'Creating...' : 'Create store'}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -501,6 +676,18 @@ const StoreProfile: React.FC = () => {
             {isLoadingStore && <p className="mt-1 text-sm text-gray-500">Loading store profile...</p>}
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={handleToggleActive}
+              disabled={isTogglingActive || !storeData.id}
+              className={
+                isStoreActive
+                  ? 'flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+                  : 'flex items-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50'
+              }
+              style={isStoreActive ? undefined : { backgroundColor: '#FFBC0D' }}
+            >
+              {isTogglingActive ? 'Updating...' : isStoreActive ? 'Disable store' : 'Enable store'}
+            </button>
             {isEditing ? (
               <>
                 <button
@@ -658,10 +845,7 @@ const StoreProfile: React.FC = () => {
                       aria-label="Opening time"
                       type="time"
                       value={storeData.operatingHours.open}
-                      onChange={(e) => setStoreData({
-                        ...storeData,
-                        operatingHours: { ...storeData.operatingHours, open: e.target.value }
-                      })}
+                      onChange={(e) => setStoreData((current) => updateOperatingHours(current, 'open_time', e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
                   ) : (
@@ -675,10 +859,7 @@ const StoreProfile: React.FC = () => {
                       aria-label="Closing time"
                       type="time"
                       value={storeData.operatingHours.close}
-                      onChange={(e) => setStoreData({
-                        ...storeData,
-                        operatingHours: { ...storeData.operatingHours, close: e.target.value }
-                      })}
+                      onChange={(e) => setStoreData((current) => updateOperatingHours(current, 'close_time', e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
                   ) : (

@@ -20,6 +20,7 @@ const ChatDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [chatSettings, setChatSettings] = useState({ isMuted: false, isPinned: false });
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Scroll to bottom of messages
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -103,6 +104,7 @@ const ChatDetail: React.FC = () => {
       })
       .catch((error) => {
         console.error('Failed to send message:', error);
+        setActionError('Message could not be sent. Please try again.');
       });
   };
 
@@ -122,21 +124,39 @@ const ChatDetail: React.FC = () => {
   const handleMuteNotifications = () => {
     if (!chat) return;
     const newMuteStatus = !chatSettings.isMuted;
-    void messagingService.updateConversationSettings(chat.id, newMuteStatus)
+    setActionError(null);
+    void messagingService.updateConversationSettings(chat.id, { isMuted: newMuteStatus })
       .then((updatedConversation) => {
         setChat(updatedConversation);
-        setChatSettings(prev => ({ ...prev, isMuted: newMuteStatus }));
+        setChatSettings({
+          isMuted: Boolean(updatedConversation.isMuted),
+          isPinned: Boolean(updatedConversation.isPinned),
+        });
         window.dispatchEvent(new CustomEvent('conversationUpdated'));
       })
       .catch((error) => {
         console.error('Failed to update conversation settings:', error);
+        setActionError('Notification settings could not be updated. Please try again.');
       });
   };
 
   const handlePinChat = () => {
     if (!chat) return;
     const newPinStatus = !chatSettings.isPinned;
-    setChatSettings(prev => ({ ...prev, isPinned: newPinStatus }));
+    setActionError(null);
+    void messagingService.updateConversationSettings(chat.id, { isPinned: newPinStatus })
+      .then((updatedConversation) => {
+        setChat(updatedConversation);
+        setChatSettings({
+          isMuted: Boolean(updatedConversation.isMuted),
+          isPinned: Boolean(updatedConversation.isPinned),
+        });
+        window.dispatchEvent(new CustomEvent('conversationUpdated'));
+      })
+      .catch((error) => {
+        console.error('Failed to update conversation pin:', error);
+        setActionError('Chat pin could not be updated. Please try again.');
+      });
   };
 
   const handleClearMessages = () => {
@@ -148,8 +168,17 @@ const ChatDetail: React.FC = () => {
     );
 
     if (confirmed) {
-      setMessages([]);
-      setIsSettingsDrawerOpen(false);
+      setActionError(null);
+      void messagingService.clearConversationMessages(chat.id)
+        .then(() => {
+          setMessages([]);
+          setIsSettingsDrawerOpen(false);
+          window.dispatchEvent(new CustomEvent('conversationUpdated'));
+        })
+        .catch((error) => {
+          console.error('Failed to clear conversation messages:', error);
+          setActionError('Messages could not be cleared. Please try again.');
+        });
     }
   };
 
@@ -228,6 +257,12 @@ const ChatDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {actionError && (
+        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">
+          {actionError}
+        </div>
+      )}
 
       {/* Messages Area */}
       <div className="chat-messages custom-scrollbar messages-container">

@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 
 const { mockGet } = vi.hoisted(() => ({
   mockGet: vi.fn(),
@@ -50,6 +50,10 @@ const storeListResponse = {
 };
 
 describe('HomePage', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     mockGet.mockReset();
     mockGet.mockResolvedValue(storeListResponse);
@@ -67,5 +71,25 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Revieu Demo Cafe').length).toBeGreaterThan(0);
     });
+  });
+
+  it('taps the home search bar into the in-app explore route', async () => {
+    const LocationProbe = () => {
+      const location = useLocation();
+      return <output data-testid="location">{location.pathname}{location.search}</output>;
+    };
+    const { default: HomePage } = await import('../HomePage');
+
+    render(
+      <MemoryRouter initialEntries={['/customer/home']}>
+        <LocationProbe />
+        <HomePage />
+      </MemoryRouter>,
+    );
+
+    const input = screen.getByRole('textbox', { name: 'Search' });
+    fireEvent.mouseDown(input);
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/customer/explore');
   });
 });

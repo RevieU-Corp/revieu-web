@@ -136,34 +136,49 @@ const Messages: React.FC = () => {
     setSelectedChatIds(new Set());
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedChatIds.size === 0) return;
 
-    const chatNames = Array.from(selectedChatIds)
+    const selectedIds = Array.from(selectedChatIds);
+
+    const chatNames = selectedIds
       .map(id => filteredChats.find(chat => chat.id === id)?.name)
       .filter(Boolean)
       .join(', ');
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedChatIds.size} chat${selectedChatIds.size !== 1 ? 's' : ''}?\n\n${chatNames}\n\nThis action cannot be undone.`
+      `Are you sure you want to delete ${selectedIds.length} chat${selectedIds.length !== 1 ? 's' : ''}?\n\n${chatNames}\n\nThis action cannot be undone.`
     );
 
-    if (confirmed) {
-      const remainingChats = allChats.filter((chat) => !selectedChatIds.has(chat.id));
-      setAllChats(remainingChats);
-      setFilteredChats(filterChats(remainingChats, searchQuery));
+    if (!confirmed) return;
 
-      // Exit delete mode
-      setIsDeleteMode(false);
-      setSelectedChatIds(new Set());
+    const results = await Promise.allSettled(
+      selectedIds.map((id) => messagingService.deleteConversation(id)),
+    );
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
 
-      // Show success toast
-      setToast({
-        message: `${selectedChatIds.size} chat${selectedChatIds.size !== 1 ? 's' : ''} deleted successfully`,
-        type: 'success',
-        isVisible: true
-      });
+    let refreshed = true;
+    try {
+      // Re-read the server state instead of assuming local removal means success.
+      const chats = await messagingService.listConversations();
+      setAllChats(chats);
+      setFilteredChats(filterChats(chats, searchQuery));
+    } catch (error) {
+      console.error('Failed to refresh conversations after deletion:', error);
+      refreshed = false;
     }
+
+    setIsDeleteMode(false);
+    setSelectedChatIds(new Set());
+    setToast({
+      message: !refreshed
+        ? 'Deletion completed, but the conversation list could not be refreshed.'
+        : failedCount === 0
+        ? `${selectedIds.length} chat${selectedIds.length !== 1 ? 's' : ''} deleted successfully`
+        : `${selectedIds.length - failedCount} deleted; ${failedCount} could not be deleted`,
+      type: refreshed && failedCount === 0 ? 'success' : 'error',
+      isVisible: true
+    });
   };
 
   const handleCreateGroup = async (groupName: string) => {

@@ -9,6 +9,7 @@ type BackendConversation = {
   last_message_at?: string | null;
   unread_count?: number;
   is_muted?: boolean;
+  is_pinned?: boolean;
 };
 
 type BackendMessage = {
@@ -77,6 +78,7 @@ const mapConversation = (conversation: BackendConversation): ChatItem => ({
   timestamp: formatRelativeTime(conversation.last_message_at),
   unreadCount: conversation.unread_count || 0,
   isMuted: Boolean(conversation.is_muted),
+  isPinned: Boolean(conversation.is_pinned),
   isOnline: false,
 });
 
@@ -121,10 +123,28 @@ export const messagingService = {
     return mapMessage(response.data.data);
   },
 
-  async updateConversationSettings(conversationId: string, isMuted: boolean): Promise<ChatItem> {
+  async updateConversationSettings(
+    conversationId: string,
+    settings: { isMuted?: boolean; isPinned?: boolean },
+  ): Promise<ChatItem> {
+    const payload: { is_muted?: boolean; is_pinned?: boolean } = {};
+    if (settings.isMuted !== undefined) {
+      payload.is_muted = settings.isMuted;
+    }
+    if (settings.isPinned !== undefined) {
+      payload.is_pinned = settings.isPinned;
+    }
     const response = await apiClient.patch(`/conversations/${conversationId}/settings`, {
-      is_muted: isMuted,
+      ...payload,
     });
     return mapConversation(response.data.data);
+  },
+
+  async deleteConversation(conversationId: string): Promise<void> {
+    await apiClient.delete(`/conversations/${conversationId}`);
+  },
+
+  async clearConversationMessages(conversationId: string): Promise<void> {
+    await apiClient.delete(`/conversations/${conversationId}/messages`);
   },
 };

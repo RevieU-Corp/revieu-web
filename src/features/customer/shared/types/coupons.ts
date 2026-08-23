@@ -6,6 +6,7 @@ export interface Coupon {
   merchantId: string;
   title: string;
   description: string;
+  imageUrl?: string;
   type: 'free' | 'paid';
   value: string;
   price?: number;

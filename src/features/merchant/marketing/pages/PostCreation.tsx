@@ -64,11 +64,14 @@ const CTA_OPTIONS = [
   { value: 'learn-more', label: 'Learn More', color: 'bg-gray-600' }
 ];
 
+// Publishing is intentionally disabled until the authenticated create-post,
+// media-upload, authorization, and persistence contract is available.
+const POST_PUBLISH_ENABLED = false;
+
 const PostCreation: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [postData, setPostData] = useState<PostData>({
     description: '',
@@ -156,49 +159,6 @@ const PostCreation: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async () => {
-    if (!postData.description.trim()) {
-      alert('Please add a description for your post');
-      return;
-    }
-
-    if (postData.media.length === 0) {
-      alert('Please add at least one image or video');
-      return;
-    }
-
-    if (postData.selectedHashtags.length === 0) {
-      const confirmWithoutHashtags = window.confirm(
-        'No hashtags selected. Hashtags help customers discover your post. Continue without hashtags?'
-      );
-      if (!confirmWithoutHashtags) {
-        return;
-      }
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Post created:', {
-        description: postData.description,
-        mediaCount: postData.media.length,
-        ctaAction: postData.ctaAction,
-        selectedHashtags: postData.selectedHashtags
-      });
-
-      // Navigate back to dashboard or posts list
-      navigate(PATHS.MERCHANT.DASHBOARD);
-    } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Failed to create post. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const selectedCTA = CTA_OPTIONS.find(option => option.value === postData.ctaAction);
 
   return (
@@ -227,13 +187,15 @@ const PostCreation: React.FC = () => {
               {showPreview ? 'Hide Preview' : 'Preview'}
             </button>
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !postData.description.trim() || postData.media.length === 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+              type="button"
+              disabled={!POST_PUBLISH_ENABLED}
+              title="Publishing is coming soon"
+              aria-label="Publish Post (coming soon)"
+              className="px-6 py-2 bg-gray-400 text-white rounded-lg disabled:opacity-70 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
             >
-              {isSubmitting ? 'Publishing...' : 'Publish Post'}
+              Publish Post
               {postData.selectedHashtags.length > 0 && (
-                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded-full">
                   {postData.selectedHashtags.length} tags
                 </span>
               )}
@@ -243,6 +205,15 @@ const PostCreation: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto p-4">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          <strong>Demo / Coming soon:</strong> post publishing is not enabled in this gray release. Your
+          content can be prepared and previewed, but nothing will be stored or shown to customers until the
+          authenticated media and create-post APIs are connected.
+        </div>
         <div className={`grid gap-6 ${showPreview ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
           {/* Creation Form */}
           <div className="space-y-6">

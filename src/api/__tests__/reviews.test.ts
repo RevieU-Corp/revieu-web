@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { mockGet, mockPost } = vi.hoisted(() => ({
+const { mockDelete, mockGet, mockPost } = vi.hoisted(() => ({
+  mockDelete: vi.fn(),
   mockGet: vi.fn(),
   mockPost: vi.fn(),
 }));
 
 vi.mock('../apiClient', () => ({
   apiClient: {
+    delete: mockDelete,
     get: mockGet,
     post: mockPost,
   },
@@ -40,6 +42,7 @@ const backendReview = {
 describe('reviewsApi', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockDelete.mockReset();
     mockPost.mockReset();
   });
 
@@ -203,6 +206,46 @@ describe('reviewsApi', () => {
       value: 4.6,
     });
     expect(response.cursor).toBe('11');
+  });
+
+  test('merchant review mutations use the protected persistence APIs', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: [{
+          id: 44,
+          customerName: 'Jamie Customer',
+          rating: 2,
+          text: 'The wait was too long.',
+          date: '2026-08-22T10:00:00Z',
+          hasReply: true,
+          replyText: 'Thanks for the feedback.',
+        }],
+      },
+    });
+    mockPost.mockResolvedValue({
+      data: {
+        id: 44,
+        customerName: 'Jamie Customer',
+        rating: 2,
+        text: 'The wait was too long.',
+        date: '2026-08-22T10:00:00Z',
+        hasReply: true,
+        replyText: 'We have improved our staffing.',
+      },
+    });
+
+    const reviews = await reviewsApi.listMerchant();
+    expect(mockGet).toHaveBeenCalledWith('/merchant/reviews');
+    expect(reviews[0]).toMatchObject({ id: 44, customerName: 'Jamie Customer', hasReply: true });
+
+    const updated = await reviewsApi.replyMerchant(44, 'We have improved our staffing.');
+    expect(mockPost).toHaveBeenCalledWith('/merchant/reviews/44/reply', {
+      text: 'We have improved our staffing.',
+    });
+    expect(updated.replyText).toBe('We have improved our staffing.');
+
+    await reviewsApi.deleteMerchant(44);
+    expect(mockDelete).toHaveBeenCalledWith('/merchant/reviews/44');
   });
 
   test('generateAiReviewCandidates posts multipart form data and returns polished candidates', async () => {
