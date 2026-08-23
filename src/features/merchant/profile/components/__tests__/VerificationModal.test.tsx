@@ -3,15 +3,17 @@ import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
-const { getVerificationStatusMock, submitVerificationMock } = vi.hoisted(() => ({
+const { getVerificationStatusMock, submitVerificationMock, uploadDocumentMock } = vi.hoisted(() => ({
   getVerificationStatusMock: vi.fn(),
   submitVerificationMock: vi.fn(),
+  uploadDocumentMock: vi.fn(),
 }));
 
 vi.mock('../../../shared/services/verificationService', () => ({
   verificationService: {
     getVerificationStatus: getVerificationStatusMock,
     submitVerification: submitVerificationMock,
+    uploadDocument: uploadDocumentMock,
   },
 }));
 
@@ -23,15 +25,17 @@ describe('VerificationModal', () => {
   beforeEach(() => {
     getVerificationStatusMock.mockReset();
     submitVerificationMock.mockReset();
+    uploadDocumentMock.mockReset();
     getVerificationStatusMock.mockResolvedValue({
       status: 'unverified',
     });
     submitVerificationMock.mockResolvedValue({
       status: 'pending',
     });
+    uploadDocumentMock.mockResolvedValue('https://cdn.revieu.com/uploads/license-real.pdf');
   });
 
-  it('submits verification data through the verification service', async () => {
+  it('uploads the selected document and submits its real URL, not the filename', async () => {
     const { default: VerificationModal } = await import('../VerificationModal');
 
     const { container } = render(
@@ -69,7 +73,13 @@ describe('VerificationModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit for verification/i }));
 
     await waitFor(() => {
-      expect(submitVerificationMock).toHaveBeenCalled();
+      expect(uploadDocumentMock).toHaveBeenCalledWith(pdfFile);
     });
+    // The backend rejects document_url unless it's an absolute http(s) URL — a
+    // bare filename like "license.pdf" fails validation with a 400. Assert the
+    // real uploaded URL is what actually gets submitted.
+    expect(submitVerificationMock).toHaveBeenCalledWith(
+      expect.objectContaining({ documentUrl: 'https://cdn.revieu.com/uploads/license-real.pdf' })
+    );
   });
 });
