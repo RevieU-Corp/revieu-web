@@ -80,7 +80,7 @@ jobs:
 
       - name: Lowercase image name
         run: |
-          echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> $GITHUB_ENV
+          echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> "$GITHUB_ENV"
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -113,6 +113,41 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Prepare infra promotion branch
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_UPDATE_TOKEN }}
+          INFRA_REPOSITORY: LosFurina/infra
+          PROMOTION_BRANCH: automation/revieu-web-${{ github.ref_name }}-${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$GH_TOKEN" ]; then
+            echo "INFRA_UPDATE_TOKEN is not configured."
+            exit 1
+          fi
+
+          rm -rf infra
+          git clone --branch main "https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPOSITORY}.git" infra
+          cd infra
+          git checkout -b "$PROMOTION_BRANCH"
+
+      - name: Update infra workload image
+        uses: mikefarah/yq@c14f446382944492701b16c1ddb48bb9dbe683e3
+        env:
+          IMAGE_REF: ${{ github.ref_name == 'main' && 'latest' || 'dev' }}@${{ steps.image.outputs.digest }}
+          WORKLOAD_FILE: ${{ github.ref_name == 'main' && 'workloads/revieu-prod/frontend.yaml' || 'workloads/revieu-dev/frontend.yaml' }}
+        with:
+          cmd: >-
+            yq -e -i
+            '(
+              select(.apiVersion == "apps/v1" and .kind == "Deployment" and
+              .metadata.name == "revieu-web")
+              .spec.template.spec.containers[]
+              | select(.name == "web")
+              | .image
+            ) = strenv(IMAGE_REF)'
+            "$WORKLOAD_FILE"
+
       - name: Create infra promotion pull request
         env:
           GH_TOKEN: ${{ secrets.INFRA_UPDATE_TOKEN }}
@@ -123,37 +158,7 @@ jobs:
           PROMOTION_BRANCH: automation/revieu-web-${{ github.ref_name }}-${{ github.sha }}
         run: |
           set -euo pipefail
-
-          if [ -z "$GH_TOKEN" ]; then
-            echo "INFRA_UPDATE_TOKEN is not configured."
-            exit 1
-          fi
-          if [ -z "$IMAGE_DIGEST" ]; then
-            echo "Docker build did not return an image digest."
-            exit 1
-          fi
-
-          rm -rf infra
-          git clone --branch main "https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPOSITORY}.git" infra
           cd infra
-          git checkout -b "$PROMOTION_BRANCH"
-
-          python3 - "$WORKLOAD_FILE" "$IMAGE_TAG" "$IMAGE_DIGEST" <<'PY'
-          from pathlib import Path
-          import re
-          import sys
-
-          path = Path(sys.argv[1])
-          image_tag = sys.argv[2]
-          digest = sys.argv[3]
-          text = path.read_text()
-          pattern = r"(ghcr\.io/revieu-corp/revieu-web:)[^@\s]+@sha256:[a-f0-9]+"
-          replacement = rf"\g<1>{image_tag}@{digest}"
-          updated, count = re.subn(pattern, replacement, text)
-          if count != 1:
-              raise SystemExit(f"expected one web image reference in {path}, found {count}")
-          path.write_text(updated)
-          PY
 
           if git diff --quiet -- "$WORKLOAD_FILE"; then
             echo "Infra already references $IMAGE_TAG@$IMAGE_DIGEST."
