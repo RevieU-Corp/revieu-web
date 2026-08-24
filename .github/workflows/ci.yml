@@ -146,7 +146,7 @@ jobs:
               | select(.name == "web")
               | .image
             ) = strenv(IMAGE_REF)'
-            "$WORKLOAD_FILE"
+            "infra/$WORKLOAD_FILE"
 
       - name: Create infra promotion pull request
         env:
